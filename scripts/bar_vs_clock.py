@@ -120,8 +120,9 @@ def diagnose(df: pd.DataFrame, symbol: str, timeframe: str = "5m") -> Dict[str, 
         "verdict": "CLOCK_EDGE" if any_clock else "NOT_IN_CLOCK_OR_BARS_YET",
         "note": (
             "CLOCK_EDGE means a weekday/time-of-day long/short cleared t>=2 "
-            "without a candlestick pattern. Otherwise MNQ 5m OHLCV on this "
-            "2024–now tape has not shown a kill-gate edge from calendar either."
+            "without a candlestick pattern. Otherwise "
+            f"{symbol} {timeframe} OHLCV on this 2024–now tape has not shown "
+            "a kill-gate edge from calendar either."
         ),
         "baselines": rows,
     }

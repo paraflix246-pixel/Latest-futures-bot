@@ -30,7 +30,7 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 | PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
 | PASS_MES | **1** | `gap_on_confirm_lock` (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140, overnight=0. **Not paper-live.** |
 | PASS_BOTH | 0 | MNQ of the same family is KILL (WF t=−1.699 n=28). |
-| KILL | 71+ | Cycles 1–4, 6–13, 15–16. Cycle 14 MNQ lock KILL. |
+| KILL | 74+ | Cycles 1–4, 6–13, 15–17. Cycle 14 MNQ lock KILL. |
 
 **PASS_MES on overnight-range confirmed fill/go. No paper-live. No live.**
 
@@ -247,6 +247,20 @@ Go-leg of the MES PASS family does not trade on this tape. MES overnight-gap fad
 
 See `reports/cycles/cycle_16/`. Next: cycle 17 **1m** path (Databento 2024-01-01→2026-03-11) — test whether the missing MNQ edge is inside the 5m candle, not on the 5m chart.
 
+## Cycle 17 (KILL) — 1m path inside the 5m bar
+
+Databento MNQ 1m: discovery 598631 bars (2024-01-01→2025-09-12, **7** WF folds), holdout 172522 bars (through 2026-03-11). Not Massive 5m.
+
+| Family | MNQ n | MNQ t | MNQ hold t | Label |
+|---|---:|---:|---:|---|
+| first5_break | 263 | −0.029 | 0.342 | KILL |
+| overnight_gap_fade | 190 | 0.607 | 1.173 | KILL |
+| first30_fade | 188 | −1.486 | −1.161 | KILL |
+
+1m clock baselines: clock_short t=0.048, mon_fri_long t=1.177 — still **NOT_IN_CLOCK_OR_BARS_YET**. The 5-minute opening-range break (the path inside the first 5m candle) has n=263 and t≈0. Overnight-gap fade has more folds than on 5m and still t=0.607.
+
+See `reports/cycles/cycle_17/`. Cycle 18 re-evals the closest 5m MNQ family (`vwap_reclaim_90`) and the MES lock on this 1m tape.
+
 ## Extra Massive history
 
 Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop. **2024–now is the working tape.**
@@ -258,6 +272,7 @@ python scripts/download_massive_futures.py --plan-depth
 python scripts/research_cycle.py --cycle 15 --symbol MNQ MES
 python scripts/research_cycle.py --cycle 16 --symbol MNQ MES
 python scripts/research_cycle.py --cycle 17 --symbol MNQ
+python scripts/research_cycle.py --cycle 18 --symbol MNQ
 python scripts/harden_candidate.py --family gap_on_confirm_lock --symbol MES
 python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy gap_on_confirm --start 2025-09-12
 python -m pytest tests/ -q

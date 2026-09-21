@@ -662,6 +662,9 @@ CYCLE_DEFAULTS = {
     17: [
         "first5_break", "overnight_gap_fade", "first30_fade",
     ],
+    18: [
+        "vwap_reclaim_90", "gap_on_confirm_lock",
+    ],
 }
 
 
@@ -809,10 +812,10 @@ def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Di
 
 def main() -> None:
     args = parse_args()
-    if args.cycle == 17:
+    if args.cycle in (17, 18):
         args.timeframe = "1m"
         print(
-            "cycle 17: 1m Databento path (2024-01-01→2026-03-11), not 5m candles",
+            f"cycle {args.cycle}: 1m Databento path (2024-01-01→2026-03-11), not 5m candles",
             flush=True,
         )
     if args.family is None:
@@ -936,7 +939,7 @@ def main() -> None:
             pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
         pocket = write_report(pocket_payloads, cycle_dir)
         print(f"regime pockets: {pocket['verdict']}", flush=True)
-    if args.cycle in (15, 16, 17) and PRIMARY in args.symbol:
+    if args.cycle in (15, 16, 17, 18) and PRIMARY in args.symbol:
         from src.data.loader import load_ohlcv as _load_clock
         from scripts.bar_vs_clock import diagnose, write_report as write_clock
 
