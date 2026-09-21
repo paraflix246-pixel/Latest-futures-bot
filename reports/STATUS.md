@@ -36,13 +36,15 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 
 ## PR #2 squash-merge
 
-PR #2 (RTH toolkit) is still **OPEN** and **CONFLICTING** with `main` (README). This agent's GitHub CLI is **read-only** and cannot squash-merge. Unique files (`scripts/eval_new_strategies.py`, `reports/new_strategies/`) are on this branch. Strategy modules already live here. Founder: squash-merge #2 in the GitHub UI after resolving README, or close it as superseded by PR #3.
+Squash-landed on `main` as `84c509a` (2026-09-21). Toolkit only: five RTH
+modules, eval harness, `reports/new_strategies/` kill tables, and clock
+exits on the sprint-1 next-open engine. Sprint reports / paper harness
+kept. The five families remain **killed** (no validated edge). PR #2 is
+closed. Hunt continues on this branch (PR #3).
 
 ## Massive plan depth (live, key present)
 
 See `reports/massive/PLAN_DEPTH.md` and `BLOCKER.md`. Auth Bearer 200. Earliest `MNQZ4` session 2024-09-23. Do not fabricate bars.
-
-**No paper-live. No live.** The MES winner is ported and paper-logged. It does not survive next-open + exit-slip.
 
 ## Local sprint 4 vs official engine — MES `s2_mes_sens_7`
 
@@ -159,6 +161,21 @@ Target_r / one_per_session around the 1.61 neighborhood did not lift WF t. MES `
 
 Same families on 15-minute bars (resampled from 5m). **0 WF trades** (train never cleared min_train_trades). Not a PASS.
 
+## Cycle 12 (running) — improved founder ideas on 2y tape
+
+Prior cycle 3/4 kills already re-evaled on this Massive 2y tape. Cycle 12
+uses *improved* classifiers, not identical grids:
+
+1. `vwap_fh_reclaim` — first-hour VWAP reclaim/fail *during* 09:30–10:30, flatten 15:45
+2. `gap_on_range` — fill vs go from overnight range vs RTH open
+3. `rvol_dir_open15` — loosened RVOL + directional 15m close, flatten 15:45
+4. `trend15_pb5_chop` — 15m trend + 5m pullback with ADX chop skip
+5. EMA/Donchian regime-pocket diagnostic — improve only if a pocket clears t≥2 n≥30; else leave dead
+
+```bash
+python scripts/research_cycle.py --cycle 12
+```
+
 ## Extra Massive history
 
 Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop.
@@ -168,6 +185,6 @@ Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earli
 ```bash
 python scripts/download_massive_futures.py --plan-depth
 python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
-python scripts/research_cycle.py --cycle 11 --family vwap_reclaim_90_target --symbol MNQ --timeframe 15m
+python scripts/research_cycle.py --cycle 12
 python -m pytest tests/ -q
 ```

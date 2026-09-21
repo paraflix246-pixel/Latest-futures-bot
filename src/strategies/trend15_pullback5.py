@@ -18,7 +18,7 @@ import pandas as pd
 
 from src.data.loader import resample_ohlcv
 from src.strategies.base import StrategySignals
-from src.strategies.indicators import ema
+from src.strategies.indicators import adx, ema
 from src.strategies.session import (
     FLATTEN_1545,
     RTH_CLOSE_MINUTES,
@@ -50,11 +50,15 @@ class Trend15Pullback5Strategy:
         stop_atr_mult: float = STOP_ATR_MULT,
         max_hold_bars: int = MAX_HOLD_BARS,
         breakeven_r_mult: float | None = None,
+        adx_min: float = 0.0,
+        pullback_mode: str = "either",
     ):
         self.fast = fast
         self.slow = slow
         self.stop_atr_mult = stop_atr_mult
         self.max_hold_bars = max_hold_bars
+        self.adx_min = float(adx_min)
+        self.pullback_mode = str(pullback_mode)
         if breakeven_r_mult is not None:
             self.breakeven_r_mult = breakeven_r_mult
 
@@ -71,6 +75,8 @@ class Trend15Pullback5Strategy:
         ema15 = fast15.shift(1)
         trend5 = trend15.reindex(df.index, method="ffill").fillna(0)
         ema5 = ema15.reindex(df.index, method="ffill")
+        adx15 = adx(df15["high"], df15["low"], df15["close"]).shift(1)
+        adx5 = adx15.reindex(df.index, method="ffill")
         vwap = rth_session_vwap(df["high"], df["low"], df["close"], df["volume"])
         atr_ = prior_day_atr(df, dates)
         holidays = short_session_dates(df)
@@ -88,6 +94,7 @@ class Trend15Pullback5Strategy:
         ema_px = ema5.to_numpy()
         vwap_px = vwap.to_numpy()
         atr_px = atr_.to_numpy()
+        adx_px = adx5.to_numpy()
 
         for d in pd.unique(date_vals):
             if d in holidays:
@@ -97,21 +104,33 @@ class Trend15Pullback5Strategy:
                 day_mask & (mins >= RTH_OPEN_MINUTES) & (mins < FLATTEN_1545) & (trend != 0)
             )[0]
             pulled = False
+            last_level = np.nan
             direction = 0
             for i in watch:
                 direction = int(trend[i])
                 if direction == 0:
                     continue
-                level = ema_px[i]
-                if np.isnan(level) and not np.isnan(vwap_px[i]):
-                    level = vwap_px[i]
-                if np.isnan(level):
+                if self.adx_min > 0:
+                    adx_i = float(adx_px[i]) if not np.isnan(adx_px[i]) else 0.0
+                    if adx_i < self.adx_min:
+                        continue
+                levels = []
+                if self.pullback_mode in ("ema", "either") and not np.isnan(ema_px[i]):
+                    levels.append(float(ema_px[i]))
+                if self.pullback_mode in ("vwap", "either") and not np.isnan(vwap_px[i]):
+                    levels.append(float(vwap_px[i]))
+                if not levels:
                     continue
-                if low[i] <= level <= high[i]:
-                    pulled = True
-                if not pulled:
+                for level in levels:
+                    if low[i] <= level <= high[i]:
+                        pulled = True
+                        last_level = level
+                        break
+                if not pulled or np.isnan(last_level):
                     continue
-                resume = (direction == 1 and close[i] > level) or (direction == -1 and close[i] < level)
+                resume = (direction == 1 and close[i] > last_level) or (
+                    direction == -1 and close[i] < last_level
+                )
                 if not resume:
                     continue
                 day_atr = float(atr_px[i])

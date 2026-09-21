@@ -30,6 +30,8 @@ from src.strategies.inside_day_orb import InsideDayOrbStrategy
 from src.strategies.pivot_bounce import PivotBounceStrategy
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
+from src.strategies.vwap_first_hour import VwapFirstHourStrategy
+from src.strategies.gap_on_range import GapOnRangeStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
 from src.strategies.rvol_open15 import RvolOpen15Strategy
 from src.strategies.vwap_band_fade import VwapBandFadeStrategy
@@ -100,8 +102,10 @@ STRATEGIES = {
     "inside_day_orb": InsideDayOrbStrategy,
     "pivot_bounce": PivotBounceStrategy,
     "vwap_hour_reclaim_fail": VwapHourReclaimFailStrategy,
+    "vwap_fh_reclaim": VwapFirstHourStrategy,
     "trend15_pullback5": Trend15Pullback5Strategy,
     "gap_fill_go": GapFillGoStrategy,
+    "gap_on_range": GapOnRangeStrategy,
     "rvol_open15": RvolOpen15Strategy,
     "vwap_band_fade": VwapBandFadeStrategy,
     "adr_exhaust_fade": AdrExhaustFadeStrategy,

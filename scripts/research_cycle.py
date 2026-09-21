@@ -80,6 +80,8 @@ from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E
 from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy  # noqa: E402
+from src.strategies.vwap_first_hour import VwapFirstHourStrategy  # noqa: E402
+from src.strategies.gap_on_range import GapOnRangeStrategy  # noqa: E402
 from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
 from src.strategies.rvol_open15 import RvolOpen15Strategy  # noqa: E402
 from src.strategies.vwap_band_fade import VwapBandFadeStrategy  # noqa: E402
@@ -480,6 +482,36 @@ FAMILIES = {
         {"stop_atr_mult": [0.20, 0.30]},
         "new",
     ),
+    # Cycle 12: improved founder ideas (not identical cycle 3/4 grids).
+    "vwap_fh_reclaim": (
+        VwapFirstHourStrategy,
+        {"stop_atr_mult": [0.25, 0.40], "min_away_atr": [0.05, 0.12]},
+        "new",
+    ),
+    "gap_on_range": (
+        GapOnRangeStrategy,
+        {"stop_atr_mult": [0.25, 0.40], "min_outside_atr": [0.0, 0.10]},
+        "new",
+    ),
+    "rvol_dir_open15": (
+        RvolOpen15Strategy,
+        {
+            "rvol_mult": [1.0, 1.15, 1.30],
+            "min_atr_frac": [0.05, 0.10],
+            "min_body_pct": [0.0],
+            "flatten_minutes": [15 * 60 + 45],
+        },
+        "new",
+    ),
+    "trend15_pb5_chop": (
+        Trend15Pullback5Strategy,
+        {
+            "adx_min": [15.0, 22.0],
+            "stop_atr_mult": [0.30, 0.45],
+            "pullback_mode": ["ema", "either"],
+        },
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -522,6 +554,9 @@ CYCLE_DEFAULTS = {
     10: [
         "vwap_reclaim_90_target",
         "morning_range_break", "keltner_am_fade", "inside_day_orb", "pivot_bounce",
+    ],
+    12: [
+        "vwap_fh_reclaim", "gap_on_range", "rvol_dir_open15", "trend15_pb5_chop",
     ],
 }
 
@@ -782,6 +817,15 @@ def main() -> None:
     ]
     (cycle_dir / "leaderboard.json").write_text(json.dumps(board, indent=2))
     print(f"\nWrote {cycle_dir}")
+    if args.cycle == 12:
+        from src.data.loader import load_ohlcv as _load
+        from scripts.regime_pocket import diagnose_symbol, write_report
+
+        pocket_payloads = []
+        for symbol in args.symbol:
+            pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
+        pocket = write_report(pocket_payloads, cycle_dir)
+        print(f"regime pockets: {pocket['verdict']}", flush=True)
     seen = set()
     for r in rows:
         key = r["family"]

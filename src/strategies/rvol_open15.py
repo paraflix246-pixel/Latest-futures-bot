@@ -47,11 +47,19 @@ class RvolOpen15Strategy:
         min_atr_frac: float = MIN_ATR_FRAC,
         stop_atr_mult: float = STOP_ATR_MULT,
         max_hold_bars: int = MAX_HOLD_BARS,
+        flatten_minutes: int = FLATTEN_MINUTES,
+        min_body_pct: float = MIN_BODY_PCT,
+        rvol_lookback: int = RVOL_LOOKBACK,
     ):
         self.rvol_mult = rvol_mult
         self.min_atr_frac = min_atr_frac
         self.stop_atr_mult = stop_atr_mult
         self.max_hold_bars = max_hold_bars
+        self.flatten_minutes = int(flatten_minutes)
+        self.session_exit_minutes = int(flatten_minutes)
+        self.rth_entry_cutoff_minutes = int(flatten_minutes)
+        self.min_body_pct = float(min_body_pct)
+        self.rvol_lookback = int(rvol_lookback)
 
     def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
         minutes, dates = session_clock(df.index)
@@ -74,9 +82,11 @@ class RvolOpen15Strategy:
                 open15_vol[d] = float(volume[idx].sum())
         dates_sorted = list(open15_vol)
         median_vol: dict = {}
+        lookback = self.rvol_lookback
+        min_hist = max(3, min(8, lookback))
         for i, d in enumerate(dates_sorted):
-            hist = [open15_vol[dates_sorted[j]] for j in range(max(0, i - RVOL_LOOKBACK), i)]
-            median_vol[d] = float(np.median(hist)) if len(hist) >= 8 else np.nan
+            hist = [open15_vol[dates_sorted[j]] for j in range(max(0, i - lookback), i)]
+            median_vol[d] = float(np.median(hist)) if len(hist) >= min_hist else np.nan
 
         entries = np.zeros(len(df), dtype=int)
         stops = np.full(len(df), np.nan)
@@ -101,7 +111,9 @@ class RvolOpen15Strategy:
             day_atr = float(atr_[entry[0]])
             if rng <= 0 or np.isnan(day_atr) or day_atr <= 0:
                 continue
-            if body < self.min_atr_frac * day_atr or (body / rng) < MIN_BODY_PCT:
+            if body < self.min_atr_frac * day_atr or (body / rng) < self.min_body_pct:
+                continue
+            if c1 == o0:
                 continue
             direction = 1 if c1 > o0 else -1
             i = int(entry[0])
