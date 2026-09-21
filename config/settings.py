@@ -20,6 +20,9 @@ SUPPORTED_STRATEGIES = [
     "trend", "mean_reversion", "breakout", "ensemble", "vwap_cross", "orb",
     "orb_failure", "vwap_pullback_trend", "vwap_pullback_trend_v2", "regime_bot",
     "vol_expansion_momentum", "extreme_displacement_reversion", "volume_shock_continuation",
+    "orb_break_fade", "vol_squeeze_expansion", "impulse_clock",
+    "orb_crabel", "last30_momentum", "ib_extension", "on_inventory",
+    "lunch_range_break", "vol_gated_ensemble",
 ]
 
 # NQ now has its own real Databento feed (data/NQ_1m.csv, NQ_5m.csv) — no

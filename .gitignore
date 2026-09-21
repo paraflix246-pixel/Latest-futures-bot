@@ -20,6 +20,8 @@ logs/*.log
 # Data (large CSVs)
 data/*.csv
 data/*.csv.bak.pre_extended
+data/massive_raw/*.csv
+data/massive_raw/*.json
 
 # Raw order-flow/order-book pilot data (large, re-downloadable from Databento)
 orderflow_data/raw/*.parquet

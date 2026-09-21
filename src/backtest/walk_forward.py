@@ -61,11 +61,13 @@ def walk_forward_search(
     train_days: int = 180,
     test_days: int = 60,
     min_train_trades: int = 10,
+    engine_kwargs: Dict[str, Any] | None = None,
 ) -> List[FoldResult]:
     results: List[FoldResult] = []
     end = df.index[-1]
     train_start = df.index[0]
     fold = 0
+    bt_kwargs = dict(engine_kwargs or {})
 
     while True:
         train_end = train_start + pd.Timedelta(days=train_days)
@@ -79,7 +81,7 @@ def walk_forward_search(
         best_params, best_train_metrics, best_score = None, None, float("-inf")
         for params in _param_combos(param_grid):
             strat = strategy_cls(**params)
-            res = run_backtest(train_df, strat, symbol, timeframe, account_size, risk_pct)
+            res = run_backtest(train_df, strat, symbol, timeframe, account_size, risk_pct, **bt_kwargs)
             m = compute_metrics(res, account_size)
             if m["trade_count"] < min_train_trades:
                 continue
@@ -88,7 +90,7 @@ def walk_forward_search(
 
         if best_params is not None:
             test_strat = strategy_cls(**best_params)
-            test_res = run_backtest(test_df, test_strat, symbol, timeframe, account_size, risk_pct)
+            test_res = run_backtest(test_df, test_strat, symbol, timeframe, account_size, risk_pct, **bt_kwargs)
             test_metrics = compute_metrics(test_res, account_size)
             results.append(
                 FoldResult(

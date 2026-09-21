@@ -35,6 +35,14 @@ from src.strategies.volume_shock_continuation import VolumeShockContinuationStra
 from src.strategies.vwap_ema_cross import VwapEmaCrossStrategy  # noqa: E402
 from src.strategies.vwap_pullback_trend import VwapPullbackTrendStrategy  # noqa: E402
 from src.strategies.vwap_pullback_trend_v2 import VwapPullbackTrendV2Strategy  # noqa: E402
+from src.strategies.ib_extension import IbExtensionStrategy  # noqa: E402
+from src.strategies.impulse_clock import ImpulseClockStrategy  # noqa: E402
+from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
+from src.strategies.lunch_range_break import LunchRangeBreakStrategy  # noqa: E402
+from src.strategies.on_inventory import OnInventoryStrategy  # noqa: E402
+from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
+from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
+from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
 
 # Kept intentionally small — this is a grid search re-run per fold, so combo
 # count multiplies directly into runtime.
@@ -76,6 +84,30 @@ STRATEGY_GRIDS = {
     }),
     "volume_shock_continuation": (VolumeShockContinuationStrategy, {
         "volume_shock_mult": [2.0, 4.0], "volume_baseline_period": [10, 20],
+    }),
+    "orb_crabel": (OrbCrabelStrategy, {
+        "or_minutes": [15, 30], "rvol_mult": [1.5, 2.0],
+    }),
+    "last30_momentum": (Last30MomentumStrategy, {
+        "min_ret_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40],
+    }),
+    "vol_squeeze_expansion": (VolSqueezeExpansionStrategy, {
+        "squeeze_percentile": [15, 25], "volume_mult": [1.2, 1.5],
+    }),
+    "impulse_clock": (ImpulseClockStrategy, {
+        "impulse_atr_mult": [1.5, 2.0], "max_hold_bars": [6, 12],
+    }),
+    "ib_extension": (IbExtensionStrategy, {
+        "ib_minutes": [60], "volume_mult": [1.1, 1.4],
+    }),
+    "on_inventory": (OnInventoryStrategy, {
+        "on_atr_min": [0.15, 0.25], "stop_atr_mult": [0.30, 0.45],
+    }),
+    "lunch_range_break": (LunchRangeBreakStrategy, {
+        "lunch_atr_max": [0.35, 0.50], "volume_mult": [1.0, 1.3],
+    }),
+    "vol_gated_ensemble": (VolGatedEnsembleStrategy, {
+        "atr_pct_lo": [15.0, 25.0], "atr_pct_hi": [75.0, 85.0],
     }),
 }
 

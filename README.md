@@ -28,6 +28,14 @@ python scripts/run_sprint.py --phase compare
 
 See `reports/sprint1/` for cost assumptions, diagnosis, and IS vs OOS tables.
 
+Long-tape research cycle (sprint-1 fills, MNQ kill gate + MES replication):
+
+```bash
+python scripts/research_cycle.py --cycle 1
+```
+
+Status is kept in `reports/STATUS.md`. Live trading stays off.
+
 ## Strategies
 
 | Name | Edge |
@@ -43,8 +51,16 @@ Run any strategy against any symbol/timeframe via `scripts/run_backtest.py
 
 ## Data
 
+Massive Futures REST ingest (preferred for 2020+ history):
+
+```bash
+# Founder must set MASSIVE_API_KEY in Cloud Agent / machine env (never commit it).
+python scripts/download_massive_futures.py --probe
+python scripts/download_massive_futures.py --start 2020-01-01 --resolutions 5min --promote
+```
+
 `data/MNQ_1m.csv`, `MNQ_5m.csv`, `MES_1m.csv`, `MES_5m.csv` — real OHLCV,
-2024-01-01 to 2026-03-11 (MNQ 5m is the sprint-1 baseline tape). **NQ has no standalone feed**: since NQ and MNQ
+2024-01-01 to 2026-03-11 until Massive history is promoted (MNQ 5m is the sprint-1 baseline tape). **NQ has no standalone feed**: since NQ and MNQ
 track the same index at the same price (same tick size), NQ backtests reuse
 MNQ's price series with NQ's own contract multiplier/margin/commission
 applied (see `config/settings.py: DERIVED_SYMBOLS`). NQ's much larger

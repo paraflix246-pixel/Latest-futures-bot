@@ -49,6 +49,19 @@ def bollinger_bands(series: pd.Series, period: int = 20, num_std: float = 2.0):
     return upper, mid, lower
 
 
+def keltner_channels(
+    high: pd.Series,
+    low: pd.Series,
+    close: pd.Series,
+    period: int = 20,
+    atr_mult: float = 1.5,
+):
+    """EMA mid ± atr_mult * ATR. Used by the squeeze-expansion strategy."""
+    mid = ema(close, period)
+    width = atr(high, low, close, period) * atr_mult
+    return mid + width, mid, mid - width
+
+
 def donchian_channel(high: pd.Series, low: pd.Series, period: int = 20):
     upper = high.rolling(period).max()
     lower = low.rolling(period).min()
