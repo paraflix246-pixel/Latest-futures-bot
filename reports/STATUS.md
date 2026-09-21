@@ -26,9 +26,9 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 | Label | Count | Notes |
 |---|---:|---|
 | PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
-| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (WF t=0.414). Cycle 12 MES `gap_on_range` t=1.213 n=45, HO t=−0.285. |
+| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (t=0.414). Cycle 13 MES `gap_on_confirm` WF **t=3.656 n=36** but HO t=−1.594 (grid-first defaults, not fold winners). |
 | PASS_BOTH | 0 | — |
-| KILL | 59+ | Cycles 1–4, 6–12. Cycle 11 (MNQ 15m) produced 0 WF trades. |
+| KILL | 63+ | Cycles 1–4, 6–13. Cycle 11 (MNQ 15m) produced 0 WF trades. |
 
 **No paper-live. No live.**
 
@@ -180,13 +180,28 @@ versions. ADX chop skip did not lift the 15m/5m family.
 
 See `reports/cycles/cycle_12/` and `REGIME_POCKETS.md`.
 
-## Cycle 13 (running)
+## Cycle 13 (KILL) — open reject / confirmed ON-range / measured move / VWAP hold
 
-New inventions after cycle-12 KILL (not retunes of dead EMA/Donchian):
-`open_reject`, `gap_on_confirm`, `am_measured`, `vwap_hold_late`.
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---|---:|---:|---|
+| open_reject | 30 | −0.602 | −1.799 | 39 | −3.168 | −3.84 | KILL |
+| gap_on_confirm | 28 | −1.507 | −1.002 | **36** | **3.656** | **−1.594** | KILL (HO) |
+| am_measured | 36 | 0.382 | −1.193 | 38 | −1.095 | −0.494 | KILL |
+| vwap_hold_late | 49 | −0.501 | −0.5 | 67 | 0.216 | −1.287 | KILL |
+
+MES `gap_on_confirm` is the first official WF t≥2 print this hunt: both discovery
+folds picked `confirm_atr=0.12`, `stop_atr_mult=0.25`, pooled OOS t=3.656 n=36.
+Holdout uses constructor-grid *first* values (`confirm_atr=0.05`) and is
+strongly negative (t=−1.594) → **KILL**, not PASS_MES. Do not promote. Cycle 14
+locks those discovery fold-consensus defaults and re-holdouts once.
+
+## Cycle 14 (running)
+
+`gap_on_confirm_lock` — single combo `confirm_atr=0.12`, `stop=0.25` (WF
+consensus from cycle 13 discovery; holdout never used to pick).
 
 ```bash
-python scripts/research_cycle.py --cycle 13
+python scripts/research_cycle.py --cycle 14
 ```
 
 ## Extra Massive history
@@ -198,6 +213,6 @@ Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earli
 ```bash
 python scripts/download_massive_futures.py --plan-depth
 python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
-python scripts/research_cycle.py --cycle 13
+python scripts/research_cycle.py --cycle 14
 python -m pytest tests/ -q
 ```

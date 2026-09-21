@@ -537,6 +537,12 @@ FAMILIES = {
         {"hold_bars": [3, 4], "min_away_atr": [0.10, 0.18]},
         "new",
     ),
+    # Cycle 14: lock cycle-13 MES WF fold consensus (discovery only).
+    "gap_on_confirm_lock": (
+        GapOnConfirmStrategy,
+        {"confirm_atr": [0.12], "stop_atr_mult": [0.25]},
+        "hunt",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -586,6 +592,7 @@ CYCLE_DEFAULTS = {
     13: [
         "open_reject", "gap_on_confirm", "am_measured", "vwap_hold_late",
     ],
+    14: ["gap_on_confirm_lock"],
 }
 
 
