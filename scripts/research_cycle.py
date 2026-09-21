@@ -7,8 +7,11 @@ Protocol (locked):
     RTH flatten, daily halt, contract cap).
   - Walk-forward 180d/60d on discovery (all bars before HOLDOUT_OOS_START).
   - Holdout once with constructor defaults (never WF winners).
-  - Kill: MNQ WF OOS t < 2 OR MES WF t strongly negative (t < 0).
-    Replication "not a clear loss" means MES t ≥ 0 preferred.
+  - Per-symbol gate (founder 2026-09-21): WF OOS t ≥ 2.0, n ≥ 30,
+    holdout not strongly negative (t ≥ −1.0), no overnight cling.
+  - PASS_MNQ / PASS_MES are independent. Same logic/params on both is
+    NOT required. PASS_BOTH is a bonus. MNQ-only is an acceptable candidate.
+  - KILL: in-sample only, overnight cling, fabricated data, live trading.
 
 Usage:
     python scripts/research_cycle.py --cycle 1
@@ -52,8 +55,22 @@ from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
 from src.strategies.lunch_range_break import LunchRangeBreakStrategy  # noqa: E402
 from src.strategies.on_inventory import OnInventoryStrategy  # noqa: E402
 from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
+from src.strategies.afternoon_momentum import AfternoonMomentumStrategy  # noqa: E402
+from src.strategies.am_vwap_reclaim import AmVwapReclaimStrategy  # noqa: E402
+from src.strategies.failed_ib_fade import FailedIbFadeStrategy  # noqa: E402
+from src.strategies.open_drive import OpenDriveStrategy  # noqa: E402
+from src.strategies.orb_filtered import OrbFilteredStrategy  # noqa: E402
+from src.strategies.orb_retrace import OrbRetraceStrategy  # noqa: E402
+from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E402
 from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
+from src.strategies.vwap_hour import VwapHourReclaimFailStrategy  # noqa: E402
+from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
+from src.strategies.rvol_open15 import RvolOpen15Strategy  # noqa: E402
+from src.strategies.vwap_band_fade import VwapBandFadeStrategy  # noqa: E402
+from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy  # noqa: E402
+from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy  # noqa: E402
+from src.strategies.morning_reversal import MorningReversalStrategy  # noqa: E402
 
 FAMILIES = {
     "ensemble": (
@@ -101,15 +118,93 @@ FAMILIES = {
         {"lunch_atr_max": [0.35, 0.50], "volume_mult": [1.0, 1.3]},
         "new",
     ),
+    "open_drive": (
+        OpenDriveStrategy,
+        {"min_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "failed_ib_fade": (
+        FailedIbFadeStrategy,
+        {"failure_bars": [3, 5], "target_ib_mult": [1.0, 1.5]},
+        "new",
+    ),
+    "afternoon_momentum": (
+        AfternoonMomentumStrategy,
+        {"min_atr_frac": [0.08, 0.16], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "am_vwap_reclaim": (
+        AmVwapReclaimStrategy,
+        {"stop_atr_mult": [0.25, 0.45]},
+        "new",
+    ),
+    # Cycle 3: same constructor params on MNQ and MES (single-combo grids).
+    "orb_filtered_15": (OrbFilteredStrategy, {"or_minutes": [15], "retest": [False]}, "new"),
+    "orb_filtered_5": (OrbFilteredStrategy, {"or_minutes": [5], "retest": [False]}, "new"),
+    "orb_filtered_30": (OrbFilteredStrategy, {"or_minutes": [30], "retest": [False]}, "new"),
+    "orb_filtered_retest": (OrbFilteredStrategy, {"or_minutes": [15], "retest": [True]}, "new"),
+    "orb_retrace": (OrbRetraceStrategy, {}, "new"),
+    "vwap_hour_reclaim_fail": (VwapHourReclaimFailStrategy, {}, "new"),
+    "trend15_pullback5": (Trend15Pullback5Strategy, {}, "new"),
+    # Cycle 4: independent per-symbol edges (params may differ by symbol).
+    "gap_fill_go": (
+        GapFillGoStrategy,
+        {"min_gap_atr": [0.30, 0.50], "stop_atr_mult": [0.30, 0.45]},
+        "new",
+    ),
+    "rvol_open15": (
+        RvolOpen15Strategy,
+        {"rvol_mult": [1.3, 1.8], "min_atr_frac": [0.08, 0.15]},
+        "new",
+    ),
+    "vwap_band_fade": (
+        VwapBandFadeStrategy,
+        {"band_atr": [0.30, 0.50], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "adr_exhaust_fade": (
+        AdrExhaustFadeStrategy,
+        {"exhaust_mult": [0.75, 1.00], "stop_atr_mult": [0.20, 0.35]},
+        "new",
+    ),
+    "pdh_pdl_fail": (
+        PdhPdlFailStrategy,
+        {"stop_atr_mult": [0.15, 0.30]},
+        "new",
+    ),
+    "morning_reversal": (
+        MorningReversalStrategy,
+        {"stop_atr_mult": [0.15, 0.30]},
+        "new",
+    ),
+}
+
+CYCLE_DEFAULTS = {
+    1: [
+        "ensemble", "orb_crabel", "last30_momentum", "vol_squeeze_expansion",
+        "impulse_clock", "vol_gated_ensemble", "ib_extension", "on_inventory",
+        "lunch_range_break",
+    ],
+    2: ["open_drive", "failed_ib_fade", "afternoon_momentum", "am_vwap_reclaim"],
+    3: [
+        "orb_filtered_15", "orb_filtered_5", "orb_filtered_30", "orb_filtered_retest",
+        "orb_retrace", "vwap_hour_reclaim_fail", "trend15_pullback5",
+    ],
+    4: [
+        "gap_fill_go", "rvol_open15", "vwap_band_fade",
+        "adr_exhaust_fade", "pdh_pdl_fail", "morning_reversal",
+    ],
 }
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--cycle", type=int, default=1)
-    p.add_argument("--family", nargs="+", default=list(FAMILIES), choices=list(FAMILIES) + ["all"])
+    p.add_argument("--family", nargs="+", default=None, choices=list(FAMILIES) + ["all"])
     p.add_argument("--symbol", nargs="+", default=[PRIMARY, REPLICATION])
     p.add_argument("--timeframe", default="5m")
+    p.add_argument("--train-days", type=int, default=WF_TRAIN_DAYS)
+    p.add_argument("--test-days", type=int, default=WF_TEST_DAYS)
     return p.parse_args()
 
 
@@ -119,8 +214,13 @@ def _t_from_trades(trades) -> float | None:
     return _t_stat([t.pnl for t in trades])
 
 
-def run_holdout(df, strategy_cls, symbol, timeframe) -> Dict[str, Any]:
-    strat = strategy_cls()
+def _locked_params(grid: dict) -> dict:
+    """Single-combo grids → identical constructor kwargs on MNQ and MES."""
+    return {k: v[0] for k, v in grid.items()} if grid else {}
+
+
+def run_holdout(df, strategy_cls, symbol, timeframe, params: dict | None = None) -> Dict[str, Any]:
+    strat = strategy_cls(**(params or {}))
     result = run_backtest(
         df, strat, symbol, timeframe, ACCOUNT_SIZE, RISK_PCT, **SPRINT1_AFTER_ENGINE
     )
@@ -137,19 +237,32 @@ def run_holdout(df, strategy_cls, symbol, timeframe) -> Dict[str, Any]:
     return metrics
 
 
-def verdict(mnq_wf: Dict[str, Any], mes_wf: Dict[str, Any] | None) -> str:
-    t = mnq_wf.get("t_stat")
-    n = mnq_wf.get("total_oos_trades") or 0
-    if t is None or n < KILL_MIN_TRADES or t < KILL_T_STAT or not mnq_wf.get("significant"):
-        return "KILLED (MNQ walk-forward OOS t<2 or under-traded)"
-    if mes_wf is None:
-        return "PENDING (MES not run)"
-    mes_t = mes_wf.get("t_stat")
-    if mes_t is None:
-        return "KILLED (MES t missing)"
-    if mes_t < 0:
-        return "KILLED (MES replication is a clear loss, t<0)"
-    return "SURVIVED kill gate (paper only — not a live go-ahead)"
+HOLDOUT_STRONG_NEG = -1.0
+
+
+def symbol_gate(wf: Dict[str, Any], ho: Dict[str, Any] | None) -> tuple[bool, str]:
+    """Per-symbol gate. MNQ-only is an acceptable candidate (PASS_MNQ)."""
+    t = wf.get("t_stat")
+    n = wf.get("total_oos_trades") or 0
+    if t is None or n < KILL_MIN_TRADES or t < KILL_T_STAT:
+        return False, "KILL (WF t<2 or n<30)"
+    if ho:
+        ht = ho.get("t_stat")
+        if ht is not None and ht < HOLDOUT_STRONG_NEG:
+            return False, f"KILL (holdout strongly negative t={ht})"
+        if int(ho.get("held_past_rth_close") or 0) > 0:
+            return False, "KILL (overnight cling)"
+    return True, "PASS"
+
+
+def family_label(mnq_ok: bool, mes_ok: bool) -> str:
+    if mnq_ok and mes_ok:
+        return "PASS_BOTH"
+    if mnq_ok:
+        return "PASS_MNQ"
+    if mes_ok:
+        return "PASS_MES"
+    return "KILL"
 
 
 def data_span(df: pd.DataFrame) -> Dict[str, Any]:
@@ -174,43 +287,57 @@ def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Di
         f"- MNQ: `{spans.get('MNQ')}`",
         f"- MES: `{spans.get('MES')}`",
         f"- Holdout start (locked): `{HOLDOUT_OOS_START}`",
-        f"- WF: {WF_TRAIN_DAYS}d train / {WF_TEST_DAYS}d test",
+        f"- WF: see run log (default {WF_TRAIN_DAYS}d/{WF_TEST_DAYS}d)",
         "",
         "## Metrics",
         "",
-        "| Family | Kind | MNQ n | MNQ PnL | MNQ t | MES n | MES PnL | MES t | Holdout MNQ t | Verdict |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| Family | Kind | MNQ n | MNQ t | MNQ hold t | MNQ | MES n | MES t | MES hold t | MES | Label |",
+        "|---|---|---:|---:|---:|---|---:|---:|---:|---|---|",
     ]
     by = {(r["symbol"], r["family"]): r for r in rows}
     families = sorted({r["family"] for r in rows})
     for name in families:
         mnq = by.get((PRIMARY, name), {})
         mes = by.get((REPLICATION, name), {})
-        kind = FAMILIES[name][2]
+        kind = FAMILIES.get(name, (None, None, "new"))[2]
         wf = mnq.get("walk_forward_oos", {})
         mes_wf = mes.get("walk_forward_oos", {})
         ho = mnq.get("holdout", {})
+        mes_ho = mes.get("holdout", {})
         lines.append(
-            "| {name} | {kind} | {n} | {pnl} | {t} | {mn} | {mp} | {mt} | {ht} | {v} |".format(
+            "| {name} | {kind} | {n} | {t} | {ht} | {mv} | {mn} | {mt} | {mht} | {mev} | {v} |".format(
                 name=name,
                 kind=kind,
                 n=wf.get("total_oos_trades"),
-                pnl=wf.get("total_oos_pnl"),
                 t=wf.get("t_stat"),
-                mn=mes_wf.get("total_oos_trades"),
-                mp=mes_wf.get("total_oos_pnl"),
-                mt=mes_wf.get("t_stat"),
                 ht=ho.get("t_stat"),
-                v=mnq.get("verdict", ""),
+                mv=mnq.get("symbol_verdict", ""),
+                mn=mes_wf.get("total_oos_trades"),
+                mt=mes_wf.get("t_stat"),
+                mht=mes_ho.get("t_stat"),
+                mev=mes.get("symbol_verdict", ""),
+                v=mnq.get("verdict", mes.get("verdict", "")),
             )
         )
-    lines.extend(["", "No live orders. Survivors still need GO_LIVE_CHECKLIST + founder OK.", ""])
+    lines.extend(
+        [
+            "",
+            "Labels: **PASS_MNQ** (MNQ-only candidate, trade-MNQ-only is allowed), "
+            "**PASS_MES**, **PASS_BOTH**, **KILL**. Paper only. No live trading.",
+            "",
+        ]
+    )
     path.write_text("\n".join(lines))
 
 
 def main() -> None:
     args = parse_args()
-    families = list(FAMILIES) if "all" in args.family else args.family
+    if args.family is None:
+        families = CYCLE_DEFAULTS.get(args.cycle, list(FAMILIES))
+    elif "all" in args.family:
+        families = list(FAMILIES)
+    else:
+        families = args.family
     cycle_dir = Path(__file__).resolve().parent.parent / REPORTS_DIR / "cycles" / f"cycle_{args.cycle}"
     cycle_dir.mkdir(parents=True, exist_ok=True)
 
@@ -240,13 +367,14 @@ def main() -> None:
                 timeframe=args.timeframe,
                 account_size=ACCOUNT_SIZE,
                 risk_pct=RISK_PCT,
-                train_days=WF_TRAIN_DAYS,
-                test_days=WF_TEST_DAYS,
+                train_days=args.train_days,
+                test_days=args.test_days,
                 engine_kwargs=SPRINT1_AFTER_ENGINE,
             )
             oos = aggregate_oos(folds)
             print(f"  WF OOS {oos}", flush=True)
-            hold = run_holdout(holdout, cls, symbol, args.timeframe)
+            locked = _locked_params(grid)
+            hold = run_holdout(holdout, cls, symbol, args.timeframe, params=locked)
             print(f"  Holdout {hold.get('total_pnl')} t={hold.get('t_stat')} n={hold.get('trade_count')}", flush=True)
             payload = {
                 "cycle": args.cycle,
@@ -277,15 +405,19 @@ def main() -> None:
     for name in families:
         mnq = payloads.get((PRIMARY, name))
         mes = payloads.get((REPLICATION, name))
-        if mnq is None:
-            continue
-        mnq["verdict"] = verdict(
-            mnq["walk_forward_oos"],
-            mes["walk_forward_oos"] if mes else None,
-        )
-        (cycle_dir / f"{PRIMARY}_{name}.json").write_text(json.dumps(mnq, indent=2, default=str))
+        mnq_ok = mes_ok = False
+        if mnq is not None:
+            mnq_ok, mnq_sv = symbol_gate(mnq["walk_forward_oos"], mnq.get("holdout"))
+            mnq["symbol_verdict"] = f"PASS_MNQ" if mnq_ok else mnq_sv
         if mes is not None:
-            mes["verdict"] = mnq["verdict"]
+            mes_ok, mes_sv = symbol_gate(mes["walk_forward_oos"], mes.get("holdout"))
+            mes["symbol_verdict"] = f"PASS_MES" if mes_ok else mes_sv
+        label = family_label(mnq_ok, mes_ok)
+        if mnq is not None:
+            mnq["verdict"] = label
+            (cycle_dir / f"{PRIMARY}_{name}.json").write_text(json.dumps(mnq, indent=2, default=str))
+        if mes is not None:
+            mes["verdict"] = label
             (cycle_dir / f"{REPLICATION}_{name}.json").write_text(json.dumps(mes, indent=2, default=str))
         rows.extend([r for r in (mnq, mes) if r])
 
@@ -303,9 +435,13 @@ def main() -> None:
     ]
     (cycle_dir / "leaderboard.json").write_text(json.dumps(board, indent=2))
     print(f"\nWrote {cycle_dir}")
+    seen = set()
     for r in rows:
-        if r["symbol"] == PRIMARY:
-            print(f"{r['family']:24} {r.get('verdict')}")
+        key = r["family"]
+        if key in seen:
+            continue
+        seen.add(key)
+        print(f"{key:28} {r.get('verdict')}")
 
 
 if __name__ == "__main__":

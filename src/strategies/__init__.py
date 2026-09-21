@@ -1,4 +1,7 @@
+from src.strategies.afternoon_momentum import AfternoonMomentumStrategy
+from src.strategies.am_vwap_reclaim import AmVwapReclaimStrategy
 from src.strategies.breakout import BreakoutStrategy
+from src.strategies.failed_ib_fade import FailedIbFadeStrategy
 from src.strategies.ensemble import EnsembleStrategy
 from src.strategies.extreme_displacement_reversion import ExtremeDisplacementReversionStrategy
 from src.strategies.ib_extension import IbExtensionStrategy
@@ -7,6 +10,17 @@ from src.strategies.last30_momentum import Last30MomentumStrategy
 from src.strategies.lunch_range_break import LunchRangeBreakStrategy
 from src.strategies.mean_reversion import MeanReversionStrategy
 from src.strategies.on_inventory import OnInventoryStrategy
+from src.strategies.open_drive import OpenDriveStrategy
+from src.strategies.orb_filtered import OrbFilteredStrategy
+from src.strategies.orb_retrace import OrbRetraceStrategy
+from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
+from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
+from src.strategies.gap_fill_go import GapFillGoStrategy
+from src.strategies.rvol_open15 import RvolOpen15Strategy
+from src.strategies.vwap_band_fade import VwapBandFadeStrategy
+from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy
+from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy
+from src.strategies.morning_reversal import MorningReversalStrategy
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy
 from src.strategies.orb_break_fade import OrbBreakFadeStrategy
 from src.strategies.orb_crabel import OrbCrabelStrategy
@@ -42,6 +56,20 @@ STRATEGIES = {
     "on_inventory": OnInventoryStrategy,
     "lunch_range_break": LunchRangeBreakStrategy,
     "vol_gated_ensemble": VolGatedEnsembleStrategy,
+    "open_drive": OpenDriveStrategy,
+    "failed_ib_fade": FailedIbFadeStrategy,
+    "afternoon_momentum": AfternoonMomentumStrategy,
+    "am_vwap_reclaim": AmVwapReclaimStrategy,
+    "orb_filtered": OrbFilteredStrategy,
+    "orb_retrace": OrbRetraceStrategy,
+    "vwap_hour_reclaim_fail": VwapHourReclaimFailStrategy,
+    "trend15_pullback5": Trend15Pullback5Strategy,
+    "gap_fill_go": GapFillGoStrategy,
+    "rvol_open15": RvolOpen15Strategy,
+    "vwap_band_fade": VwapBandFadeStrategy,
+    "adr_exhaust_fade": AdrExhaustFadeStrategy,
+    "pdh_pdl_fail": PdhPdlFailStrategy,
+    "morning_reversal": MorningReversalStrategy,
 }
 
 

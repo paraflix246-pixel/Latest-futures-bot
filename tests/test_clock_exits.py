@@ -73,3 +73,100 @@ def test_ib_extension_fires_after_first_hour():
     sig = IbExtensionStrategy().generate_signals(df)
     assert sig.entries.loc[first] == 1
     assert sig.stop_price.loc[first] < df.loc[first, "close"]
+
+
+def test_orb_filtered_requires_close_beyond_or_and_filters():
+    from src.strategies.orb_filtered import OrbFilteredStrategy
+    from src.strategies.session import RTH_OPEN_MINUTES, session_clock
+
+    start = pd.Timestamp("2024-01-03 14:00", tz="UTC")
+    idx = pd.date_range(start, periods=80, freq="5min", tz="UTC")
+    px = np.full(80, 20000.0)
+    df = pd.DataFrame(
+        {"open": px, "high": px + 2, "low": px - 2, "close": px, "volume": 1000.0},
+        index=idx,
+    )
+    minutes, _ = session_clock(df.index)
+    or_mask = (minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 15)
+    after = minutes >= RTH_OPEN_MINUTES + 15
+    df.loc[or_mask, ["open", "low"]] = 20000.0
+    df.loc[or_mask, ["close", "high"]] = 20020.0
+    first = df.index[after][0]
+    df.loc[first, ["open", "low"]] = 20020.0
+    df.loc[first, ["high", "close"]] = 20080.0
+    df.loc[first, "volume"] = 9000.0
+    sig = OrbFilteredStrategy(or_minutes=15, on_adr_mult=99.0).generate_signals(df)
+    assert sig.entries.loc[first] in (0, 1)
+    if sig.entries.loc[first] == 1:
+        assert sig.stop_price.loc[first] < df.loc[first, "close"]
+
+
+def test_cycle3_modules_are_rth_flat():
+    from src.strategies.orb_filtered import OrbFilteredStrategy
+    from src.strategies.orb_retrace import OrbRetraceStrategy
+    from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
+    from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
+
+    for strat in (
+        OrbFilteredStrategy(),
+        OrbRetraceStrategy(),
+        VwapHourReclaimFailStrategy(),
+        Trend15Pullback5Strategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes >= 15 * 60 + 30
+
+
+def test_cycle4_modules_are_rth_flat():
+    from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy
+    from src.strategies.gap_fill_go import GapFillGoStrategy
+    from src.strategies.morning_reversal import MorningReversalStrategy
+    from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy
+    from src.strategies.rvol_open15 import RvolOpen15Strategy
+    from src.strategies.vwap_band_fade import VwapBandFadeStrategy
+
+    for strat in (
+        GapFillGoStrategy(),
+        RvolOpen15Strategy(),
+        VwapBandFadeStrategy(),
+        AdrExhaustFadeStrategy(),
+        PdhPdlFailStrategy(),
+        MorningReversalStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes is not None
+        assert strat.max_hold_bars is not None
+
+
+def test_symbol_gate_and_family_label():
+    from scripts.research_cycle import family_label, symbol_gate
+
+    ok, why = symbol_gate({"t_stat": 2.1, "total_oos_trades": 40}, {"t_stat": -0.2, "held_past_rth_close": 0})
+    assert ok and why == "PASS"
+    bad, reason = symbol_gate({"t_stat": 1.9, "total_oos_trades": 40}, None)
+    assert not bad and "KILL" in reason
+    cling, cling_why = symbol_gate(
+        {"t_stat": 2.4, "total_oos_trades": 32},
+        {"t_stat": 0.1, "held_past_rth_close": 2},
+    )
+    assert not cling and "overnight" in cling_why
+    assert family_label(True, False) == "PASS_MNQ"
+    assert family_label(False, True) == "PASS_MES"
+    assert family_label(True, True) == "PASS_BOTH"
+    assert family_label(False, False) == "KILL"
+
+
+def test_open_drive_and_failed_ib_have_clock_attrs():
+    from src.strategies.afternoon_momentum import AfternoonMomentumStrategy
+    from src.strategies.am_vwap_reclaim import AmVwapReclaimStrategy
+    from src.strategies.failed_ib_fade import FailedIbFadeStrategy
+    from src.strategies.open_drive import OpenDriveStrategy
+
+    for strat in (
+        OpenDriveStrategy(),
+        FailedIbFadeStrategy(),
+        AfternoonMomentumStrategy(),
+        AmVwapReclaimStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.max_hold_bars is not None

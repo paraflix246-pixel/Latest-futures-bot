@@ -1,0 +1,136 @@
+{
+  "cycle": 2,
+  "symbol": "MNQ",
+  "family": "afternoon_momentum",
+  "kind": "new",
+  "tape": {
+    "rows": 137304,
+    "start": "2024-09-22 22:00:00+00:00",
+    "end": "2026-09-18 20:55:00+00:00",
+    "source": "data/{SYM}_5m.csv (Massive if promoted, else existing Databento 2024+ tape)"
+  },
+  "engine": {
+    "fill_model": "next_open",
+    "apply_exit_slippage": true,
+    "gap_aware_stops": true,
+    "trail_update": "next_bar",
+    "cooldown_bars": 3,
+    "allow_same_bar_reentry": false,
+    "daily_loss_halt_pct": 2.0,
+    "flatten_at_rth_close": true,
+    "max_contracts": 10,
+    "rth_entries_only": true,
+    "min_atr_gate": false,
+    "max_cost_frac_of_risk": null,
+    "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0
+  },
+  "walk_forward_oos": {
+    "folds": 2,
+    "profitable_folds": 0,
+    "total_oos_trades": 25,
+    "total_oos_pnl": -445.3,
+    "avg_oos_win_rate": 0.4097,
+    "avg_pnl_per_fold": -222.65,
+    "t_stat": -0.521,
+    "significant": false
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_start": "2024-09-22 22:00:00+00:00",
+      "train_end": "2025-03-21 22:00:00+00:00",
+      "test_start": "2025-03-21 22:00:00+00:00",
+      "test_end": "2025-05-20 22:00:00+00:00",
+      "best_params": {
+        "min_atr_frac": 0.16,
+        "stop_atr_mult": 0.25
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "afternoon_momentum",
+        "timeframe": "5m",
+        "trade_count": 43,
+        "win_rate": 0.4651,
+        "profit_factor": 1.4813,
+        "expectancy": 23.62,
+        "total_pnl": 1015.7,
+        "max_drawdown": -697.4,
+        "sharpe": 0.7506,
+        "final_equity": 51015.7
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "afternoon_momentum",
+        "timeframe": "5m",
+        "trade_count": 9,
+        "win_rate": 0.4444,
+        "profit_factor": 0.8651,
+        "expectancy": -12.75,
+        "total_pnl": -114.76,
+        "max_drawdown": -554.76,
+        "sharpe": -0.2701,
+        "final_equity": 49885.24
+      }
+    },
+    {
+      "fold": 1,
+      "train_start": "2024-11-21 22:00:00+00:00",
+      "train_end": "2025-05-20 22:00:00+00:00",
+      "test_start": "2025-05-20 22:00:00+00:00",
+      "test_end": "2025-07-19 22:00:00+00:00",
+      "best_params": {
+        "min_atr_frac": 0.16,
+        "stop_atr_mult": 0.25
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "afternoon_momentum",
+        "timeframe": "5m",
+        "trade_count": 35,
+        "win_rate": 0.5143,
+        "profit_factor": 1.3838,
+        "expectancy": 19.75,
+        "total_pnl": 691.19,
+        "max_drawdown": -468.17,
+        "sharpe": 0.6273,
+        "final_equity": 50691.19
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "afternoon_momentum",
+        "timeframe": "5m",
+        "trade_count": 16,
+        "win_rate": 0.375,
+        "profit_factor": 0.7428,
+        "expectancy": -20.66,
+        "total_pnl": -330.55,
+        "max_drawdown": -602.95,
+        "sharpe": -0.6593,
+        "final_equity": 49669.45
+      }
+    }
+  ],
+  "holdout": {
+    "symbol": "MNQ",
+    "strategy": "afternoon_momentum",
+    "timeframe": "5m",
+    "trade_count": 42,
+    "win_rate": 0.4524,
+    "profit_factor": 0.9435,
+    "expectancy": -2.54,
+    "total_pnl": -106.71,
+    "max_drawdown": -461.94,
+    "sharpe": -0.0737,
+    "final_equity": 49893.29,
+    "t_stat": -0.145,
+    "exit_reasons": {
+      "time_stop": 32,
+      "stop": 5,
+      "target": 5
+    },
+    "held_past_rth_close": 0
+  },
+  "verdict": "KILLED (MNQ walk-forward OOS t<2 or under-traded)"
+}
