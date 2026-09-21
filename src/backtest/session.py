@@ -40,3 +40,10 @@ def last_rth_bar_mask(index: pd.DatetimeIndex) -> pd.Series:
     mask = rth_mask(index)
     nxt = mask.shift(-1, fill_value=False)
     return mask & ~nxt
+
+
+def minutes_since_rth_open(index: pd.DatetimeIndex) -> pd.Series:
+    """Minutes from 09:30 ET to the bar start. Negative before the cash open."""
+    local = _local_index(index)
+    minutes = local.hour * 60 + local.minute
+    return pd.Series(minutes - RTH_START_MINUTES, index=index)

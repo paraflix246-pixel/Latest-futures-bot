@@ -1,0 +1,46 @@
+{
+  "full": {
+    "trade_count": 910,
+    "win_rate": 0.344,
+    "profit_factor": 0.8811,
+    "expectancy": -6.36,
+    "total_pnl": -5790.72,
+    "max_drawdown": -8370.86,
+    "total_commission": 1641.14,
+    "total_slippage": 6617.5,
+    "same_bar_reentries": 0
+  },
+  "in_sample": {
+    "trade_count": 731,
+    "win_rate": 0.3352,
+    "profit_factor": 0.8716,
+    "expectancy": -7.01,
+    "total_pnl": -5122.0,
+    "max_drawdown": -8283.27,
+    "total_commission": 1347.26,
+    "total_slippage": 5432.5,
+    "same_bar_reentries": 0
+  },
+  "holdout_oos": {
+    "trade_count": 189,
+    "win_rate": 0.3757,
+    "profit_factor": 0.9886,
+    "expectancy": -0.6,
+    "total_pnl": -112.62,
+    "max_drawdown": -1664.73,
+    "total_commission": 328.6,
+    "total_slippage": 1325.0,
+    "same_bar_reentries": 0
+  },
+  "walk_forward": {
+    "folds": 10,
+    "profitable_folds": 3,
+    "total_oos_trades": 692,
+    "total_oos_pnl": -5474.42,
+    "avg_oos_win_rate": 0.3622,
+    "avg_pnl_per_fold": -547.44,
+    "t_stat": -1.372,
+    "significant": false
+  },
+  "disclaimer": "Paper/backtest only. MES replication of MNQ sprint-1 after ensemble. Not a profit claim."
+}

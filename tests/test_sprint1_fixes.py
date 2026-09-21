@@ -163,6 +163,40 @@ def test_ensemble_rth_only_zeros_overnight_entries():
     assert overnight_fires.sum() == 0
 
 
+def test_cost_frac_filter_skips_tight_stop():
+    # 2-tick stop on MNQ is $1 of risk vs ~$1.62 RT cost → cost/R > 1, skip.
+    closes = [20000] * 30 + [20050 + i * 5 for i in range(20)]
+    df = _make_df(closes)
+
+    class Tight:
+        name = "tight"
+        def generate_signals(self, df):
+            entries = pd.Series(0, index=df.index)
+            stop = pd.Series(np.nan, index=df.index)
+            target = pd.Series(np.nan, index=df.index)
+            entries.iloc[10] = 1
+            stop.iloc[10] = df["close"].iloc[10] - 0.50  # 2 ticks
+            target.iloc[10] = df["close"].iloc[10] + 50
+            return StrategySignals(entries=entries, stop_price=stop, target_price=target)
+
+    blocked = run_backtest(
+        df, Tight(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=True, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        max_cost_frac_of_risk=0.25, slippage_ticks=1,
+    )
+    allowed = run_backtest(
+        df, Tight(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=True, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        max_cost_frac_of_risk=None, slippage_ticks=1,
+    )
+    assert len(blocked.trades) == 0
+    assert len(allowed.trades) == 1
+
+
 def test_next_open_fill_uses_following_bar_open():
     closes = [20000] * 30 + [20050 + i * 5 for i in range(20)]
     idx = pd.date_range("2026-01-01", periods=len(closes), freq="5min", tz="UTC")

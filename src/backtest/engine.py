@@ -53,6 +53,10 @@ ENGINE_DEFAULTS = {
     "daily_loss_halt_pct": None,
     "flatten_at_rth_close": False,
     "max_contracts": DEFAULT_MAX_CONTRACTS,
+    "rth_entries_only": False,
+    "min_atr_gate": False,
+    "max_cost_frac_of_risk": None,
+    "skip_rth_open_minutes": 0,
 }
 
 
@@ -89,6 +93,17 @@ def _slip(direction: int, ticks: int, tick_size: float, side: str) -> float:
     return -direction * signed
 
 
+def _cost_ok(entry_price: float, stop: float, spec, slippage_ticks: int, max_cost_frac: Optional[float]) -> bool:
+    if max_cost_frac is None:
+        return True
+    ticks_at_risk = abs(entry_price - stop) / spec.tick_size
+    dollar_risk = ticks_at_risk * spec.tick_value_usd
+    if dollar_risk <= 0:
+        return False
+    rt_cost = spec.commission_rt + 2 * slippage_ticks * spec.tick_value_usd
+    return (rt_cost / dollar_risk) <= max_cost_frac
+
+
 def run_backtest(
     df: pd.DataFrame,
     strategy: Strategy,
@@ -106,6 +121,10 @@ def run_backtest(
     daily_loss_halt_pct: Optional[float] = ENGINE_DEFAULTS["daily_loss_halt_pct"],
     flatten_at_rth_close: bool = ENGINE_DEFAULTS["flatten_at_rth_close"],
     max_contracts: Optional[int] = ENGINE_DEFAULTS["max_contracts"],
+    rth_entries_only: bool = ENGINE_DEFAULTS["rth_entries_only"],
+    min_atr_gate: bool = ENGINE_DEFAULTS["min_atr_gate"],
+    max_cost_frac_of_risk: Optional[float] = ENGINE_DEFAULTS["max_cost_frac_of_risk"],
+    skip_rth_open_minutes: int = ENGINE_DEFAULTS["skip_rth_open_minutes"],
 ) -> BacktestResult:
     spec = get_spec(symbol)
     signals: StrategySignals = strategy.generate_signals(df)
@@ -114,9 +133,15 @@ def run_backtest(
     exit_slip_price = slippage_price if apply_exit_slippage else 0.0
     breakeven_r_mult = getattr(strategy, "breakeven_r_mult", None)
 
-    rth = rth_mask(df.index) if flatten_at_rth_close else None
+    need_rth = bool(flatten_at_rth_close or rth_entries_only or skip_rth_open_minutes)
+    rth = rth_mask(df.index) if need_rth else None
     last_rth = last_rth_bar_mask(df.index) if flatten_at_rth_close else None
     sess_dates = session_date(df.index) if daily_loss_halt_pct else None
+    rth_open_mins = None
+    if skip_rth_open_minutes:
+        from src.backtest.session import minutes_since_rth_open
+
+        rth_open_mins = minutes_since_rth_open(df.index)
 
     trades: List[Trade] = []
     equity = account_size
@@ -187,7 +212,7 @@ def run_backtest(
 
         # Fill a pending next-open entry at this bar's open.
         if position is None and pending is not None:
-            if flatten_at_rth_close and rth is not None and not bool(rth.iloc[i]):
+            if rth is not None and (flatten_at_rth_close or rth_entries_only) and not bool(rth.iloc[i]):
                 pending = None
             else:
                 direction = pending["direction"]
@@ -202,9 +227,12 @@ def run_backtest(
                     )
                 )
                 if not gapped_through:
-                    contracts = contracts_for_risk(
-                        equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
-                    )
+                    if not _cost_ok(entry_price, stop, spec, slippage_ticks, max_cost_frac_of_risk):
+                        contracts = 0
+                    else:
+                        contracts = contracts_for_risk(
+                            equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
+                        )
                     if contracts > 0:
                         position = {
                             "direction": direction,
@@ -347,6 +375,16 @@ def run_backtest(
                 can_signal = False
         if can_signal and flatten_at_rth_close and last_rth is not None and bool(last_rth.iloc[i]):
             can_signal = False  # would fill after the cash close
+        if can_signal and rth_entries_only and rth is not None and not bool(rth.iloc[i]):
+            can_signal = False
+        if can_signal and skip_rth_open_minutes and rth_open_mins is not None:
+            mins = int(rth_open_mins.iloc[i])
+            if mins < skip_rth_open_minutes:
+                can_signal = False
+        if can_signal and min_atr_gate:
+            atr_i = trail_atr.iloc[i]
+            if pd.isna(atr_i) or float(atr_i) < spec.atr_minimum:
+                can_signal = False
 
         if can_signal:
             entry_signal = signals.entries.iloc[i]
@@ -361,9 +399,12 @@ def run_backtest(
                             mid_entry = float(row["close"])
                             entry_price = mid_entry + _slip(direction, slippage_ticks, spec.tick_size, "entry")
                             stop = float(raw_stop)
-                            contracts = contracts_for_risk(
-                                equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
-                            )
+                            if not _cost_ok(entry_price, stop, spec, slippage_ticks, max_cost_frac_of_risk):
+                                contracts = 0
+                            else:
+                                contracts = contracts_for_risk(
+                                    equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
+                                )
                             if contracts > 0:
                                 position = {
                                     "direction": direction,
