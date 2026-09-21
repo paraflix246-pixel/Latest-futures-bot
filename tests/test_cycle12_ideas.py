@@ -333,3 +333,7 @@ def test_vwap_reclaim_90_lock_matches_cycle18_holdout():
     assert s.entry_end_minutes == 11 * 60
     assert s.first_hour_bias is True
     assert s.max_hold_bars == 36
+    lock = get_strategy("vwap_reclaim_90_lock")
+    assert lock.stop_atr_mult == 0.30
+    assert lock.min_away_atr == 0.10
+    assert lock.first_hour_bias is True

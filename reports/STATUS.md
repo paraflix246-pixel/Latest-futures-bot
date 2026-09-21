@@ -27,12 +27,12 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | **1** | **1m** `vwap_reclaim_90` (`min_away_atr=0.10`, `stop_atr_mult=0.20`, entry through 11:00, first-hour bias). WF t=**3.096** n=282, HO t=**2.481** n=114, overnight=0. Same family on **5m** was t=1.609 KILL. **Not paper-live until harden.** |
-| PASS_MES | **1** | `gap_on_confirm_lock` 5m (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140, overnight=0. **Not paper-live.** |
-| PASS_BOTH | 0 | MES 1m of `vwap_reclaim_90` not yet run. MNQ 5m of the MES lock is KILL. |
-| KILL | 74+ | Cycles 1–4, 6–13, 15–17. Cycle 18 MES lock on MNQ 1m KILL. |
+| PASS_MNQ | **1** | **1m** `vwap_reclaim_90_lock` (`min_away_atr=0.10`, `stop_atr_mult=0.30`, 11:00, first-hour bias). WF t=**3.943** n=259 (7/7 folds), HO t=**3.696** n=87 +$4893, overnight=0. **Not paper-live until harden neighbors.** |
+| PASS_MES | **1** | 5m `gap_on_confirm_lock` (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140. **Not paper-live.** |
+| PASS_BOTH | 0 | Independent symbols/tapes. MES 1m of the MNQ lock not yet run. |
+| KILL | 74+ | Cycles 1–4, 6–13, 15–17. Cycle 18 MES lock on MNQ 1m KILL. Grid-first stop=0.20 lock WF t=1.847. |
 
-**PASS_MNQ on 1m VWAP reclaim (not 5m candles). PASS_MES on 5m overnight-range confirm. No paper-live. No live.**
+**PASS_MNQ on 1m VWAP reclaim lock (stop=0.30). PASS_MES on 5m overnight-range confirm. No paper-live. No live.**
 
 `MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth: earliest bar **2024-09-23**. Founder: **2024–now is the working tape** — do not wait for a plan upgrade. MNQ hunt continues here.
 
@@ -294,6 +294,22 @@ Cycle 18 PASS_MNQ is fold-optimized OOS. The constructor lock does **not** indep
 
 See `reports/cycles/harden/MNQ_vwap_reclaim_90/`.
 
+## Cycle 19 — PASS_MNQ lock `stop_atr_mult=0.30`
+
+Single-combo lock of the other cycle-18 fold winner (3/7 folds picked 0.30). Same 1m tape. All **7/7** discovery folds profitable. Overnight=0.
+
+| Source | n | t | PnL |
+|---|---:|---:|---:|
+| Official WF 180/60 (7 folds) | **259** | **3.943** | +$10094 |
+| Official holdout | **87** | **3.696** | **+$4893** |
+| Holdout WR / PF / expectancy | 65.5% | PF **2.66** | +$56.24 / trade |
+| Max DD (holdout) | | | −$684 |
+| Paper replay | 87 | — | matches holdout |
+
+This is the official MNQ candidate (cycle-14 style lock), stronger than the grid-first 0.20 combo. **Not** `READY_FOR_PAPER_LIVE_CANDIDATE` until neighbors / bootstrap / cost×2. No live.
+
+See `reports/cycles/cycle_19/`. Paper: `reports/paper/MNQ_1m_vwap_reclaim_90_lock_replay.json`.
+
 ## Extra Massive history
 
 Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop. **2024–now is the working tape.**
@@ -308,6 +324,8 @@ python scripts/research_cycle.py --cycle 17 --symbol MNQ
 python scripts/research_cycle.py --cycle 18 --symbol MNQ
 python scripts/harden_candidate.py --family vwap_reclaim_90 --symbol MNQ --timeframe 1m
 python scripts/research_cycle.py --cycle 19 --symbol MNQ
+python scripts/harden_candidate.py --family vwap_reclaim_90_lock --symbol MNQ --timeframe 1m
+python scripts/run_paper_replay.py --symbol MNQ --timeframe 1m --strategy vwap_reclaim_90_lock --start 2025-09-12
 python scripts/run_paper_replay.py --symbol MNQ --timeframe 1m --strategy vwap_reclaim_90 --start 2025-09-12
 python scripts/harden_candidate.py --family gap_on_confirm_lock --symbol MES
 python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy gap_on_confirm --start 2025-09-12
