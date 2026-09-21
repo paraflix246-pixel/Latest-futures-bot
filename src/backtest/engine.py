@@ -84,6 +84,7 @@ def run_backtest(
     flatten_rth = bool(getattr(strategy, "flatten_rth", False))
     flatten_minutes = int(getattr(strategy, "rth_flatten_minutes", RTH_CLOSE_MINUTES))
     entry_cutoff_minutes = int(getattr(strategy, "rth_entry_cutoff_minutes", RTH_ENTRY_CUTOFF_MINUTES))
+    session_exit_minutes = getattr(strategy, "session_exit_minutes", None)
 
     trades: List[Trade] = []
     equity = account_size
@@ -95,9 +96,15 @@ def run_backtest(
     for i in range(n):
         ts = df.index[i]
         row = df.iloc[i]
-        bar_minutes = local_minutes(ts) if flatten_rth else None
+        needs_clock = flatten_rth or session_exit_minutes is not None
+        bar_minutes = local_minutes(ts) if needs_clock else None
+        at_session_exit = (
+            session_exit_minutes is not None
+            and bar_minutes is not None
+            and bar_minutes >= int(session_exit_minutes)
+        )
         at_rth_flatten = flatten_rth and bar_minutes is not None and bar_minutes >= flatten_minutes
-        past_entry_cutoff = flatten_rth and bar_minutes is not None and bar_minutes >= entry_cutoff_minutes
+        past_entry_cutoff = needs_clock and bar_minutes is not None and bar_minutes >= entry_cutoff_minutes
 
         if position is not None:
             direction = position["direction"]
@@ -139,6 +146,9 @@ def run_backtest(
             # Clock exits fill at close ± the same 1-tick slippage as entries.
             # Price stops/targets still win if they printed on this bar.
             if exit_price is None and max_hold_bars is not None and position["bars_held"] >= max_hold_bars:
+                exit_price = row["close"] - direction * slippage_price
+                exit_reason = "time_stop"
+            if exit_price is None and at_session_exit:
                 exit_price = row["close"] - direction * slippage_price
                 exit_reason = "time_stop"
             if exit_price is None and at_rth_flatten:

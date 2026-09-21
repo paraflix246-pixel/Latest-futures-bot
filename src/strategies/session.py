@@ -46,3 +46,15 @@ def local_minutes(ts: pd.Timestamp) -> int:
 def in_rth_entry_window(minutes_of_day) -> pd.Series:
     """True where a new RTH entry is allowed (09:30 inclusive, 15:30 exclusive)."""
     return (minutes_of_day >= RTH_OPEN_MINUTES) & (minutes_of_day < RTH_ENTRY_CUTOFF_MINUTES)
+
+
+def rth_session_vwap(high: pd.Series, low: pd.Series, close: pd.Series, volume: pd.Series) -> pd.Series:
+    """VWAP that resets at the cash open (09:30 ET), not the CME 23:00 session."""
+    minutes, dates = session_clock(close.index)
+    typical = (high + low + close) / 3.0
+    in_rth = minutes >= RTH_OPEN_MINUTES
+    pv = (typical * volume).where(in_rth, 0.0)
+    vol = volume.where(in_rth, 0.0)
+    cum_pv = pv.groupby(dates).cumsum()
+    cum_vol = vol.groupby(dates).cumsum()
+    return cum_pv / cum_vol.replace(0, float("nan"))

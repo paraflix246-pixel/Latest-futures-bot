@@ -175,6 +175,25 @@ def test_rth_flatten_closes_before_overnight():
     assert trade.exit_time.tz_convert("America/New_York").hour == 16
 
 
+def test_session_exit_minutes_flattens_at_clock():
+    # 09:50–11:20 ET. Enter first bar; 11:00 clock must flatten even though
+    # cash close is later.
+    idx = pd.date_range("2024-01-03 14:50", periods=20, freq="5min", tz="UTC")
+    close = np.full(20, 20000.0)
+    df = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close, "volume": 1000},
+        index=idx,
+    )
+    strategy = _TimedLongStrategy(entry_idx=0, stop=19900, target=22000, flatten_rth=True)
+    strategy.session_exit_minutes = 11 * 60
+    strategy.rth_entry_cutoff_minutes = 11 * 60
+    result = run_backtest(df=df, strategy=strategy, symbol="MNQ", timeframe="5m",
+                          account_size=50_000, risk_pct=0.5)
+    assert len(result.trades) == 1
+    assert result.trades[0].exit_reason == "time_stop"
+    assert result.trades[0].exit_time.tz_convert("America/New_York").hour == 11
+
+
 def test_rth_flatten_blocks_entries_after_cutoff():
     # Signal at 15:45 ET must not open — cutoff is 15:30 when flatten_rth is on.
     idx = pd.date_range("2024-01-03 20:40", periods=8, freq="5min", tz="UTC")  # 15:40 ET

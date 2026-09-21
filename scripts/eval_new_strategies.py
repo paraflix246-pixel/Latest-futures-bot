@@ -31,7 +31,9 @@ from src.backtest.metrics import compute_metrics  # noqa: E402
 from src.backtest.walk_forward import SIGNIFICANCE_MIN_T_STAT, aggregate_oos, walk_forward_search  # noqa: E402
 from src.data.loader import load_ohlcv  # noqa: E402
 from src.strategies.impulse_clock import ImpulseClockStrategy  # noqa: E402
+from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
 from src.strategies.orb_break_fade import OrbBreakFadeStrategy  # noqa: E402
+from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
 
 DISCOVERY_FRAC = 0.80
@@ -47,6 +49,12 @@ NEW_STRATEGIES = {
     }),
     "impulse_clock": (ImpulseClockStrategy, {
         "impulse_atr_mult": [1.5, 2.0], "max_hold_bars": [6, 12],
+    }),
+    "orb_crabel": (OrbCrabelStrategy, {
+        "or_minutes": [15, 30], "rvol_mult": [1.5, 2.0],
+    }),
+    "last30_momentum": (Last30MomentumStrategy, {
+        "min_ret_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40],
     }),
 }
 

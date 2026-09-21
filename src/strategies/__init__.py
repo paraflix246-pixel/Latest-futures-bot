@@ -2,7 +2,9 @@ from src.strategies.breakout import BreakoutStrategy
 from src.strategies.ensemble import EnsembleStrategy
 from src.strategies.extreme_displacement_reversion import ExtremeDisplacementReversionStrategy
 from src.strategies.impulse_clock import ImpulseClockStrategy
+from src.strategies.last30_momentum import Last30MomentumStrategy
 from src.strategies.mean_reversion import MeanReversionStrategy
+from src.strategies.orb_crabel import OrbCrabelStrategy
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy
 from src.strategies.orb_break_fade import OrbBreakFadeStrategy
 from src.strategies.orb_failure import OrbFailureStrategy
@@ -30,6 +32,8 @@ STRATEGIES = {
     "orb_break_fade": OrbBreakFadeStrategy,
     "vol_squeeze_expansion": VolSqueezeExpansionStrategy,
     "impulse_clock": ImpulseClockStrategy,
+    "orb_crabel": OrbCrabelStrategy,
+    "last30_momentum": Last30MomentumStrategy,
 }
 
 
