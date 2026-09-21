@@ -28,6 +28,7 @@ from src.strategies.ensemble import EnsembleStrategy  # noqa: E402
 from src.strategies.extreme_displacement_reversion import ExtremeDisplacementReversionStrategy  # noqa: E402
 from src.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy  # noqa: E402
+from src.strategies.orb_break_fade import OrbBreakFadeStrategy  # noqa: E402
 from src.strategies.orb_failure import OrbFailureStrategy  # noqa: E402
 from src.strategies.trend_following import TrendFollowingStrategy  # noqa: E402
 from src.strategies.vol_expansion_momentum import VolExpansionMomentumStrategy  # noqa: E402
@@ -84,6 +85,9 @@ STRATEGY_GRIDS = {
     }),
     "volume_shock_continuation": (VolumeShockContinuationStrategy, {
         "volume_shock_mult": [2.0, 4.0], "volume_baseline_period": [10, 20],
+    }),
+    "orb_break_fade": (OrbBreakFadeStrategy, {
+        "or_minutes": [15, 30], "failure_bars": [3, 5],
     }),
     "orb_crabel": (OrbCrabelStrategy, {
         "or_minutes": [15, 30], "rvol_mult": [1.5, 2.0],
