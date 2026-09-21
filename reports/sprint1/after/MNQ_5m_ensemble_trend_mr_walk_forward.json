@@ -1,0 +1,87 @@
+{
+  "strategy": "ensemble_trend_mr",
+  "oos_summary": {
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 208,
+    "total_oos_pnl": 9003.28,
+    "avg_oos_win_rate": 0.3775,
+    "avg_pnl_per_fold": 900.33,
+    "t_stat": 1.647,
+    "significant": false
+  },
+  "avg_is_pnl_per_fold": 2408.88,
+  "avg_oos_pnl_per_fold": 900.33,
+  "folds": [
+    {
+      "fold": 0,
+      "train_pnl": 150.92,
+      "test_pnl": 1423.88,
+      "test_trades": 21,
+      "test_sharpe": 1.0124
+    },
+    {
+      "fold": 1,
+      "train_pnl": 2037.91,
+      "test_pnl": -131.34,
+      "test_trades": 31,
+      "test_sharpe": -0.1156
+    },
+    {
+      "fold": 2,
+      "train_pnl": 2005.52,
+      "test_pnl": 1910.39,
+      "test_trades": 18,
+      "test_sharpe": 1.4024
+    },
+    {
+      "fold": 3,
+      "train_pnl": 3465.51,
+      "test_pnl": 983.41,
+      "test_trades": 17,
+      "test_sharpe": 0.68
+    },
+    {
+      "fold": 4,
+      "train_pnl": 2698.46,
+      "test_pnl": 2219.23,
+      "test_trades": 17,
+      "test_sharpe": 1.0389
+    },
+    {
+      "fold": 5,
+      "train_pnl": 5051.96,
+      "test_pnl": -997.41,
+      "test_trades": 20,
+      "test_sharpe": -0.8012
+    },
+    {
+      "fold": 6,
+      "train_pnl": 1895.95,
+      "test_pnl": 643.03,
+      "test_trades": 19,
+      "test_sharpe": 0.8378
+    },
+    {
+      "fold": 7,
+      "train_pnl": 1686.48,
+      "test_pnl": 1552.63,
+      "test_trades": 19,
+      "test_sharpe": 1.175
+    },
+    {
+      "fold": 8,
+      "train_pnl": 1079.94,
+      "test_pnl": 1605.9,
+      "test_trades": 17,
+      "test_sharpe": 1.3698
+    },
+    {
+      "fold": 9,
+      "train_pnl": 4016.12,
+      "test_pnl": -206.45,
+      "test_trades": 29,
+      "test_sharpe": -0.2141
+    }
+  ]
+}

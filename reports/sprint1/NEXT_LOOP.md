@@ -1,26 +1,24 @@
-# Next auto-loop plan (filled after sprint-1 after/compare)
+# Next auto-loop plan (after sprint 1)
 
-This file is the handoff for the next improve-loop iteration on the same
-branch. It will be completed once after-metrics land.
+Paper/backtest only. Do not enable live trading.
 
-Do not promote anything to live trading. Paper/backtest only.
+Sprint 1 result to carry forward: MNQ 5m ensemble walk-forward OOS went from
+t=-9.57 / -$48k to **t=+1.76 / +$9.9k**. Holdout (2025-09-12) went from
+-$7,975 to +$1,802. **Fails the t≥2 significance bar.** Breakout remains
+WF-negative. 2-tick cost stress did not flip the sign on this tape.
 
-## Loop protocol (keep)
+## Loop 2 (same branch, no holdout peeking for decisions)
 
-1. Freeze a locked holdout (currently 2025-09-12 → end of tape). Do not tune on it.
-2. Diagnose on in-sample + walk-forward only.
-3. One batch of related engineering/risk changes.
-4. Re-run IS / holdout / walk-forward. Report both. No profit claims.
+Walk-forward ablation is done: trend+MR-only t=1.65 / +$9.0k vs ensemble-with-breakout t=1.76 / +$9.9k. **Keep breakout in the non-ranging router.** Cost-stress at 2 ticks did not flip the holdout sign.
 
-## Candidate next steps (priority depends on after-metrics)
+Remaining on this branch:
 
-1. If ensemble OOS is still a large loss: **drop breakout from the router** entirely (it dominated the before-baseline) and evaluate trend+MR only, same holdout.
-2. Mean reversion was the only before-leg with non-negative WF OOS (t=0.19, not significant). Cost-stress it at 2 ticks/side and require a t-stat ≥ 2 on ≥ 30 OOS trades before calling it an edge — it almost certainly will not clear.
-3. Time-of-day **expectancy table** on IS only (RTH hour buckets) for the surviving legs; promote a single hour window to holdout only if IS t-stat ≥ 2. One test, not a grid.
-4. Cost-sensitivity: 0 / 1 / 2 ticks per fill on the after-engine. If the sign flips at 1 tick, there is no robust edge.
-5. Engine: port the same fill/risk overlays into `src/regime/adaptive_engine.py` (still duplicates the old loop).
-6. Do **not** add another 5m OHLCV pattern strategy this loop. The research dossier already retired that family.
+1. Port next-open / exit-slip / gap-aware fills into `src/regime/adaptive_engine.py` so that path is not secretly optimistic.
+2. **Do not grid-search** ADX thresholds, EMA lengths, or session hours.
+3. Next *strategy* loop only if we accept a different hypothesis. If we run one more 5m OHLCV experiment and WF t is still &lt; 2: **stop this family.** Order-book Stage 1 already failed; do not revive Donchian/EMA/VWAP variants.
 
 ## Stop rule
 
-If two consecutive loops after the engine-realism pass still show walk-forward t-stat < 2 and negative total OOS PnL on MNQ 5m ensemble and its three legs, say **no edge yet** in the PR and keep iterating only on a *new information source* (session microstructure already tested, order-book already failed Stage 1) or a lower-frequency hypothesis — not more Donchian/EMA variants.
+Two consecutive post-realism loops with WF t&lt;2 and no significant OOS PnL
+→ PR says **no edge yet** and we do not spend another sprint on 5m pattern
+entries for MNQ.

@@ -60,3 +60,17 @@ Walk-forward for ensemble matches the previously saved `reports/walk_forward/MNQ
 7. 2% daily loss halt on new entries.
 
 If after these the locked holdout and walk-forward OOS are still negative with t-stat < 2, the honest readout is still **no edge** — with a more realistic engine and less self-inflicted turnover.
+
+## After (same splits, realistic engine + event-trigger + RTH ensemble)
+
+| Split | Strategy | Trades | PF | Net PnL | vs before |
+|---|---|---:|---:|---:|---|
+| Full | ensemble | 633 | 1.22 | +$8,847 | was -$30,890 |
+| Holdout OOS | ensemble | 122 | 1.21 | +$1,802 | was -$7,975 |
+| WF OOS | ensemble | 442 | — | +$9,940 (t=+1.76, 7/10 folds) | was -$48,292 (t=-9.57, 0/10) |
+| WF OOS | mean_reversion | 100 | — | +$8,024 (t=+1.62) | was +$2,043 (t=+0.19) |
+| WF OOS | breakout | 508 | — | -$1,808 (t=-0.75) | was -$44,520 (t=-10.28) |
+
+Same-bar re-entries: 365 → 0. Commission on ensemble full sample: $4,074 → $901.
+
+**We do not call this an edge.** t=1.76 is below the project's bar of 2.0. The sign is better because we stopped overtrading a negative-expectancy breakout and stopped filling like a fantasy. See `compare.md`.
