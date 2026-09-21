@@ -1,0 +1,76 @@
+{
+  "kind": "plan_history_2y",
+  "earliest": "2024-09-23",
+  "rows": [
+    {
+      "ticker": "MNQU5",
+      "n": 219,
+      "first": "2024-10-01",
+      "last": "2025-09-19",
+      "error": null
+    },
+    {
+      "ticker": "MNQZ4",
+      "n": 64,
+      "first": "2024-09-23",
+      "last": "2024-12-20",
+      "error": null
+    },
+    {
+      "ticker": "MNQH4",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MNQZ3",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MNQH3",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MNQZ2",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MNQH2",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MESU5",
+      "n": 214,
+      "first": "2024-09-24",
+      "last": "2025-09-19",
+      "error": null
+    },
+    {
+      "ticker": "MESZ3",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    },
+    {
+      "ticker": "MESH3",
+      "n": 0,
+      "first": null,
+      "last": null,
+      "error": null
+    }
+  ]
+}

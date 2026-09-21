@@ -25,10 +25,22 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` / `vwap_reclaim_90_vol` **WF t=1.609 n=41, HO t=2.116 n=158**. Densifying (cycle 7) did not raise WF t. Local `s2_orb_retrace_7` **DEMOTED**. Local `s4_spread_fade2` t=1.80 **fails robustness**; official `spread_fade` t=0.997. |
-| PASS_MES | **0** | Local sprint-4 `s2_mes_sens_7` was STRONG (soft HO). **Official sprint-1 replay KILL:** WF t=0.414 n=39, HO t=−0.073 n=41. Paper replay matches HO (−$88, n=41). ±20% sensitivity all KILL. Same pattern as `filtered_orb_2`. |
+| PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
+| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (WF t=0.414). Cycle 10 MES `pivot_bounce` t=1.339 n=39 but HO t=−0.898. |
 | PASS_BOTH | 0 | — |
-| KILL | 50 | Cycles 1–4, 6, 7, 8, 9 on the official engine |
+| KILL | 55+ | Cycles 1–4, 6–11. Cycle 11 (MNQ 15m) produced 0 WF trades. |
+
+**No paper-live. No live.**
+
+`MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth probe: earliest bar **2024-09-23**, 2022–2023 tickers **n=0**. This is Massive Basic/Starter **2-year history**, not a missing-key blocker. Tape cannot thicken until the founder upgrades the Massive plan. Hunt continues on the 2y tape.
+
+## PR #2 squash-merge
+
+PR #2 (RTH toolkit) is still **OPEN** and **CONFLICTING** with `main` (README). This agent's GitHub CLI is **read-only** and cannot squash-merge. Unique files (`scripts/eval_new_strategies.py`, `reports/new_strategies/`) are on this branch. Strategy modules already live here. Founder: squash-merge #2 in the GitHub UI after resolving README, or close it as superseded by PR #3.
+
+## Massive plan depth (live, key present)
+
+See `reports/massive/PLAN_DEPTH.md` and `BLOCKER.md`. Auth Bearer 200. Earliest `MNQZ4` session 2024-09-23. Do not fabricate bars.
 
 **No paper-live. No live.** The MES winner is ported and paper-logged. It does not survive next-open + exit-slip.
 
@@ -131,18 +143,31 @@ MNQ `orb_fail_fade` holdout t=2.22 but WF t=0.59 — not a PASS.
 | higher_low_vwap | 33 | −1.035 | 0.386 | 25 | 1.394 | −1.574 | KILL |
 | prior_mid_reclaim | 13 | −0.633 | −0.551 | 18 | 0.447 | −0.173 | KILL |
 
+## Cycle 10 (KILL) — more MNQ inventions + vwap_reclaim_90 target grid
+
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---:|---:|---:|---|
+| vwap_reclaim_90_target | 41 | 1.546 | 1.572 | 27 | 0.902 | −0.49 | KILL |
+| morning_range_break | 17 | −0.123 | 0.90 | 54 | −0.057 | 0.391 | KILL |
+| keltner_am_fade | 45 | 1.122 | −0.206 | 70 | −2.963 | −1.045 | KILL |
+| inside_day_orb | 2 | −4.65 | 0.894 | 3 | −0.561 | −0.579 | KILL |
+| pivot_bounce | 32 | 0.311 | −0.817 | 39 | 1.339 | −0.898 | KILL |
+
+Target_r / one_per_session around the 1.61 neighborhood did not lift WF t. MES `pivot_bounce` 2/2 folds but holdout negative.
+
+## Cycle 11 (KILL) — MNQ 15m resample
+
+Same families on 15-minute bars (resampled from 5m). **0 WF trades** (train never cleared min_train_trades). Not a PASS.
+
 ## Extra Massive history
 
-`reports/massive/BLOCKER.md`: 2020+ pull authenticated but **429** + **0**
-pre-2024 bars. Tape stays 2024-09 → 2026-09.
+Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop.
 
 ## Reproduce
 
 ```bash
-python scripts/research_cycle.py --cycle 8 --symbol MES MNQ
-python scripts/research_cycle.py --cycle 7 --symbol MNQ
-python scripts/research_cycle.py --cycle 9 --symbol MNQ MES
-python scripts/harden_candidate.py --family s2_mes_sens_7 --symbol MES
-python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy s2_mes_sens_7 --start 2025-09-12
+python scripts/download_massive_futures.py --plan-depth
+python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
+python scripts/research_cycle.py --cycle 11 --family vwap_reclaim_90_target --symbol MNQ --timeframe 15m
 python -m pytest tests/ -q
 ```
