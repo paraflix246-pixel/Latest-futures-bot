@@ -6,7 +6,10 @@ from __future__ import annotations
 DEFAULT_ACCOUNT_SIZE = 50_000.0
 DEFAULT_RISK_PCT = 0.5          # % of account risked per trade
 DEFAULT_TIMEFRAME = "5m"        # 5-minute bars: less noise than 1m, still intraday
-DEFAULT_SLIPPAGE_TICKS = 1      # assumed slippage per fill, in ticks
+DEFAULT_SLIPPAGE_TICKS = 1      # assumed slippage per fill, in ticks (entry AND exit)
+DEFAULT_MAX_CONTRACTS = 10      # hard cap so tight stops cannot explode size
+DEFAULT_DAILY_LOSS_HALT_PCT = 2.0  # halt new entries after -2% day (sprint overlay)
+DEFAULT_COOLDOWN_BARS = 3       # bars to wait after an exit before a new entry
 
 DATA_DIR = "data"
 REPORTS_DIR = "reports"
