@@ -10,6 +10,7 @@ import pandas as pd
 from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy
 from src.strategies.first30_fade import First30FadeStrategy
+from src.strategies.first5_break import First5BreakStrategy
 from src.strategies.gap_on_confirm import GapOnConfirmStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
 from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy
@@ -306,3 +307,18 @@ def test_gap_on_go_only_skips_inside_range_fill():
     df.loc[stretch, "close"] = 20040.0
     go = GapOnConfirmStrategy(trade_mode="go", confirm_atr=0.0).generate_signals(df)
     assert int((go.entries != 0).sum()) == 0
+
+
+def test_first5_break_enters_beyond_open_range():
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    first = df.index[minutes == RTH_OPEN_MINUTES][0]
+    df.loc[first, "high"] = 20020.0
+    df.loc[first, "low"] = 20000.0
+    nxt = first + pd.Timedelta(minutes=5)
+    df.loc[nxt, "close"] = 20080.0
+    df.loc[nxt, "high"] = 20080.0
+    sig = First5BreakStrategy(min_or_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[nxt] == 1
+    inside = First5BreakStrategy(min_or_atr=10.0).generate_signals(df)
+    assert inside.entries.loc[nxt] == 0

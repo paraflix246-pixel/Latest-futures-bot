@@ -1,0 +1,37 @@
+{
+  "generated": "2026-09-21T13:50:20.157789+00:00",
+  "symbol": "MNQ",
+  "tape_rows": 66395,
+  "verdict": "NOT_IN_CLOCK_OR_BARS_YET",
+  "note": "CLOCK_EDGE means a weekday/time-of-day long/short cleared t>=2 without a candlestick pattern. Otherwise MNQ 5m OHLCV on this 2024\u2013now tape has not shown a kill-gate edge from calendar either.",
+  "baselines": [
+    {
+      "name": "clock_long_rth",
+      "n": 153,
+      "t_stat": -0.971,
+      "pnl": -2430.28,
+      "clears_gate": false
+    },
+    {
+      "name": "clock_short_rth",
+      "n": 162,
+      "t_stat": 0.688,
+      "pnl": 1687.02,
+      "clears_gate": false
+    },
+    {
+      "name": "tue_thu_long",
+      "n": 90,
+      "t_stat": -1.659,
+      "pnl": -3012.75,
+      "clears_gate": false
+    },
+    {
+      "name": "mon_fri_long",
+      "n": 66,
+      "t_stat": 0.638,
+      "pnl": 1111.59,
+      "clears_gate": false
+    }
+  ]
+}

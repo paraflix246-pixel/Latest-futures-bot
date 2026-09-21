@@ -38,6 +38,7 @@ SUPPORTED_STRATEGIES = [
     "gap_on_confirm_lock", "gap_on_fill_only", "am_measured", "vwap_hold_late",
     "cross_lead_open15", "weekday_gap_clock", "vol_clock_fade",
     "gap_on_go_only", "overnight_gap_fade", "first30_fade", "lunch_or_magnet",
+    "first5_break",
 ]
 
 # NQ now has its own real Databento feed (data/NQ_1m.csv, NQ_5m.csv) — no

@@ -90,6 +90,7 @@ from src.strategies.vol_clock_fade import VolClockFadeStrategy  # noqa: E402
 from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy  # noqa: E402
 from src.strategies.first30_fade import First30FadeStrategy  # noqa: E402
 from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy  # noqa: E402
+from src.strategies.first5_break import First5BreakStrategy  # noqa: E402
 from src.strategies.am_measured import AmMeasuredMoveStrategy  # noqa: E402
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy  # noqa: E402
 from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
@@ -596,6 +597,12 @@ FAMILIES = {
         {"min_away_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
         "new",
     ),
+    # Cycle 17: 1m path (not the 5m candle). First-5m OR break.
+    "first5_break": (
+        First5BreakStrategy,
+        {"min_or_atr": [0.03, 0.08], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -651,6 +658,9 @@ CYCLE_DEFAULTS = {
     ],
     16: [
         "gap_on_go_only", "overnight_gap_fade", "first30_fade", "lunch_or_magnet",
+    ],
+    17: [
+        "first5_break", "overnight_gap_fade", "first30_fade",
     ],
 }
 
@@ -799,6 +809,12 @@ def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Di
 
 def main() -> None:
     args = parse_args()
+    if args.cycle == 17:
+        args.timeframe = "1m"
+        print(
+            "cycle 17: 1m Databento path (2024-01-01→2026-03-11), not 5m candles",
+            flush=True,
+        )
     if args.family is None:
         families = CYCLE_DEFAULTS.get(args.cycle, list(FAMILIES))
     elif "all" in args.family:
@@ -920,7 +936,7 @@ def main() -> None:
             pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
         pocket = write_report(pocket_payloads, cycle_dir)
         print(f"regime pockets: {pocket['verdict']}", flush=True)
-    if args.cycle in (15, 16) and PRIMARY in args.symbol:
+    if args.cycle in (15, 16, 17) and PRIMARY in args.symbol:
         from src.data.loader import load_ohlcv as _load_clock
         from scripts.bar_vs_clock import diagnose, write_report as write_clock
 

@@ -40,6 +40,7 @@ from src.strategies.vol_clock_fade import VolClockFadeStrategy
 from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy
 from src.strategies.first30_fade import First30FadeStrategy
 from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy
+from src.strategies.first5_break import First5BreakStrategy
 from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -127,6 +128,7 @@ STRATEGIES = {
     "overnight_gap_fade": OvernightGapFadeStrategy,
     "first30_fade": First30FadeStrategy,
     "lunch_or_magnet": LunchOrMagnetStrategy,
+    "first5_break": First5BreakStrategy,
     "am_measured": AmMeasuredMoveStrategy,
     "vwap_hold_late": VwapHoldLateStrategy,
     "rvol_open15": RvolOpen15Strategy,
