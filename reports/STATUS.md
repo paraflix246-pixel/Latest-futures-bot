@@ -30,11 +30,11 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 | PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
 | PASS_MES | **1** | `gap_on_confirm_lock` (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140, overnight=0. **Not paper-live.** |
 | PASS_BOTH | 0 | MNQ of the same family is KILL (WF t=−1.699 n=28). |
-| KILL | 63+ | Cycles 1–4, 6–13. Cycle 14 MNQ lock KILL. |
+| KILL | 67+ | Cycles 1–4, 6–13, 15. Cycle 14 MNQ lock KILL. |
 
 **PASS_MES on overnight-range confirmed fill/go. No paper-live. No live.**
 
-`MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth probe: earliest bar **2024-09-23**, 2022–2023 tickers **n=0**. This is Massive Basic/Starter **2-year history**, not a missing-key blocker. Tape cannot thicken until the founder upgrades the Massive plan. MNQ hunt continues on the 2y tape.
+`MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth: earliest bar **2024-09-23**. Founder: **2024–now is the working tape** — do not wait for a plan upgrade. MNQ hunt continues here.
 
 ## PR #2 squash-merge
 
@@ -219,16 +219,31 @@ MNQ same lock: WF t=−1.699 n=28 KILL.
 See `reports/cycles/cycle_14/` and `reports/cycles/harden/MES_gap_on_confirm_lock/`.
 Paper log: `reports/paper/MES_5m_gap_on_confirm_replay.json`.
 
+## Cycle 15 (KILL) — fill-only / cross-lead / weekday clock / vol-clock
+
+2024–now 5m tape. Clock vs bars diagnostic on MNQ discovery: **NOT_IN_CLOCK_OR_BARS_YET**.
+
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---|---:|---:|---|
+| gap_on_fill_only | 25 | −1.157 | −0.904 | 25 | **2.679** | −0.724 | KILL (n<30) |
+| cross_lead_open15 | 43 | −1.515 | −1.075 | 44 | −0.513 | −1.518 | KILL |
+| weekday_gap_clock | 19 | −1.219 | −0.264 | 29 | −1.021 | −0.907 | KILL |
+| vol_clock_fade | 2 | 0.258 | −0.397 | 34 | −0.91 | −1.601 | KILL |
+
+MES fill-only is the same family as PASS_MES without the go-leg: t≥2 but **n=25** so it is not even PASS_MES_PROVISIONAL (gate is WF n≥30). MNQ of that family stays negative. Weekday/clock and volume-clock do not clear. Always-long/short RTH baselines: clock_short t=0.688, clock_long t=−0.971 — not a calendar edge.
+
+See `reports/cycles/cycle_15/` and `BAR_VS_CLOCK.md`. Hunt continues (cycle 16: go-only, fade overnight gap, fade first-30m, lunch OR magnet).
+
 ## Extra Massive history
 
-Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop.
+Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop. **2024–now is the working tape.**
 
 ## Reproduce
 
 ```bash
 python scripts/download_massive_futures.py --plan-depth
-python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
-python scripts/research_cycle.py --cycle 14
+python scripts/research_cycle.py --cycle 15 --symbol MNQ MES
+python scripts/research_cycle.py --cycle 16 --symbol MNQ MES
 python scripts/harden_candidate.py --family gap_on_confirm_lock --symbol MES
 python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy gap_on_confirm --start 2025-09-12
 python -m pytest tests/ -q
