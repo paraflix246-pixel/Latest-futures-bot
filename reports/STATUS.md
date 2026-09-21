@@ -26,9 +26,9 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 | Label | Count | Notes |
 |---|---:|---|
 | PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
-| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (WF t=0.414). Cycle 10 MES `pivot_bounce` t=1.339 n=39 but HO t=−0.898. |
+| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (WF t=0.414). Cycle 12 MES `gap_on_range` t=1.213 n=45, HO t=−0.285. |
 | PASS_BOTH | 0 | — |
-| KILL | 55+ | Cycles 1–4, 6–11. Cycle 11 (MNQ 15m) produced 0 WF trades. |
+| KILL | 59+ | Cycles 1–4, 6–12. Cycle 11 (MNQ 15m) produced 0 WF trades. |
 
 **No paper-live. No live.**
 
@@ -161,20 +161,24 @@ Target_r / one_per_session around the 1.61 neighborhood did not lift WF t. MES `
 
 Same families on 15-minute bars (resampled from 5m). **0 WF trades** (train never cleared min_train_trades). Not a PASS.
 
-## Cycle 12 (running) — improved founder ideas on 2y tape
+## Cycle 12 (KILL) — improved founder ideas on 2y tape
 
 Prior cycle 3/4 kills already re-evaled on this Massive 2y tape. Cycle 12
-uses *improved* classifiers, not identical grids:
+used *improved* classifiers, not identical grids. All **KILL**. EMA/Donchian
+regime pockets: **LEAVE_DEAD** (no year/ADX/ATR pocket with t≥2 n≥30).
 
-1. `vwap_fh_reclaim` — first-hour VWAP reclaim/fail *during* 09:30–10:30, flatten 15:45
-2. `gap_on_range` — fill vs go from overnight range vs RTH open
-3. `rvol_dir_open15` — loosened RVOL + directional 15m close, flatten 15:45
-4. `trend15_pb5_chop` — 15m trend + 5m pullback with ADX chop skip
-5. EMA/Donchian regime-pocket diagnostic — improve only if a pocket clears t≥2 n≥30; else leave dead
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---|---:|---:|---|
+| vwap_fh_reclaim | 38 | −1.288 | −1.417 | 62 | −0.373 | −1.933 | KILL |
+| gap_on_range | 46 | 0.15 | −1.405 | 45 | 1.213 | −0.285 | KILL |
+| rvol_dir_open15 | 14 | −2.282 | −1.216 | 19 | −0.274 | 0.581 | KILL |
+| trend15_pb5_chop | 41 | 0.101 | −1.328 | 68 | −1.374 | 0.662 | KILL |
 
-```bash
-python scripts/research_cycle.py --cycle 12
-```
+MES `gap_on_range` 2/2 profitable folds, t=1.213 — not a PASS. First-hour-during
+VWAP and loosened RVOL are worse than the already-killed after-10:30 / tight-RVOL
+versions. ADX chop skip did not lift the 15m/5m family.
+
+See `reports/cycles/cycle_12/` and `REGIME_POCKETS.md`.
 
 ## Extra Massive history
 

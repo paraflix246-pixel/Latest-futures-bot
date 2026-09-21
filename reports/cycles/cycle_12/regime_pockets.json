@@ -1,0 +1,283 @@
+{
+  "generated": "2026-09-21T12:46:37.904602+00:00",
+  "verdict": "LEAVE_DEAD",
+  "note": "Improve original EMA/Donchian only if a discovery pocket clears t>=2 n>=30. Otherwise leave dead.",
+  "symbols": [
+    {
+      "symbol": "MNQ",
+      "tape_rows": 66395,
+      "families": {
+        "trend": {
+          "n": 234,
+          "t_stat": 0.871,
+          "pnl": 2894.77,
+          "held_past_rth_close": 0,
+          "pockets": [
+            {
+              "pocket": "2024",
+              "n": 69,
+              "t_stat": 0.811,
+              "pnl": 1534.01,
+              "clears_gate": false
+            },
+            {
+              "pocket": "2025",
+              "n": 165,
+              "t_stat": 0.497,
+              "pnl": 1360.76,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_hi",
+              "n": 42,
+              "t_stat": 0.446,
+              "pnl": 500.96,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_lo",
+              "n": 80,
+              "t_stat": 0.636,
+              "pnl": 1485.72,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_mid",
+              "n": 112,
+              "t_stat": 0.433,
+              "pnl": 908.09,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_hi",
+              "n": 179,
+              "t_stat": 0.412,
+              "pnl": 1117.38,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_lo",
+              "n": 3,
+              "t_stat": -0.461,
+              "pnl": -140.29,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_mid",
+              "n": 52,
+              "t_stat": 1.008,
+              "pnl": 1917.68,
+              "clears_gate": false
+            }
+          ],
+          "gate_pockets": [],
+          "verdict": "LEAVE_DEAD"
+        },
+        "breakout": {
+          "n": 334,
+          "t_stat": 0.006,
+          "pnl": 13.58,
+          "held_past_rth_close": 0,
+          "pockets": [
+            {
+              "pocket": "2024",
+              "n": 124,
+              "t_stat": 0.816,
+              "pnl": 854.06,
+              "clears_gate": false
+            },
+            {
+              "pocket": "2025",
+              "n": 210,
+              "t_stat": -0.444,
+              "pnl": -840.49,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_hi",
+              "n": 84,
+              "t_stat": 0.885,
+              "pnl": 1068.28,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_lo",
+              "n": 114,
+              "t_stat": -1.77,
+              "pnl": -1945.96,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_mid",
+              "n": 136,
+              "t_stat": 0.631,
+              "pnl": 891.25,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_hi",
+              "n": 160,
+              "t_stat": 0.418,
+              "pnl": 662.58,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_lo",
+              "n": 13,
+              "t_stat": 0.468,
+              "pnl": 219.43,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_mid",
+              "n": 161,
+              "t_stat": -0.618,
+              "pnl": -868.43,
+              "clears_gate": false
+            }
+          ],
+          "gate_pockets": [],
+          "verdict": "LEAVE_DEAD"
+        }
+      }
+    },
+    {
+      "symbol": "MES",
+      "tape_rows": 66321,
+      "families": {
+        "trend": {
+          "n": 253,
+          "t_stat": -1.222,
+          "pnl": -3702.79,
+          "held_past_rth_close": 0,
+          "pockets": [
+            {
+              "pocket": "2024",
+              "n": 68,
+              "t_stat": -0.852,
+              "pnl": -1627.92,
+              "clears_gate": false
+            },
+            {
+              "pocket": "2025",
+              "n": 185,
+              "t_stat": -0.879,
+              "pnl": -2074.87,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_hi",
+              "n": 47,
+              "t_stat": -0.748,
+              "pnl": -957.74,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_lo",
+              "n": 85,
+              "t_stat": 0.533,
+              "pnl": 1116.76,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_mid",
+              "n": 121,
+              "t_stat": -2.186,
+              "pnl": -3861.81,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_hi",
+              "n": 171,
+              "t_stat": -1.675,
+              "pnl": -3604.86,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_lo",
+              "n": 5,
+              "t_stat": 0.439,
+              "pnl": 222.48,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_mid",
+              "n": 77,
+              "t_stat": -0.153,
+              "pnl": -320.41,
+              "clears_gate": false
+            }
+          ],
+          "gate_pockets": [],
+          "verdict": "LEAVE_DEAD"
+        },
+        "breakout": {
+          "n": 455,
+          "t_stat": -1.609,
+          "pnl": -3460.92,
+          "held_past_rth_close": 0,
+          "pockets": [
+            {
+              "pocket": "2024",
+              "n": 138,
+              "t_stat": -1.852,
+              "pnl": -2082.12,
+              "clears_gate": false
+            },
+            {
+              "pocket": "2025",
+              "n": 317,
+              "t_stat": -0.752,
+              "pnl": -1378.8,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_hi",
+              "n": 150,
+              "t_stat": -2.051,
+              "pnl": -2207.49,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_lo",
+              "n": 109,
+              "t_stat": -0.277,
+              "pnl": -326.08,
+              "clears_gate": false
+            },
+            {
+              "pocket": "adx_mid",
+              "n": 196,
+              "t_stat": -0.641,
+              "pnl": -927.35,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_hi",
+              "n": 255,
+              "t_stat": -1.112,
+              "pnl": -1581.06,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_lo",
+              "n": 14,
+              "t_stat": 0.526,
+              "pnl": 290.53,
+              "clears_gate": false
+            },
+            {
+              "pocket": "atr_mid",
+              "n": 186,
+              "t_stat": -1.426,
+              "pnl": -2170.38,
+              "clears_gate": false
+            }
+          ],
+          "gate_pockets": [],
+          "verdict": "LEAVE_DEAD"
+        }
+      }
+    }
+  ]
+}
