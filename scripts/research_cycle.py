@@ -72,6 +72,10 @@ from src.strategies.ib_hold_break import IbHoldBreakStrategy  # noqa: E402
 from src.strategies.inside_hour_break import InsideHourBreakStrategy  # noqa: E402
 from src.strategies.higher_low_vwap import HigherLowVwapStrategy  # noqa: E402
 from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy  # noqa: E402
+from src.strategies.morning_range_break import MorningRangeBreakStrategy  # noqa: E402
+from src.strategies.keltner_am_fade import KeltnerAmFadeStrategy  # noqa: E402
+from src.strategies.inside_day_orb import InsideDayOrbStrategy  # noqa: E402
+from src.strategies.pivot_bounce import PivotBounceStrategy  # noqa: E402
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E402
 from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
@@ -444,6 +448,38 @@ FAMILIES = {
         {"min_away_atr": [0.10, 0.20], "stop_atr_mult": [0.25, 0.35]},
         "new",
     ),
+    "vwap_reclaim_90_target": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "target_r": [0.75, 1.0, 1.25, 1.5],
+            "one_per_session": [False, True],
+        },
+        "hunt",
+    ),
+    "morning_range_break": (
+        MorningRangeBreakStrategy,
+        {"range_end_minutes": [10 * 60 + 30, 11 * 60]},
+        "new",
+    ),
+    "keltner_am_fade": (
+        KeltnerAmFadeStrategy,
+        {"keltner_mult": [1.25, 1.5, 1.75]},
+        "new",
+    ),
+    "inside_day_orb": (
+        InsideDayOrbStrategy,
+        {"or_minutes": [15]},
+        "new",
+    ),
+    "pivot_bounce": (
+        PivotBounceStrategy,
+        {"stop_atr_mult": [0.20, 0.30]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -482,6 +518,10 @@ CYCLE_DEFAULTS = {
     ],
     9: [
         "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",
+    ],
+    10: [
+        "vwap_reclaim_90_target",
+        "morning_range_break", "keltner_am_fade", "inside_day_orb", "pivot_bounce",
     ],
 }
 

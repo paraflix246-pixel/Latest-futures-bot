@@ -291,6 +291,22 @@ def test_cycle9_modules_are_rth_flat():
         assert strat.max_hold_bars is not None
 
 
+def test_cycle10_modules_are_rth_flat():
+    from src.strategies.inside_day_orb import InsideDayOrbStrategy
+    from src.strategies.keltner_am_fade import KeltnerAmFadeStrategy
+    from src.strategies.morning_range_break import MorningRangeBreakStrategy
+    from src.strategies.pivot_bounce import PivotBounceStrategy
+
+    for strat in (
+        MorningRangeBreakStrategy(),
+        KeltnerAmFadeStrategy(),
+        InsideDayOrbStrategy(),
+        PivotBounceStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes is not None
+
+
 def test_paper_engine_matches_sprint1():
     from scripts.run_paper_replay import PAPER_ENGINE
     from src.research.presets import SPRINT1_AFTER_ENGINE

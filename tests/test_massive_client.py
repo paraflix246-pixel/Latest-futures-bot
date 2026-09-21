@@ -67,11 +67,14 @@ def test_bearer_then_query_fallback(monkeypatch):
 
 
 def test_hmuz_tickers_include_known_roots():
-    from src.data.massive_client import enumerate_hmuz_tickers
+    from src.data.massive_client import enumerate_hmuz_tickers, infer_hmuz_last_trade
 
     names = enumerate_hmuz_tickers("MNQ", "2024-01-01", "2026-12-31")
     for t in ("MNQU5", "MNQZ5", "MNQH6", "MNQM6"):
         assert t in names
+    assert infer_hmuz_last_trade("MNQH4", year_hint=2026) == "2024-03-20"
+    assert infer_hmuz_last_trade("MNQZ24") == "2024-12-20"
+    assert infer_hmuz_last_trade("MESU5", year_hint=2026) == "2025-09-20"
 
 
 def test_all_auth_styles_rejected(monkeypatch):

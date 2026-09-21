@@ -47,3 +47,35 @@ def test_volume_roll_and_backward_adjust():
     assert abs(adj["close"].iloc[0] - 200.0) < 1e-6
     csv = to_loader_csv(adj)
     assert list(csv.columns) == ["datetime", "open", "high", "low", "close", "volume"]
+
+
+def test_roll_infers_hmuz_expiry_when_metadata_missing():
+    idx_a = pd.date_range("2024-03-01", periods=3, freq="1D", tz="UTC")
+    idx_b = pd.date_range("2024-03-01", periods=3, freq="1D", tz="UTC")
+    a = pd.DataFrame(
+        {
+            "datetime": idx_a,
+            "open": [100.0, 100.0, 100.0],
+            "high": [101.0, 101.0, 101.0],
+            "low": [99.0, 99.0, 99.0],
+            "close": [100.0, 100.0, 100.0],
+            "volume": [10.0, 10.0, 1.0],
+        }
+    )
+    b = pd.DataFrame(
+        {
+            "datetime": idx_b,
+            "open": [200.0, 200.0, 200.0],
+            "high": [201.0, 201.0, 201.0],
+            "low": [199.0, 199.0, 199.0],
+            "close": [200.0, 200.0, 200.0],
+            "volume": [1.0, 1.0, 50.0],
+        }
+    )
+    raw, rolls = pick_front_month(
+        {"MNQH4": a, "MNQM4": b},
+        [{"ticker": "MNQH4"}, {"ticker": "MNQM4"}],
+        min_days_to_expiry=5,
+    )
+    assert len(raw) == 3
+    assert len(rolls) == 1

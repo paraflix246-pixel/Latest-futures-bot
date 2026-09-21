@@ -24,6 +24,10 @@ from src.strategies.ib_hold_break import IbHoldBreakStrategy
 from src.strategies.inside_hour_break import InsideHourBreakStrategy
 from src.strategies.higher_low_vwap import HigherLowVwapStrategy
 from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy
+from src.strategies.morning_range_break import MorningRangeBreakStrategy
+from src.strategies.keltner_am_fade import KeltnerAmFadeStrategy
+from src.strategies.inside_day_orb import InsideDayOrbStrategy
+from src.strategies.pivot_bounce import PivotBounceStrategy
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -91,6 +95,10 @@ STRATEGIES = {
     "inside_hour_break": InsideHourBreakStrategy,
     "higher_low_vwap": HigherLowVwapStrategy,
     "prior_mid_reclaim": PriorMidReclaimStrategy,
+    "morning_range_break": MorningRangeBreakStrategy,
+    "keltner_am_fade": KeltnerAmFadeStrategy,
+    "inside_day_orb": InsideDayOrbStrategy,
+    "pivot_bounce": PivotBounceStrategy,
     "vwap_hour_reclaim_fail": VwapHourReclaimFailStrategy,
     "trend15_pullback5": Trend15Pullback5Strategy,
     "gap_fill_go": GapFillGoStrategy,

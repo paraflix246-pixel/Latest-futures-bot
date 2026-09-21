@@ -31,6 +31,7 @@ import requests
 
 # CME equity-index quarterlies. product_code filters are flaky; enumerate.
 HMUZ_MONTHS = ("H", "M", "U", "Z")
+HMUZ_MONTH_NUM = {"H": 3, "M": 6, "U": 9, "Z": 12}
 
 
 def enumerate_hmuz_tickers(root: str, start: str, end: str) -> List[str]:
@@ -48,6 +49,29 @@ def enumerate_hmuz_tickers(root: str, start: str, end: str) -> List[str]:
                     seen.add(name)
                     tickers.append(name)
     return tickers
+
+
+def infer_hmuz_last_trade(ticker: str, year_hint: int = 2026) -> str | None:
+    """Approximate last-trade date (day 20 of HMUZ month) from MNQH4 / MNQH24."""
+    import re
+
+    m = re.fullmatch(r"([A-Z]+)([HMUZ])(\d{1,2})", ticker.upper())
+    if not m:
+        return None
+    month = HMUZ_MONTH_NUM[m.group(2)]
+    year_part = int(m.group(3))
+    if year_part >= 100:
+        return None
+    if year_part >= 10:
+        year = 2000 + year_part if year_part < 80 else 1900 + year_part
+    else:
+        century = (year_hint // 10) * 10
+        year = century + year_part
+        if year > year_hint + 1:
+            year -= 10
+        if year < year_hint - 9:
+            year += 10
+    return f"{year:04d}-{month:02d}-20"
 
 
 DEFAULT_BASE = "https://api.massive.com"
@@ -117,16 +141,19 @@ class MassiveFuturesClient:
         api_key: Optional[str] = None,
         base_url: str = DEFAULT_BASE,
         timeout: float = 60.0,
-        max_retries: int = 4,
+        max_retries: int = 6,
+        request_interval: float = 0.75,
         session: Optional[requests.Session] = None,
     ) -> None:
         self._key = api_key if api_key is not None else _load_key()
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.max_retries = max_retries
+        self.request_interval = float(request_interval)
         self.session = session or requests.Session()
         self._auth: Optional[Dict[str, Any]] = None
         self.auth_probes: List[AuthProbe] = []
+        self._last_request_ts = 0.0
 
     def probe_auth(self, ticker: str = "ESU6") -> AuthProbe:
         """Try auth styles against a cheap aggregates request. Caches the first OK."""
@@ -183,14 +210,23 @@ class MassiveFuturesClient:
         }
         last_exc: Optional[Exception] = None
         for attempt in range(self.max_retries):
+            gap = time.monotonic() - self._last_request_ts
+            if self.request_interval and gap < self.request_interval:
+                time.sleep(self.request_interval - gap)
             try:
                 resp = self.session.get(url, params=merged, headers=headers, timeout=self.timeout)
+                self._last_request_ts = time.monotonic()
             except requests.RequestException as exc:
                 last_exc = exc
-                time.sleep(min(2 ** attempt, 16))
+                time.sleep(min(2 ** attempt, 30))
                 continue
             if resp.status_code in (429, 500, 502, 503, 504):
-                time.sleep(min(2 ** attempt, 16))
+                ra = resp.headers.get("Retry-After")
+                try:
+                    wait = float(ra) if ra else min(8 * (2 ** attempt), 120)
+                except ValueError:
+                    wait = min(8 * (2 ** attempt), 120)
+                time.sleep(max(wait, 1.0))
                 last_exc = MassiveApiError(f"HTTP {resp.status_code}")
                 continue
             if resp.status_code in (401, 403):

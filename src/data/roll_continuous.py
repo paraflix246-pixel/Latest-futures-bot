@@ -50,10 +50,16 @@ def pick_front_month(
         ticker = c.get("ticker")
         if not ticker or ticker not in frames:
             continue
-        last = pd.to_datetime(c.get("last_trade_date") or c.get("settlement_date"))
+        last = pd.to_datetime(c.get("last_trade_date") or c.get("settlement_date"), errors="coerce")
+        if pd.isna(last):
+            from src.data.massive_client import infer_hmuz_last_trade
+
+            inferred = infer_hmuz_last_trade(ticker)
+            last = pd.to_datetime(inferred) if inferred else pd.NaT
         if pd.isna(last):
             continue
-        meta[ticker] = last.tz_localize(None)
+        ts = pd.Timestamp(last)
+        meta[ticker] = pd.Timestamp(ts.date())
 
     clean: Dict[str, pd.DataFrame] = {}
     for ticker, df in frames.items():
