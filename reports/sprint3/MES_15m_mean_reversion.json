@@ -1,0 +1,50 @@
+{
+  "symbol": "MES",
+  "timeframe": "15m",
+  "strategy": "mean_reversion",
+  "hypothesis": "single_rth_higher_tf",
+  "walk_forward": {
+    "folds": 7,
+    "profitable_folds": 4,
+    "total_oos_trades": 35,
+    "total_oos_pnl": -642.21,
+    "avg_oos_win_rate": 0.2833,
+    "avg_pnl_per_fold": -91.74,
+    "t_stat": -0.291,
+    "significant": false
+  },
+  "splits": {
+    "full": {
+      "trade_count": 56,
+      "win_rate": 0.2679,
+      "profit_factor": 0.745,
+      "expectancy": -35.96,
+      "total_pnl": -2013.85,
+      "max_drawdown": -2595.21,
+      "total_commission": 221.96,
+      "total_slippage": 895.0
+    },
+    "in_sample": {
+      "trade_count": 41,
+      "win_rate": 0.2927,
+      "profit_factor": 0.8831,
+      "expectancy": -15.61,
+      "total_pnl": -640.16,
+      "max_drawdown": -1751.44,
+      "total_commission": 167.4,
+      "total_slippage": 675.0
+    },
+    "holdout_oos": {
+      "trade_count": 15,
+      "win_rate": 0.2,
+      "profit_factor": 0.4554,
+      "expectancy": -87.99,
+      "total_pnl": -1319.87,
+      "max_drawdown": -1562.5,
+      "total_commission": 55.18,
+      "total_slippage": 222.5
+    }
+  },
+  "promising": false,
+  "disclaimer": "Paper/backtest only. Not live. Not a profit claim."
+}

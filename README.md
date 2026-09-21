@@ -5,6 +5,10 @@ built around three independent strategy edges plus a regime-switch ensemble.
 Old strategy/backtest code from the previous iteration of this project has
 been archived under `legacy/` (not deleted) rather than deleted outright.
 
+**Paper / backtest only.** These simulations do not imply live profitability
+and are not a profit guarantee. Do not enable live trading without an
+explicit later go-ahead.
+
 ## Quick start
 
 ```bash
@@ -14,6 +18,15 @@ python scripts/run_backtest.py --symbol MNQ --timeframe 5m --strategy ensemble \
 ```
 
 Results (trade log, equity curve, summary metrics) are written to `reports/`.
+
+Sprint improve-loop (walk-forward + locked holdout, before/after):
+
+```bash
+python scripts/run_sprint.py --phase after
+python scripts/run_sprint.py --phase compare
+```
+
+See `reports/sprint1/` for cost assumptions, diagnosis, and IS vs OOS tables.
 
 ## Strategies
 
@@ -31,12 +44,17 @@ Run any strategy against any symbol/timeframe via `scripts/run_backtest.py
 ## Data
 
 `data/MNQ_1m.csv`, `MNQ_5m.csv`, `MES_1m.csv`, `MES_5m.csv` — real OHLCV,
-2025-12-29 to 2026-03-11. **NQ has no standalone feed**: since NQ and MNQ
+2024-01-01 to 2026-03-11 (MNQ 5m is the sprint-1 baseline tape). **NQ has no standalone feed**: since NQ and MNQ
 track the same index at the same price (same tick size), NQ backtests reuse
 MNQ's price series with NQ's own contract multiplier/margin/commission
 applied (see `config/settings.py: DERIVED_SYMBOLS`). NQ's much larger
 multiplier means it needs a bigger account/risk budget to size any contracts
 at all — expect low or zero trade counts on a small account.
+
+Default fills: next-bar open ± 1 tick, exit slippage, gap-aware stops.
+Round-trip MNQ friction is documented in `reports/sprint1/COST_ASSUMPTIONS.md`
+(~$0.62 commission + 2 ticks slippage ≈ $1.62/contract). Legacy signal-close
+fills remain available on `run_backtest` via engine kwargs for reproduction.
 
 ## Structure
 

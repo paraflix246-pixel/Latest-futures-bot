@@ -3,22 +3,24 @@
   "timeframe": "5m",
   "full_history": {
     "segment": "full_history",
-    "trade_count": 424,
-    "win_rate": 0.2524,
-    "total_pnl": -6843.36,
-    "t_stat": -1.642,
+    "trade_count": 3303,
+    "win_rate": 0.3418,
+    "total_pnl": -17272.28,
+    "t_stat": -2.233,
     "significant": false
   },
   "final_hold_out": {
     "segment": "final_90_days",
-    "trade_count": 27,
-    "win_rate": 0.1481,
-    "total_pnl": -2021.74,
-    "t_stat": -1.851,
+    "trade_count": 345,
+    "win_rate": 0.342,
+    "total_pnl": -2589.96,
+    "t_stat": -1.417,
     "significant": false
   },
   "selected_strategy_counts": {
-    "no_trade": 153839,
-    "vwap_pullback_trend": 424
+    "no_trade": 150960,
+    "breakout": 2036,
+    "trend": 920,
+    "vwap_pullback_trend": 347
   }
 }

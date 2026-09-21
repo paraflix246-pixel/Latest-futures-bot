@@ -5,6 +5,13 @@ import numpy as np
 import pandas as pd
 
 
+def rising_edge(cond: pd.Series) -> pd.Series:
+    """True on the first bar `cond` becomes true, not while it stays true."""
+    flag = cond.fillna(False).astype(bool)
+    prev = flag.shift(1).fillna(False).astype(bool)
+    return flag & ~prev
+
+
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
 

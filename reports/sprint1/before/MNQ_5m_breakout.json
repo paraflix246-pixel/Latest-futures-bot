@@ -1,0 +1,358 @@
+{
+  "full": {
+    "symbol": "MNQ",
+    "strategy": "breakout",
+    "timeframe": "5m",
+    "trade_count": 3272,
+    "win_rate": 0.3166,
+    "profit_factor": 0.6274,
+    "expectancy": -9.33,
+    "total_pnl": -30542.12,
+    "max_drawdown": -30605.09,
+    "sharpe": -3.4736,
+    "final_equity": 19457.88,
+    "total_gross_pnl": -26503.44,
+    "total_commission": 4038.68,
+    "total_slippage": 0.0,
+    "avg_hold_minutes": 40.55,
+    "median_hold_minutes": 25.0,
+    "avg_contracts": 1.991,
+    "max_contracts": 16,
+    "same_bar_reentries": 369,
+    "exit_reasons": {
+      "trail": 3272
+    },
+    "split": "full",
+    "phase": "before",
+    "bars": 154263,
+    "start": "2024-01-01 23:00:00+00:00",
+    "end": "2026-03-11 23:55:00+00:00"
+  },
+  "in_sample": {
+    "symbol": "MNQ",
+    "strategy": "breakout",
+    "timeframe": "5m",
+    "trade_count": 2911,
+    "win_rate": 0.3126,
+    "profit_factor": 0.6166,
+    "expectancy": -10.08,
+    "total_pnl": -29328.64,
+    "max_drawdown": -29428.16,
+    "sharpe": -3.9562,
+    "final_equity": 20671.36,
+    "total_gross_pnl": -25549.12,
+    "total_commission": 3779.52,
+    "total_slippage": 0.0,
+    "avg_hold_minutes": 39.92,
+    "median_hold_minutes": 25.0,
+    "avg_contracts": 2.094,
+    "max_contracts": 16,
+    "same_bar_reentries": 348,
+    "exit_reasons": {
+      "trail": 2911
+    },
+    "split": "in_sample",
+    "phase": "before",
+    "bars": 119754,
+    "start": "2024-01-01 23:00:00+00:00",
+    "end": "2025-09-11 23:55:00+00:00"
+  },
+  "holdout_oos": {
+    "symbol": "MNQ",
+    "strategy": "breakout",
+    "timeframe": "5m",
+    "trade_count": 878,
+    "win_rate": 0.3497,
+    "profit_factor": 0.7438,
+    "expectancy": -8.45,
+    "total_pnl": -7421.95,
+    "max_drawdown": -7721.41,
+    "sharpe": -2.4322,
+    "final_equity": 42578.05,
+    "total_gross_pnl": -6371.67,
+    "total_commission": 1050.28,
+    "total_slippage": 0.0,
+    "avg_hold_minutes": 45.87,
+    "median_hold_minutes": 25.0,
+    "avg_contracts": 1.929,
+    "max_contracts": 9,
+    "same_bar_reentries": 100,
+    "exit_reasons": {
+      "trail": 878
+    },
+    "split": "holdout_oos",
+    "phase": "before",
+    "bars": 34509,
+    "start": "2025-09-12 00:00:00+00:00",
+    "end": "2026-03-11 23:55:00+00:00"
+  },
+  "walk_forward": {
+    "symbol": "MNQ",
+    "strategy": "breakout",
+    "phase": "before",
+    "oos_summary": {
+      "folds": 10,
+      "profitable_folds": 0,
+      "total_oos_trades": 3344,
+      "total_oos_pnl": -44519.96,
+      "avg_oos_win_rate": 0.3202,
+      "avg_pnl_per_fold": -4452.0,
+      "t_stat": -10.281,
+      "significant": false
+    },
+    "avg_is_pnl_per_fold": -12237.29,
+    "avg_oos_pnl_per_fold": -4452.0,
+    "folds": [
+      {
+        "fold": 0,
+        "train_start": "2024-01-01 23:00:00+00:00",
+        "train_end": "2024-06-29 23:00:00+00:00",
+        "test_start": "2024-06-29 23:00:00+00:00",
+        "test_end": "2024-08-28 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1182,
+          "win_rate": 0.3232,
+          "profit_factor": 0.6688,
+          "expectancy": -10.76,
+          "total_pnl": -12718.49,
+          "max_drawdown": -13134.97,
+          "sharpe": -3.5403
+        },
+        "test_metrics": {
+          "trade_count": 338,
+          "win_rate": 0.3195,
+          "profit_factor": 0.6531,
+          "expectancy": -12.72,
+          "total_pnl": -4298.35,
+          "max_drawdown": -4523.84,
+          "sharpe": -3.6177
+        }
+      },
+      {
+        "fold": 1,
+        "train_start": "2024-03-01 23:00:00+00:00",
+        "train_end": "2024-08-28 23:00:00+00:00",
+        "test_start": "2024-08-28 23:00:00+00:00",
+        "test_end": "2024-10-27 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1080,
+          "win_rate": 0.3296,
+          "profit_factor": 0.6722,
+          "expectancy": -11.0,
+          "total_pnl": -11877.5,
+          "max_drawdown": -12043.67,
+          "sharpe": -3.2988
+        },
+        "test_metrics": {
+          "trade_count": 367,
+          "win_rate": 0.327,
+          "profit_factor": 0.7108,
+          "expectancy": -9.63,
+          "total_pnl": -3532.46,
+          "max_drawdown": -3730.47,
+          "sharpe": -3.2074
+        }
+      },
+      {
+        "fold": 2,
+        "train_start": "2024-04-30 23:00:00+00:00",
+        "train_end": "2024-10-27 23:00:00+00:00",
+        "test_start": "2024-10-27 23:00:00+00:00",
+        "test_end": "2024-12-26 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1059,
+          "win_rate": 0.322,
+          "profit_factor": 0.6676,
+          "expectancy": -10.72,
+          "total_pnl": -11349.73,
+          "max_drawdown": -11681.84,
+          "sharpe": -3.3586
+        },
+        "test_metrics": {
+          "trade_count": 386,
+          "win_rate": 0.2746,
+          "profit_factor": 0.4366,
+          "expectancy": -20.5,
+          "total_pnl": -7913.46,
+          "max_drawdown": -8329.4,
+          "sharpe": -7.7157
+        }
+      },
+      {
+        "fold": 3,
+        "train_start": "2024-06-29 23:00:00+00:00",
+        "train_end": "2024-12-26 23:00:00+00:00",
+        "test_start": "2024-12-26 23:00:00+00:00",
+        "test_end": "2025-02-24 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1053,
+          "win_rate": 0.3048,
+          "profit_factor": 0.6049,
+          "expectancy": -13.0,
+          "total_pnl": -13690.03,
+          "max_drawdown": -14137.41,
+          "sharpe": -4.569
+        },
+        "test_metrics": {
+          "trade_count": 329,
+          "win_rate": 0.3708,
+          "profit_factor": 0.795,
+          "expectancy": -6.75,
+          "total_pnl": -2221.74,
+          "max_drawdown": -2627.0,
+          "sharpe": -1.9866
+        }
+      },
+      {
+        "fold": 4,
+        "train_start": "2024-08-28 23:00:00+00:00",
+        "train_end": "2025-02-24 23:00:00+00:00",
+        "test_start": "2025-02-24 23:00:00+00:00",
+        "test_end": "2025-04-25 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1033,
+          "win_rate": 0.3195,
+          "profit_factor": 0.6136,
+          "expectancy": -12.16,
+          "total_pnl": -12559.31,
+          "max_drawdown": -12638.42,
+          "sharpe": -4.4026
+        },
+        "test_metrics": {
+          "trade_count": 241,
+          "win_rate": 0.278,
+          "profit_factor": 0.4568,
+          "expectancy": -17.65,
+          "total_pnl": -4253.69,
+          "max_drawdown": -4301.57,
+          "sharpe": -5.2165
+        }
+      },
+      {
+        "fold": 5,
+        "train_start": "2024-10-27 23:00:00+00:00",
+        "train_end": "2025-04-25 23:00:00+00:00",
+        "test_start": "2025-04-25 23:00:00+00:00",
+        "test_end": "2025-06-24 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 880,
+          "win_rate": 0.3102,
+          "profit_factor": 0.5591,
+          "expectancy": -13.79,
+          "total_pnl": -12132.12,
+          "max_drawdown": -12180.0,
+          "sharpe": -4.6122
+        },
+        "test_metrics": {
+          "trade_count": 326,
+          "win_rate": 0.2914,
+          "profit_factor": 0.4274,
+          "expectancy": -21.06,
+          "total_pnl": -6866.44,
+          "max_drawdown": -7209.24,
+          "sharpe": -7.4385
+        }
+      },
+      {
+        "fold": 6,
+        "train_start": "2024-12-26 23:00:00+00:00",
+        "train_end": "2025-06-24 23:00:00+00:00",
+        "test_start": "2025-06-24 23:00:00+00:00",
+        "test_end": "2025-08-23 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 865,
+          "win_rate": 0.3225,
+          "profit_factor": 0.5925,
+          "expectancy": -13.01,
+          "total_pnl": -11257.31,
+          "max_drawdown": -11606.41,
+          "sharpe": -4.3606
+        },
+        "test_metrics": {
+          "trade_count": 400,
+          "win_rate": 0.32,
+          "profit_factor": 0.6102,
+          "expectancy": -14.44,
+          "total_pnl": -5775.74,
+          "max_drawdown": -6112.6,
+          "sharpe": -4.762
+        }
+      },
+      {
+        "fold": 7,
+        "train_start": "2025-02-24 23:00:00+00:00",
+        "train_end": "2025-08-23 23:00:00+00:00",
+        "test_start": "2025-08-23 23:00:00+00:00",
+        "test_end": "2025-10-22 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 934,
+          "win_rate": 0.3009,
+          "profit_factor": 0.5182,
+          "expectancy": -15.23,
+          "total_pnl": -14224.82,
+          "max_drawdown": -14224.82,
+          "sharpe": -5.3055
+        },
+        "test_metrics": {
+          "trade_count": 384,
+          "win_rate": 0.3464,
+          "profit_factor": 0.7289,
+          "expectancy": -9.05,
+          "total_pnl": -3474.27,
+          "max_drawdown": -3883.75,
+          "sharpe": -2.7957
+        }
+      },
+      {
+        "fold": 8,
+        "train_start": "2025-04-25 23:00:00+00:00",
+        "train_end": "2025-10-22 23:00:00+00:00",
+        "test_start": "2025-10-22 23:00:00+00:00",
+        "test_end": "2025-12-21 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1059,
+          "win_rate": 0.3211,
+          "profit_factor": 0.6052,
+          "expectancy": -12.37,
+          "total_pnl": -13099.19,
+          "max_drawdown": -13501.71,
+          "sharpe": -4.1669
+        },
+        "test_metrics": {
+          "trade_count": 275,
+          "win_rate": 0.3418,
+          "profit_factor": 0.7719,
+          "expectancy": -7.88,
+          "total_pnl": -2165.82,
+          "max_drawdown": -3201.95,
+          "sharpe": -2.1421
+        }
+      },
+      {
+        "fold": 9,
+        "train_start": "2025-06-24 23:00:00+00:00",
+        "train_end": "2025-12-21 23:00:00+00:00",
+        "test_start": "2025-12-21 23:00:00+00:00",
+        "test_end": "2026-02-19 23:00:00+00:00",
+        "train_metrics": {
+          "trade_count": 1007,
+          "win_rate": 0.3396,
+          "profit_factor": 0.7079,
+          "expectancy": -9.4,
+          "total_pnl": -9464.41,
+          "max_drawdown": -9801.27,
+          "sharpe": -2.8898
+        },
+        "test_metrics": {
+          "trade_count": 298,
+          "win_rate": 0.3322,
+          "profit_factor": 0.6108,
+          "expectancy": -13.48,
+          "total_pnl": -4018.0,
+          "max_drawdown": -4239.71,
+          "sharpe": -4.0328
+        }
+      }
+    ]
+  }
+}

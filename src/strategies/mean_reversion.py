@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from src.strategies.base import StrategySignals
-from src.strategies.indicators import adx, bollinger_bands, rsi
+from src.strategies.indicators import adx, bollinger_bands, rising_edge, rsi
 
 BB_PERIOD, BB_STD = 20, 2.0
 RSI_PERIOD = 14
@@ -24,7 +24,7 @@ class MeanReversionStrategy:
     def __init__(self, bb_period: int = BB_PERIOD, bb_std: float = BB_STD,
                  rsi_period: int = RSI_PERIOD, rsi_oversold: float = RSI_OVERSOLD,
                  rsi_overbought: float = RSI_OVERBOUGHT, adx_period: int = ADX_PERIOD,
-                 adx_range_max: float = ADX_RANGE_MAX):
+                 adx_range_max: float = ADX_RANGE_MAX, event_trigger: bool = True):
         self.bb_period = bb_period
         self.bb_std = bb_std
         self.rsi_period = rsi_period
@@ -32,6 +32,9 @@ class MeanReversionStrategy:
         self.rsi_overbought = rsi_overbought
         self.adx_period = adx_period
         self.adx_range_max = adx_range_max
+        # If True, fire only on the first bar the fade condition becomes true,
+        # not on every bar that remains stretched outside the bands.
+        self.event_trigger = event_trigger
 
     def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
         close = df["close"]
@@ -40,8 +43,14 @@ class MeanReversionStrategy:
         adx_ = adx(df["high"], df["low"], close, self.adx_period)
 
         ranging = adx_ < self.adx_range_max
-        long_entry = (close <= lower) & (rsi_ < self.rsi_oversold) & ranging
-        short_entry = (close >= upper) & (rsi_ > self.rsi_overbought) & ranging
+        long_cond = (close <= lower) & (rsi_ < self.rsi_oversold) & ranging
+        short_cond = (close >= upper) & (rsi_ > self.rsi_overbought) & ranging
+        if self.event_trigger:
+            long_entry = rising_edge(long_cond)
+            short_entry = rising_edge(short_cond)
+        else:
+            long_entry = long_cond
+            short_entry = short_cond
 
         entries = pd.Series(0, index=df.index)
         entries[long_entry] = 1

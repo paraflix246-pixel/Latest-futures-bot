@@ -1,0 +1,54 @@
+{
+  "hours": [
+    {
+      "hour_et": 9,
+      "trades": 189,
+      "pnl": 6842.23,
+      "expectancy": 36.2,
+      "t_stat": 1.578
+    },
+    {
+      "hour_et": 10,
+      "trades": 93,
+      "pnl": 2753.2,
+      "expectancy": 29.6,
+      "t_stat": 1.216
+    },
+    {
+      "hour_et": 13,
+      "trades": 48,
+      "pnl": 1340.55,
+      "expectancy": 27.93,
+      "t_stat": 0.807
+    },
+    {
+      "hour_et": 12,
+      "trades": 35,
+      "pnl": -176.95,
+      "expectancy": -5.06,
+      "t_stat": -0.167
+    },
+    {
+      "hour_et": 15,
+      "trades": 67,
+      "pnl": -777.61,
+      "expectancy": -11.61,
+      "t_stat": -0.651
+    },
+    {
+      "hour_et": 14,
+      "trades": 49,
+      "pnl": -1726.37,
+      "expectancy": -35.23,
+      "t_stat": -1.814
+    },
+    {
+      "hour_et": 11,
+      "trades": 19,
+      "pnl": -1070.61,
+      "expectancy": -56.35,
+      "t_stat": -2.256
+    }
+  ],
+  "note": "In-sample only. Do not promote a bucket unless t>=2 and n>=30."
+}

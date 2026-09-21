@@ -1,0 +1,321 @@
+{
+  "disclaimer": "Paper/backtest only. The 1-tick MNQ ensemble was never a validated edge (t=1.76, MES failed). This audit asks whether even that fragile number survives harsher fills.",
+  "baseline_holdout_pnl": 1801.96,
+  "baseline_wf_pnl": 9939.65,
+  "rows": [
+    {
+      "name": "ticks_1_baseline",
+      "extra": {
+        "slippage_ticks": 1
+      },
+      "splits": {
+        "full": {
+          "trade_count": 633,
+          "win_rate": 0.3633,
+          "profit_factor": 1.2223,
+          "expectancy": 13.98,
+          "total_pnl": 8846.53,
+          "max_drawdown": -3344.88,
+          "total_commission": 900.86,
+          "total_slippage": 1453.0
+        },
+        "in_sample": {
+          "trade_count": 500,
+          "win_rate": 0.364,
+          "profit_factor": 1.2402,
+          "expectancy": 14.37,
+          "total_pnl": 7184.43,
+          "max_drawdown": -3344.88,
+          "total_commission": 673.32,
+          "total_slippage": 1086.0
+        },
+        "holdout_oos": {
+          "trade_count": 122,
+          "win_rate": 0.3934,
+          "profit_factor": 1.2135,
+          "expectancy": 14.77,
+          "total_pnl": 1801.96,
+          "max_drawdown": -1582.06,
+          "total_commission": 203.36,
+          "total_slippage": 328.0
+        }
+      },
+      "walk_forward": {
+        "folds": 10,
+        "profitable_folds": 7,
+        "total_oos_trades": 442,
+        "total_oos_pnl": 9939.65,
+        "avg_oos_win_rate": 0.3782,
+        "avg_pnl_per_fold": 993.96,
+        "t_stat": 1.762,
+        "significant": false
+      }
+    },
+    {
+      "name": "ticks_2",
+      "extra": {
+        "slippage_ticks": 2
+      },
+      "splits": {
+        "full": {
+          "trade_count": 626,
+          "win_rate": 0.3594,
+          "profit_factor": 1.1845,
+          "expectancy": 11.6,
+          "total_pnl": 7262.9,
+          "max_drawdown": -3595.61,
+          "total_commission": 879.16,
+          "total_slippage": 2836.0
+        },
+        "in_sample": {
+          "trade_count": 495,
+          "win_rate": 0.3576,
+          "profit_factor": 1.1916,
+          "expectancy": 11.53,
+          "total_pnl": 5707.52,
+          "max_drawdown": -3595.61,
+          "total_commission": 658.44,
+          "total_slippage": 2124.0
+        },
+        "holdout_oos": {
+          "trade_count": 121,
+          "win_rate": 0.3967,
+          "profit_factor": 1.2039,
+          "expectancy": 14.19,
+          "total_pnl": 1716.7,
+          "max_drawdown": -1632.86,
+          "total_commission": 202.12,
+          "total_slippage": 652.0
+        }
+      },
+      "walk_forward": {
+        "folds": 10,
+        "profitable_folds": 7,
+        "total_oos_trades": 440,
+        "total_oos_pnl": 9044.31,
+        "avg_oos_win_rate": 0.3755,
+        "avg_pnl_per_fold": 904.43,
+        "t_stat": 1.609,
+        "significant": false
+      }
+    },
+    {
+      "name": "ticks_3",
+      "extra": {
+        "slippage_ticks": 3
+      },
+      "splits": {
+        "full": {
+          "trade_count": 618,
+          "win_rate": 0.3576,
+          "profit_factor": 1.1415,
+          "expectancy": 9.1,
+          "total_pnl": 5623.13,
+          "max_drawdown": -3939.18,
+          "total_commission": 864.28,
+          "total_slippage": 4182.0
+        },
+        "in_sample": {
+          "trade_count": 489,
+          "win_rate": 0.3538,
+          "profit_factor": 1.1422,
+          "expectancy": 8.78,
+          "total_pnl": 4295.17,
+          "max_drawdown": -3939.18,
+          "total_commission": 648.52,
+          "total_slippage": 3138.0
+        },
+        "holdout_oos": {
+          "trade_count": 121,
+          "win_rate": 0.3967,
+          "profit_factor": 1.1553,
+          "expectancy": 11.09,
+          "total_pnl": 1341.67,
+          "max_drawdown": -1749.86,
+          "total_commission": 201.5,
+          "total_slippage": 975.0
+        }
+      },
+      "walk_forward": null
+    },
+    {
+      "name": "ticks_4",
+      "extra": {
+        "slippage_ticks": 4
+      },
+      "splits": {
+        "full": {
+          "trade_count": 611,
+          "win_rate": 0.3519,
+          "profit_factor": 1.1099,
+          "expectancy": 7.18,
+          "total_pnl": 4389.05,
+          "max_drawdown": -4071.82,
+          "total_commission": 848.16,
+          "total_slippage": 5472.0
+        },
+        "in_sample": {
+          "trade_count": 484,
+          "win_rate": 0.345,
+          "profit_factor": 1.1182,
+          "expectancy": 7.4,
+          "total_pnl": 3581.89,
+          "max_drawdown": -4071.82,
+          "total_commission": 637.98,
+          "total_slippage": 4116.0
+        },
+        "holdout_oos": {
+          "trade_count": 119,
+          "win_rate": 0.4034,
+          "profit_factor": 1.1294,
+          "expectancy": 9.27,
+          "total_pnl": 1103.7,
+          "max_drawdown": -1575.98,
+          "total_commission": 196.54,
+          "total_slippage": 1268.0
+        }
+      },
+      "walk_forward": {
+        "folds": 10,
+        "profitable_folds": 6,
+        "total_oos_trades": 438,
+        "total_oos_pnl": 7265.09,
+        "avg_oos_win_rate": 0.3646,
+        "avg_pnl_per_fold": 726.51,
+        "t_stat": 1.315,
+        "significant": false
+      }
+    },
+    {
+      "name": "ticks_1_gap_extra_2",
+      "extra": {
+        "slippage_ticks": 1,
+        "gap_extra_ticks": 2
+      },
+      "splits": {
+        "full": {
+          "trade_count": 633,
+          "win_rate": 0.3633,
+          "profit_factor": 1.2213,
+          "expectancy": 13.92,
+          "total_pnl": 8813.53,
+          "max_drawdown": -3359.88,
+          "total_commission": 900.86,
+          "total_slippage": 1486.0
+        },
+        "in_sample": {
+          "trade_count": 500,
+          "win_rate": 0.364,
+          "profit_factor": 1.2391,
+          "expectancy": 14.31,
+          "total_pnl": 7156.43,
+          "max_drawdown": -3359.88,
+          "total_commission": 673.32,
+          "total_slippage": 1114.0
+        },
+        "holdout_oos": {
+          "trade_count": 122,
+          "win_rate": 0.3934,
+          "profit_factor": 1.2132,
+          "expectancy": 14.75,
+          "total_pnl": 1799.96,
+          "max_drawdown": -1582.06,
+          "total_commission": 203.36,
+          "total_slippage": 330.0
+        }
+      },
+      "walk_forward": null
+    },
+    {
+      "name": "ticks_1_partial_50pct",
+      "extra": {
+        "slippage_ticks": 1,
+        "fill_fraction": 0.5
+      },
+      "splits": {
+        "full": {
+          "trade_count": 276,
+          "win_rate": 0.3696,
+          "profit_factor": 1.3837,
+          "expectancy": 16.09,
+          "total_pnl": 4439.7,
+          "max_drawdown": -1548.8,
+          "total_commission": 319.3,
+          "total_slippage": 515.0
+        },
+        "in_sample": {
+          "trade_count": 222,
+          "win_rate": 0.3604,
+          "profit_factor": 1.3461,
+          "expectancy": 14.26,
+          "total_pnl": 3165.22,
+          "max_drawdown": -1548.8,
+          "total_commission": 239.32,
+          "total_slippage": 386.0
+        },
+        "holdout_oos": {
+          "trade_count": 51,
+          "win_rate": 0.3725,
+          "profit_factor": 1.4671,
+          "expectancy": 21.0,
+          "total_pnl": 1071.1,
+          "max_drawdown": -704.3,
+          "total_commission": 75.02,
+          "total_slippage": 121.0
+        }
+      },
+      "walk_forward": null
+    },
+    {
+      "name": "harsh_4tick_gap2_partial50",
+      "extra": {
+        "slippage_ticks": 4,
+        "gap_extra_ticks": 2,
+        "fill_fraction": 0.5
+      },
+      "splits": {
+        "full": {
+          "trade_count": 267,
+          "win_rate": 0.3521,
+          "profit_factor": 1.2489,
+          "expectancy": 11.22,
+          "total_pnl": 2995.25,
+          "max_drawdown": -1802.59,
+          "total_commission": 305.66,
+          "total_slippage": 1976.0
+        },
+        "in_sample": {
+          "trade_count": 215,
+          "win_rate": 0.3442,
+          "profit_factor": 1.2424,
+          "expectancy": 10.61,
+          "total_pnl": 2280.23,
+          "max_drawdown": -1802.59,
+          "total_commission": 228.78,
+          "total_slippage": 1480.0
+        },
+        "holdout_oos": {
+          "trade_count": 51,
+          "win_rate": 0.3725,
+          "profit_factor": 1.2303,
+          "expectancy": 11.06,
+          "total_pnl": 564.18,
+          "max_drawdown": -728.35,
+          "total_commission": 71.92,
+          "total_slippage": 464.0
+        }
+      },
+      "walk_forward": {
+        "folds": 10,
+        "profitable_folds": 7,
+        "total_oos_trades": 181,
+        "total_oos_pnl": 3512.01,
+        "avg_oos_win_rate": 0.3622,
+        "avg_pnl_per_fold": 351.2,
+        "t_stat": 1.38,
+        "significant": false
+      }
+    }
+  ],
+  "holdout_oos_start": "2025-09-12"
+}

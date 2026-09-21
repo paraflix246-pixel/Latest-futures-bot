@@ -1,0 +1,121 @@
+[
+  {
+    "variant": "cooldown_6",
+    "extra": {
+      "cooldown_bars": 6
+    },
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 426,
+    "total_oos_pnl": 10138.59,
+    "avg_oos_win_rate": 0.3773,
+    "avg_pnl_per_fold": 1013.86,
+    "t_stat": 1.799,
+    "significant": false,
+    "avg_is_pnl": 2541.36
+  },
+  {
+    "variant": "min_atr_gate",
+    "extra": {
+      "min_atr_gate": true
+    },
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 440,
+    "total_oos_pnl": 10036.8,
+    "avg_oos_win_rate": 0.3794,
+    "avg_pnl_per_fold": 1003.68,
+    "t_stat": 1.779,
+    "significant": false,
+    "avg_is_pnl": 2521.15
+  },
+  {
+    "variant": "halt_1pct",
+    "extra": {
+      "daily_loss_halt_pct": 1.0
+    },
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 441,
+    "total_oos_pnl": 9974.89,
+    "avg_oos_win_rate": 0.3788,
+    "avg_pnl_per_fold": 997.49,
+    "t_stat": 1.768,
+    "significant": false,
+    "avg_is_pnl": 2502.58
+  },
+  {
+    "variant": "max_contracts_5",
+    "extra": {
+      "max_contracts": 5
+    },
+    "folds": 10,
+    "profitable_folds": 9,
+    "total_oos_trades": 441,
+    "total_oos_pnl": 7567.48,
+    "avg_oos_win_rate": 0.3761,
+    "avg_pnl_per_fold": 756.75,
+    "t_stat": 1.763,
+    "significant": false,
+    "avg_is_pnl": 1813.07
+  },
+  {
+    "variant": "s1_after_baseline",
+    "extra": {},
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 442,
+    "total_oos_pnl": 9939.65,
+    "avg_oos_win_rate": 0.3782,
+    "avg_pnl_per_fold": 993.96,
+    "t_stat": 1.762,
+    "significant": false,
+    "avg_is_pnl": 2498.38
+  },
+  {
+    "variant": "atr_plus_cost",
+    "extra": {
+      "min_atr_gate": true,
+      "max_cost_frac_of_risk": 0.25
+    },
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 435,
+    "total_oos_pnl": 8970.53,
+    "avg_oos_win_rate": 0.381,
+    "avg_pnl_per_fold": 897.05,
+    "t_stat": 1.633,
+    "significant": false,
+    "avg_is_pnl": 2188.12
+  },
+  {
+    "variant": "cost_frac_0.25",
+    "extra": {
+      "max_cost_frac_of_risk": 0.25
+    },
+    "folds": 10,
+    "profitable_folds": 7,
+    "total_oos_trades": 437,
+    "total_oos_pnl": 8873.38,
+    "avg_oos_win_rate": 0.3799,
+    "avg_pnl_per_fold": 887.34,
+    "t_stat": 1.615,
+    "significant": false,
+    "avg_is_pnl": 2158.97
+  },
+  {
+    "variant": "skip_open_30m",
+    "extra": {
+      "skip_rth_open_minutes": 30
+    },
+    "folds": 10,
+    "profitable_folds": 4,
+    "total_oos_trades": 264,
+    "total_oos_pnl": -1078.52,
+    "avg_oos_win_rate": 0.3385,
+    "avg_pnl_per_fold": -107.85,
+    "t_stat": -0.344,
+    "significant": false,
+    "avg_is_pnl": -496.42
+  }
+]

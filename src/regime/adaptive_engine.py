@@ -24,8 +24,14 @@ import numpy as np
 import pandas as pd
 
 from config.instruments import get_spec
-from config.settings import DEFAULT_SLIPPAGE_TICKS
-from src.backtest.engine import BacktestResult, Trade, run_backtest
+from config.settings import DEFAULT_MAX_CONTRACTS, DEFAULT_SLIPPAGE_TICKS
+from src.backtest.engine import (
+    ENGINE_DEFAULTS,
+    BacktestResult,
+    Trade,
+    _slip,
+    run_backtest,
+)
 from src.regime.engine import compute_regime_scores
 from src.regime.expectancy_tracker import REGIME_COLUMNS, RegimeExpectancyTracker
 from src.risk.position_sizing import contracts_for_risk
@@ -57,6 +63,7 @@ class ResearchLogRow:
     gross_pnl: float | None = None
     commission: float | None = None
     net_pnl: float | None = None
+    equity_at_entry: float | None = None
 
 
 def run_adaptive_backtest(
@@ -68,7 +75,14 @@ def run_adaptive_backtest(
     risk_pct: float,
     min_sample: int = MIN_SAMPLE,
     slippage_ticks: int = DEFAULT_SLIPPAGE_TICKS,
+    max_contracts: int | None = DEFAULT_MAX_CONTRACTS,
 ) -> Tuple[BacktestResult, pd.DataFrame]:
+    """Adaptive router with the same fill/risk defaults as `run_backtest`.
+
+    Reference (solo) backtests and live fills both use next-open + exit
+    slippage + gap-aware stops so this path is not secretly optimistic
+    relative to the sprint-1 engine.
+    """
     spec = get_spec(symbol)
     regime_scores = compute_regime_scores(df)
 
@@ -97,7 +111,8 @@ def run_adaptive_backtest(
     tracker = RegimeExpectancyTracker(reference_results, regime_scores)
 
     trail_atr = atr(df["high"], df["low"], df["close"], TRAIL_ATR_PERIOD)
-    slippage_price = slippage_ticks * spec.tick_size
+    apply_exit_slippage = ENGINE_DEFAULTS["apply_exit_slippage"]
+    gap_aware_stops = ENGINE_DEFAULTS["gap_aware_stops"]
 
     trades: List[Trade] = []
     log_rows: List[ResearchLogRow] = []
@@ -105,7 +120,19 @@ def run_adaptive_backtest(
     equity_curve = []
 
     position = None
+    pending = None
+    just_exited = False
     n = len(df)
+
+    def _exit_fill(direction, raw_price, row, reason):
+        mid = raw_price
+        if reason in ("stop", "trail") and gap_aware_stops:
+            if direction == 1 and row["open"] <= raw_price:
+                mid = row["open"]
+            elif direction == -1 and row["open"] >= raw_price:
+                mid = row["open"]
+        fill = mid + _slip(direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit")
+        return fill, mid
 
     for i in range(n):
         ts = df.index[i]
@@ -113,64 +140,124 @@ def run_adaptive_backtest(
         score_row = regime_scores.iloc[i]
         dominant_regime = max(REGIME_COLUMNS, key=lambda label: score_row[REGIME_COLUMNS[label]])
         transition = bool(score_row["transition_score"] >= TRANSITION_THRESHOLD)
+        just_exited = False
+        candidate_evs: Dict[str, Tuple[float, int]] = {}
+        selected_strategy = "no_trade"
+        row_extras: dict = {}
+
+        if position is None and pending is not None:
+            direction = pending["direction"]
+            mid_entry = float(row["open"])
+            entry_price = mid_entry + _slip(direction, slippage_ticks, spec.tick_size, "entry")
+            stop = pending["stop"]
+            gapped = gap_aware_stops and (
+                (direction == 1 and row["open"] <= stop) or (direction == -1 and row["open"] >= stop)
+            )
+            if not gapped:
+                contracts = contracts_for_risk(
+                    equity, pending["risk_pct"], entry_price, stop, spec, max_contracts=max_contracts
+                )
+                if contracts > 0:
+                    position = {
+                        "direction": direction,
+                        "entry_time": ts,
+                        "entry_price": entry_price,
+                        "mid_entry": mid_entry,
+                        "stop": stop,
+                        "target": pending["target"],
+                        "contracts": contracts,
+                        "trailing": pending["target"] is None,
+                        "trail_extreme": mid_entry,
+                        "initial_risk": abs(entry_price - stop),
+                        "breakeven_triggered": False,
+                    }
+                    selected_strategy = pending["name"]
+                    candidate_evs = pending["candidate_evs"]
+                    transition = pending["transition"]
+                    row_extras = {
+                        "entry": entry_price,
+                        "stop": stop,
+                        "target": pending["target"],
+                        "position_size": contracts,
+                        "equity_at_entry": equity,
+                    }
+            pending = None
 
         if position is not None:
             direction = position["direction"]
-            if direction == 1:
-                position["trail_extreme"] = max(position["trail_extreme"], row["high"])
-                if not position["breakeven_triggered"]:
-                    if row["high"] - position["entry_price"] >= position["initial_risk"]:
-                        position["stop"] = max(position["stop"], position["entry_price"])
-                        position["breakeven_triggered"] = True
-                if position["trailing"]:
-                    candidate = position["trail_extreme"] - TRAIL_ATR_MULT * trail_atr.iloc[i]
-                    position["stop"] = max(position["stop"], candidate)
-            else:
-                position["trail_extreme"] = min(position["trail_extreme"], row["low"])
-                if not position["breakeven_triggered"]:
-                    if position["entry_price"] - row["low"] >= position["initial_risk"]:
-                        position["stop"] = min(position["stop"], position["entry_price"])
-                        position["breakeven_triggered"] = True
-                if position["trailing"]:
-                    candidate = position["trail_extreme"] + TRAIL_ATR_MULT * trail_atr.iloc[i]
-                    position["stop"] = min(position["stop"], candidate)
+            stop_at_open = position["stop"]
+            target_at_open = position["target"]
+            trailing_at_open = position["trailing"]
 
-            exit_price, exit_reason = None, None
+            exit_price, exit_reason, mid_exit = None, None, None
             if direction == 1:
-                if row["low"] <= position["stop"]:
-                    exit_price, exit_reason = position["stop"], "trail" if position["trailing"] else "stop"
-                elif position["target"] is not None and row["high"] >= position["target"]:
-                    exit_price, exit_reason = position["target"], "target"
+                if row["low"] <= stop_at_open:
+                    reason = "trail" if trailing_at_open else "stop"
+                    exit_price, mid_exit = _exit_fill(direction, stop_at_open, row, reason)
+                    exit_reason = reason
+                elif target_at_open is not None and row["high"] >= target_at_open:
+                    mid_exit = target_at_open
+                    exit_price = mid_exit + _slip(
+                        direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                    )
+                    exit_reason = "target"
             else:
-                if row["high"] >= position["stop"]:
-                    exit_price, exit_reason = position["stop"], "trail" if position["trailing"] else "stop"
-                elif position["target"] is not None and row["low"] <= position["target"]:
-                    exit_price, exit_reason = position["target"], "target"
+                if row["high"] >= stop_at_open:
+                    reason = "trail" if trailing_at_open else "stop"
+                    exit_price, mid_exit = _exit_fill(direction, stop_at_open, row, reason)
+                    exit_reason = reason
+                elif target_at_open is not None and row["low"] <= target_at_open:
+                    mid_exit = target_at_open
+                    exit_price = mid_exit + _slip(
+                        direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                    )
+                    exit_reason = "target"
 
             if i == n - 1 and exit_price is None:
-                exit_price, exit_reason = row["close"], "eod"
+                mid_exit = float(row["close"])
+                exit_price = mid_exit + _slip(
+                    direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                )
+                exit_reason = "eod"
 
             if exit_price is not None:
                 ticks = (exit_price - position["entry_price"]) / spec.tick_size * direction
                 gross_pnl = ticks * spec.tick_value_usd * position["contracts"]
                 commission = spec.commission_rt * position["contracts"]
                 pnl = gross_pnl - commission
+                entry_slip = abs(position["entry_price"] - position.get("mid_entry", position["entry_price"])) / spec.tick_size
+                exit_slip = abs(exit_price - (mid_exit if mid_exit is not None else exit_price)) / spec.tick_size
+                slippage_cost = (entry_slip + exit_slip) * spec.tick_value_usd * position["contracts"]
                 equity += pnl
                 trades.append(
                     Trade(
                         symbol=symbol, direction=direction, entry_time=position["entry_time"],
                         entry_price=position["entry_price"], exit_time=ts, exit_price=exit_price,
                         contracts=position["contracts"], gross_pnl=gross_pnl, commission=commission,
-                        pnl=pnl, exit_reason=exit_reason,
+                        pnl=pnl, exit_reason=exit_reason, slippage_cost=float(slippage_cost),
                     )
                 )
                 position = None
+                just_exited = True
+            else:
+                if direction == 1:
+                    position["trail_extreme"] = max(position["trail_extreme"], row["high"])
+                    if (row["high"] - position["entry_price"]) >= position["initial_risk"]:
+                        position["stop"] = max(position["stop"], position["entry_price"])
+                        position["breakeven_triggered"] = True
+                    if position["trailing"] and not pd.isna(trail_atr.iloc[i]):
+                        candidate = position["trail_extreme"] - TRAIL_ATR_MULT * trail_atr.iloc[i]
+                        position["stop"] = max(position["stop"], candidate)
+                else:
+                    position["trail_extreme"] = min(position["trail_extreme"], row["low"])
+                    if (position["entry_price"] - row["low"]) >= position["initial_risk"]:
+                        position["stop"] = min(position["stop"], position["entry_price"])
+                        position["breakeven_triggered"] = True
+                    if position["trailing"] and not pd.isna(trail_atr.iloc[i]):
+                        candidate = position["trail_extreme"] + TRAIL_ATR_MULT * trail_atr.iloc[i]
+                        position["stop"] = min(position["stop"], candidate)
 
-        candidate_evs: Dict[str, Tuple[float, int]] = {}
-        selected_strategy = "no_trade"
-        row_extras = {}
-
-        if position is None and i < n - 1:
+        if position is None and pending is None and (not just_exited) and i < n - 1:
             best_name, best_ev = None, 0.0
             for name, strat in all_strategies.items():
                 if all_entry_signals[name].iloc[i] == 0:
@@ -187,24 +274,17 @@ def run_adaptive_backtest(
                 direction = int(all_entry_signals[best_name].iloc[i])
                 raw_stop = all_stop_signals[best_name].iloc[i]
                 if not np.isnan(raw_stop):
-                    entry_price = row["close"] + direction * slippage_price
-                    effective_risk_pct = risk_pct * TRANSITION_RISK_MULT if transition else risk_pct
-                    contracts = contracts_for_risk(equity, effective_risk_pct, entry_price, raw_stop, spec)
-                    if contracts > 0:
-                        strat_target = all_target_signals[best_name].iloc[i]
-                        target = None if np.isnan(strat_target) else strat_target
-                        position = {
-                            "direction": direction, "entry_time": ts, "entry_price": entry_price,
-                            "stop": raw_stop, "target": target, "contracts": contracts,
-                            "trailing": target is None,
-                            "trail_extreme": row["high"] if direction == 1 else row["low"],
-                            "initial_risk": abs(entry_price - raw_stop), "breakeven_triggered": False,
-                        }
-                        selected_strategy = best_name
-                        row_extras = {
-                            "entry": entry_price, "stop": raw_stop, "target": target,
-                            "position_size": contracts,
-                        }
+                    strat_target = all_target_signals[best_name].iloc[i]
+                    target = None if np.isnan(strat_target) else float(strat_target)
+                    pending = {
+                        "name": best_name,
+                        "direction": direction,
+                        "stop": float(raw_stop),
+                        "target": target,
+                        "risk_pct": risk_pct * TRANSITION_RISK_MULT if transition else risk_pct,
+                        "transition": transition,
+                        "candidate_evs": candidate_evs,
+                    }
 
         log_rows.append(
             ResearchLogRow(
@@ -229,6 +309,7 @@ def run_adaptive_backtest(
             "transition": r.transition, "dominant_regime": r.dominant_regime,
             "selected_strategy": r.selected_strategy,
             "entry": r.entry, "stop": r.stop, "target": r.target, "position_size": r.position_size,
+            "equity_at_entry": r.equity_at_entry,
             **{f"{name}_ev": ev for name, (ev, _) in r.candidate_evs.items()},
             **{f"{name}_ev_n": n_ for name, (_, n_) in r.candidate_evs.items()},
         }

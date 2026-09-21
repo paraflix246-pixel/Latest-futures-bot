@@ -73,6 +73,7 @@ def test_research_log_schema_has_required_columns():
         "timestamp", "trend_score", "range_score", "breakout_score", "transition_score",
         "transition", "dominant_regime", "selected_strategy", "entry", "stop", "target",
         "position_size", "gross_pnl", "commission", "net_pnl",
+        "equity_at_entry",
     }
     assert required.issubset(set(log.columns))
     assert len(log) == len(df)
@@ -87,13 +88,10 @@ def test_transition_trade_uses_halved_risk_budget():
         return
 
     spec = get_spec("MNQ")
-    # result.equity_curve holds the exact equity the engine used for sizing
-    # at each bar (already reflects any same-bar exit before the same-bar
-    # entry decision), so look it up directly rather than reconstructing it.
     for _, row in executed.iterrows():
-        equity_at_entry = result.equity_curve.loc[row["timestamp"]]
-        full_size = contracts_for_risk(equity_at_entry, 0.5, row["entry"], row["stop"], spec)
-        half_size = contracts_for_risk(equity_at_entry, 0.25, row["entry"], row["stop"], spec)
+        equity_at_entry = row["equity_at_entry"] if pd.notna(row.get("equity_at_entry")) else result.equity_curve.loc[row["timestamp"]]
+        full_size = contracts_for_risk(equity_at_entry, 0.5, row["entry"], row["stop"], spec, max_contracts=10)
+        half_size = contracts_for_risk(equity_at_entry, 0.25, row["entry"], row["stop"], spec, max_contracts=10)
         if row["transition"]:
             assert row["position_size"] == half_size
         else:

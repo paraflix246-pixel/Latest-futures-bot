@@ -1,0 +1,50 @@
+{
+  "symbol": "MNQ",
+  "timeframe": "15m",
+  "strategy": "mean_reversion",
+  "hypothesis": "single_rth_higher_tf",
+  "walk_forward": {
+    "folds": 8,
+    "profitable_folds": 2,
+    "total_oos_trades": 36,
+    "total_oos_pnl": -2293.53,
+    "avg_oos_win_rate": 0.1865,
+    "avg_pnl_per_fold": -286.69,
+    "t_stat": -1.174,
+    "significant": false
+  },
+  "splits": {
+    "full": {
+      "trade_count": 56,
+      "win_rate": 0.2321,
+      "profit_factor": 0.9812,
+      "expectancy": -3.0,
+      "total_pnl": -167.79,
+      "max_drawdown": -3533.36,
+      "total_commission": 172.98,
+      "total_slippage": 279.0
+    },
+    "in_sample": {
+      "trade_count": 44,
+      "win_rate": 0.2727,
+      "profit_factor": 1.2807,
+      "expectancy": 43.35,
+      "total_pnl": 1907.42,
+      "max_drawdown": -1837.27,
+      "total_commission": 143.84,
+      "total_slippage": 232.0
+    },
+    "holdout_oos": {
+      "trade_count": 12,
+      "win_rate": 0.0833,
+      "profit_factor": 0.0251,
+      "expectancy": -172.93,
+      "total_pnl": -2075.21,
+      "max_drawdown": -2075.21,
+      "total_commission": 29.14,
+      "total_slippage": 47.0
+    }
+  },
+  "promising": false,
+  "disclaimer": "Paper/backtest only. Not live. Not a profit claim."
+}

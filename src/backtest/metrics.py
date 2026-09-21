@@ -36,8 +36,8 @@ def compute_metrics(result: BacktestResult, account_size: float) -> Dict[str, An
     gross_profit = wins.sum() if len(wins) else 0.0
     gross_loss = abs(losses.sum()) if len(losses) else 0.0
     profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float("inf")
-    expectancy = pnls.mean()
-    total_pnl = pnls.sum()
+    expectancy = float(pnls.mean())
+    total_pnl = float(pnls.sum())
 
     equity = result.equity_curve
     running_max = equity.cummax()
@@ -55,7 +55,7 @@ def compute_metrics(result: BacktestResult, account_size: float) -> Dict[str, An
         "timeframe": result.timeframe,
         "trade_count": n_trades,
         "win_rate": round(win_rate, 4),
-        "profit_factor": round(profit_factor, 4) if profit_factor != float("inf") else None,
+        "profit_factor": round(float(profit_factor), 4) if profit_factor != float("inf") else None,
         "expectancy": round(float(expectancy), 2),
         "total_pnl": round(float(total_pnl), 2),
         "max_drawdown": round(float(max_drawdown), 2),
