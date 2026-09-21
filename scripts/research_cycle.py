@@ -319,6 +319,18 @@ FAMILIES = {
         },
         "hunt",
     ),
+    # Cycle 19: lock the other cycle-18 fold winner (stop 0.30, 3/7 folds).
+    # Grid-first 0.20 failed locked WF t=1.847 on harden.
+    "vwap_reclaim_90_lock": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.30],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+        },
+        "hunt",
+    ),
     "orb_retrace_3": (
         OrbRetraceStrategy,
         {
@@ -665,6 +677,9 @@ CYCLE_DEFAULTS = {
     18: [
         "vwap_reclaim_90", "gap_on_confirm_lock",
     ],
+    19: [
+        "vwap_reclaim_90_lock",
+    ],
 }
 
 
@@ -813,7 +828,7 @@ def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Di
 
 def main() -> None:
     args = parse_args()
-    if args.cycle in (17, 18):
+    if args.cycle in (17, 18, 19):
         args.timeframe = "1m"
         print(
             f"cycle {args.cycle}: 1m Databento path (2024-01-01→2026-03-11), not 5m candles",
@@ -940,7 +955,7 @@ def main() -> None:
             pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
         pocket = write_report(pocket_payloads, cycle_dir)
         print(f"regime pockets: {pocket['verdict']}", flush=True)
-    if args.cycle in (15, 16, 17, 18) and PRIMARY in args.symbol:
+    if args.cycle in (15, 16, 17, 18, 19) and PRIMARY in args.symbol:
         from src.data.loader import load_ohlcv as _load_clock
         from scripts.bar_vs_clock import diagnose, write_report as write_clock
 

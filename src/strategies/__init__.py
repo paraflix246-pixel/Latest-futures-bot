@@ -143,6 +143,7 @@ STRATEGIES = {
     "rsi2_vwap_fade": Rsi2VwapFadeStrategy,
     "vwap_reclaim": VwapReclaimStrategy,
     "vwap_reclaim_90": VwapReclaimStrategy,
+    "vwap_reclaim_90_lock": VwapReclaimStrategy,
 }
 
 
@@ -162,6 +163,13 @@ def get_strategy(name: str):
         return VwapReclaimStrategy(
             min_away_atr=0.10,
             stop_atr_mult=0.20,
+            entry_end_minutes=11 * 60,
+            first_hour_bias=True,
+        )
+    if name == "vwap_reclaim_90_lock":
+        return VwapReclaimStrategy(
+            min_away_atr=0.10,
+            stop_atr_mult=0.30,
             entry_end_minutes=11 * 60,
             first_hour_bias=True,
         )

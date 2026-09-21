@@ -274,9 +274,25 @@ Locked constructor-grid first values (and 4/7 fold winners): `min_away_atr=0.10`
 | Holdout WR / PF / expectancy | 63.2% | PF 1.66 | +$36.22 / trade |
 | Exits | target 51 | time_stop 36 | stop 27 |
 
-Gate: **PASS_MNQ**. Holdout is *positive* and t≥2 (unlike PASS_MES). **Not** `READY_FOR_PAPER_LIVE_CANDIDATE` until neighbor / bootstrap / LOYO / cost×2. MES 1m of this family not yet run. 1m `gap_on_confirm_lock` on MNQ is KILL (t=−1.26).
+Gate: **PASS_MNQ** (fold-search WF + locked holdout). Holdout is *positive* and t≥2 (unlike PASS_MES). Harden of the constructor lock **fails** WF t≥2 (see below). **Not** `READY_FOR_PAPER_LIVE_CANDIDATE`. MES 1m of this family not yet run. 1m `gap_on_confirm_lock` on MNQ is KILL (t=−1.26).
 
-See `reports/cycles/cycle_18/`. Paper: `reports/paper/MNQ_1m_vwap_reclaim_90_replay.json` (after replay).
+See `reports/cycles/cycle_18/`. Paper: `reports/paper/MNQ_1m_vwap_reclaim_90_replay.json` (matches holdout).
+
+## Harden MNQ 1m `vwap_reclaim_90` — not paper-live
+
+Locked grid-first combo (`min_away=0.10`, `stop=0.20`, 11:00, first-hour bias) on the **same** 1m tape:
+
+| Check | n | t | Note |
+|---|---:|---:|---|
+| Locked-combo WF 180/60 | 294 | **1.847** | **fails t≥2** (fold-search WF was 3.096) |
+| Locked holdout | 114 | 2.481 | unchanged |
+| Diagnostic 90/30 | 428 | 2.262 | not the gate |
+| Neighbor `min_away=0.08` | 329 | 3.163 | HO t=2.881 — diagnostic only |
+| Neighbor `stop=0.24` | 275 | 2.97 | HO t=3.738 — diagnostic only |
+
+Cycle 18 PASS_MNQ is fold-optimized OOS. The constructor lock does **not** independently clear WF t≥2. **Not** `READY_FOR_PAPER_LIVE_CANDIDATE`. Cycle 19 locks the other fold winner (`stop=0.30`, 3/7 folds) as a single combo.
+
+See `reports/cycles/harden/MNQ_vwap_reclaim_90/`.
 
 ## Extra Massive history
 
@@ -291,6 +307,7 @@ python scripts/research_cycle.py --cycle 16 --symbol MNQ MES
 python scripts/research_cycle.py --cycle 17 --symbol MNQ
 python scripts/research_cycle.py --cycle 18 --symbol MNQ
 python scripts/harden_candidate.py --family vwap_reclaim_90 --symbol MNQ --timeframe 1m
+python scripts/research_cycle.py --cycle 19 --symbol MNQ
 python scripts/run_paper_replay.py --symbol MNQ --timeframe 1m --strategy vwap_reclaim_90 --start 2025-09-12
 python scripts/harden_candidate.py --family gap_on_confirm_lock --symbol MES
 python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy gap_on_confirm --start 2025-09-12
