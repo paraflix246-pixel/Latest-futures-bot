@@ -22,6 +22,8 @@ data/*.csv
 data/*.csv.bak.pre_extended
 data/massive_raw/*.csv
 data/massive_raw/*.json
+# Committed Massive research dumps are gzip only
+data/massive/*.csv
 
 # Raw order-flow/order-book pilot data (large, re-downloadable from Databento)
 orderflow_data/raw/*.parquet

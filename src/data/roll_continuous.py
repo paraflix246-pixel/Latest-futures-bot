@@ -143,7 +143,9 @@ def backward_ratio_adjust(raw: pd.DataFrame, rolls: List[RollEvent]) -> pd.DataF
     scale = 1.0
     for event in sorted(rolls, key=lambda e: e.timestamp, reverse=True):
         ratio = event.ratio if event.ratio and np.isfinite(event.ratio) and event.ratio > 0 else 1.0
-        scale *= 1.0 / ratio
+        # Backward adjust: older bars * (new_front / old_front) so the
+        # latest segment stays at raw prices and the roll gap is removed.
+        scale *= ratio
         factor.loc[factor.index < event.timestamp] = scale
     for col in ("open", "high", "low", "close"):
         out[col] = out[col] * factor

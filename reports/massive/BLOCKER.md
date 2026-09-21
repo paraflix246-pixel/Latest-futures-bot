@@ -1,11 +1,21 @@
-# Massive ingest blocker
+# Massive ingest — attached dump unblocks research
 
 Paper / backtest only. No live trading.
 
-**Kind:** `missing_api_key`
+**Cloud `MASSIVE_API_KEY` is not required for this cycle.** Founder attached
+volume-rolled 5m dumps (2024-09-22 → 2026-09-18) which are committed as
+`data/massive/MNQ_5m.csv.gz` and `data/massive/MES_5m.csv.gz`.
 
-**Detail:** `MASSIVE_API_KEY` is not set in this Cloud Agent environment. The client and `scripts/download_massive_futures.py` are implemented and will read the env var (never print it). Auth styles tried in order: `Authorization: Bearer`, `?apiKey=`, both, `X-API-KEY`.
+The loader prefers those files. Future REST pulls (optional) still use:
 
-Founder action: set `MASSIVE_API_KEY` in the Cloud Agent / machine environment (never commit it). Futures history depth depends on the Massive plan (Basic/Starter ≈ 2y, Developer ≈ 5y, Advanced = full history back to 2017-04-03).
+```
+Authorization: Bearer $MASSIVE_API_KEY
+GET https://api.massive.com/futures/v1/aggs/{ticker}?resolution=5min&...
+```
 
-Until the key is present, research cycles run on the existing Databento 2024-01 → 2026-03 MNQ/MES 5m tape. That is **not** the requested 2020+ long tape.
+Tickers: `MNQU5`, `MESU5`, `ESU5`. Enumerate H/M/U/Z. Do not rely on
+`product_code` filters.
+
+This dump is **~2 years**, not 2020+. That is shorter than a Developer-plan
+5-year pull. Research proceeds on the attached tape; a longer REST pull is
+an optional later step, not a gate.

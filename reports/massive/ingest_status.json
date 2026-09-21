@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "source": "founder_upload",
+  "cloud_key_required": false,
+  "auth_for_future_pulls": "Authorization: Bearer $MASSIVE_API_KEY",
+  "endpoint": "https://api.massive.com/futures/v1/aggs/{ticker}?resolution=5min",
+  "tickers": [
+    "MNQU5",
+    "MESU5",
+    "ESU5"
+  ],
+  "ts": "2026-09-21T05:21:02.498969+00:00",
+  "symbols": {
+    "MNQ_5m": {
+      "rows": 137304,
+      "start": "2024-09-22 22:00:00+00:00",
+      "end": "2026-09-18 20:55:00+00:00",
+      "path": "data/massive/MNQ_5m.csv.gz"
+    },
+    "MES_5m": {
+      "rows": 138366,
+      "start": "2024-09-22 22:00:00+00:00",
+      "end": "2026-09-18 13:25:00+00:00",
+      "path": "data/massive/MES_5m.csv.gz"
+    }
+  }
+}

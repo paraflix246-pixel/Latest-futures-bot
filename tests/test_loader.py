@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 
-from src.data.loader import resample_ohlcv
+from src.data.loader import _normalize_ohlcv, load_ohlcv, resample_ohlcv, resolve_ohlcv_path
 
 
 def test_resample_15m_ohlc_is_bucket_first_max_min_last():
@@ -35,3 +35,31 @@ def test_resample_15m_ohlc_is_bucket_first_max_min_last():
     assert second["low"] == 12.5
     assert second["close"] == 16.0
     assert second["volume"] == 15
+
+
+def test_normalize_accepts_massive_timestamp_column():
+    df = pd.DataFrame(
+        {
+            "timestamp": ["2024-09-22T22:00:00+00:00", "2024-09-22T22:05:00+00:00"],
+            "open": [1.0, 2.0],
+            "high": [1.5, 2.5],
+            "low": [0.5, 1.5],
+            "close": [1.2, 2.2],
+            "volume": [10, 20],
+            "contract": ["MNQU5", "MNQU5"],
+        }
+    )
+    out = _normalize_ohlcv(df)
+    assert list(out.columns) == ["open", "high", "low", "close", "volume"]
+    assert str(out.index.tz) == "UTC"
+    assert len(out) == 2
+
+
+def test_loader_prefers_committed_massive_gzip():
+    path = resolve_ohlcv_path("MNQ", "5m")
+    assert "massive" in str(path)
+    assert path.exists()
+    df = load_ohlcv("MNQ", "5m")
+    assert len(df) > 100_000
+    assert df.index.min() >= pd.Timestamp("2024-09-01", tz="UTC")
+    assert set(["open", "high", "low", "close", "volume"]) <= set(df.columns)

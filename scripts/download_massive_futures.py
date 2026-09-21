@@ -10,7 +10,16 @@ Usage:
     python scripts/download_massive_futures.py --start 2020-01-01 --resolutions 5min
     python scripts/download_massive_futures.py --start 2020-01-01 --resolutions 1min 5min --promote
 
-If MASSIVE_API_KEY is missing, exits 2 and writes reports/massive/BLOCKER.md.
+Auth for future pulls: Authorization: Bearer $MASSIVE_API_KEY against
+https://api.massive.com/futures/v1/aggs/{ticker}?resolution=5min&...
+Tickers like MNQU5 / MESU5 / ESU5 work. `product_code` on /contracts is
+flaky — this script enumerates H/M/U/Z (+ optional 2-digit year) instead.
+
+Attached research dumps live in data/massive/*.csv.gz and are preferred
+by the loader. Do not block research on a cloud-env key when those exist.
+
+If MASSIVE_API_KEY is missing and no dump is present, exits 2 and writes
+reports/massive/BLOCKER.md.
 """
 from __future__ import annotations
 
@@ -30,6 +39,7 @@ from src.data.massive_client import (  # noqa: E402
     MassiveAuthError,
     MassiveFuturesClient,
     MissingMassiveApiKey,
+    enumerate_hmuz_tickers,
 )
 from src.data.roll_continuous import (  # noqa: E402
     backward_ratio_adjust,
@@ -164,18 +174,23 @@ def main() -> int:
 
     summary: Dict[str, Any] = {"auth": probe_payload, "symbols": {}}
     for product in args.products:
-        print(f"Listing contracts for {product} ...", flush=True)
+        print(f"Enumerating HMUZ contracts for {product} ...", flush=True)
+        tickers = enumerate_hmuz_tickers(product, args.start, end)
+        # Optional metadata lookup — ignore failures; product_code is flaky.
+        contracts: List[Dict[str, Any]] = []
         try:
-            contracts = client.list_contracts(product_code=product, type_="single")
+            listed = client.list_contracts(product_code=product, type_="single")
+            by_ticker = {c.get("ticker"): c for c in listed if c.get("ticker")}
+            for t in tickers:
+                if t in by_ticker:
+                    contracts.append(by_ticker[t])
+                else:
+                    contracts.append({"ticker": t})
         except Exception as exc:
-            _write_blocker("contracts_failed", f"{product}: {exc}")
-            print(f"Contract list failed for {product}: {exc}", file=sys.stderr)
-            return 2
-        if not contracts:
-            print(f"  no contracts for {product}", flush=True)
-            continue
+            print(f"  contracts endpoint skipped ({exc}); using HMUZ names only", flush=True)
+            contracts = [{"ticker": t} for t in tickers]
         (RAW_DIR / f"{product}_contracts.json").write_text(json.dumps(contracts, indent=2, default=str))
-        print(f"  {len(contracts)} contracts", flush=True)
+        print(f"  {len(contracts)} HMUZ names", flush=True)
 
         for resolution in resolutions:
             tf = RES_TO_TF[resolution]
@@ -183,12 +198,6 @@ def main() -> int:
             for i, c in enumerate(contracts):
                 ticker = c.get("ticker")
                 if not ticker:
-                    continue
-                last = str(c.get("last_trade_date") or "")
-                first = str(c.get("first_trade_date") or "")
-                if last and last < args.start:
-                    continue
-                if first and first > end:
                     continue
                 print(f"  [{i+1}/{len(contracts)}] {ticker} {resolution}", flush=True)
                 try:

@@ -1,17 +1,23 @@
 """Massive.com Futures REST client (Polygon rebrand).
 
-Reads MASSIVE_API_KEY from the environment and never prints it. Auth is
-tried in the order Massive documents first, then common fallbacks:
+Reads MASSIVE_API_KEY from the environment and never prints it.
 
-  1. Authorization: Bearer <key>
+Official Massive REST auth (docs/quickstart):
+
+  1. Authorization: Bearer <key>   ← preferred for futures aggs
   2. ?apiKey=<key> query parameter
   3. Authorization: Bearer <key> plus ?apiKey=<key>
   4. X-API-KEY header
 
-Endpoint family (current docs):
-  GET https://api.massive.com/futures/v1/aggs/{ticker}
-  GET https://api.massive.com/futures/v1/contracts
-  GET https://api.massive.com/futures/v1/products
+Futures aggregates:
+
+  GET https://api.massive.com/futures/v1/aggs/{ticker}?resolution=5min&...
+
+Confirmed tickers: MNQU5, MESU5, ESU5 (root + H/M/U/Z + 1-digit year).
+`product_code` filters on /contracts have been flaky — enumerate HMUZ
+contract months instead of relying on that filter.
+
+Also: GET /futures/v1/contracts, GET /futures/v1/products
 """
 from __future__ import annotations
 
@@ -22,6 +28,27 @@ from typing import Any, Dict, Iterable, List, Optional
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import requests
+
+# CME equity-index quarterlies. product_code filters are flaky; enumerate.
+HMUZ_MONTHS = ("H", "M", "U", "Z")
+
+
+def enumerate_hmuz_tickers(root: str, start: str, end: str) -> List[str]:
+    """Build MNQU5 / MESU5 / ESU5-style tickers, plus 2-digit-year aliases."""
+    y0 = int(start[:4])
+    y1 = int(end[:4])
+    tickers: List[str] = []
+    seen = set()
+    for year in range(y0, y1 + 1):
+        one = str(year)[-1]
+        two = f"{year % 100:02d}"
+        for month in HMUZ_MONTHS:
+            for name in (f"{root}{month}{one}", f"{root}{month}{two}"):
+                if name not in seen:
+                    seen.add(name)
+                    tickers.append(name)
+    return tickers
+
 
 DEFAULT_BASE = "https://api.massive.com"
 AGGS_PATH = "/futures/v1/aggs/{ticker}"

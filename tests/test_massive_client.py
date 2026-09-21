@@ -66,6 +66,14 @@ def test_bearer_then_query_fallback(monkeypatch):
     assert "test-secret-key" not in probe.detail
 
 
+def test_hmuz_tickers_include_known_roots():
+    from src.data.massive_client import enumerate_hmuz_tickers
+
+    names = enumerate_hmuz_tickers("MNQ", "2024-01-01", "2026-12-31")
+    for t in ("MNQU5", "MNQZ5", "MNQH6", "MNQM6"):
+        assert t in names
+
+
 def test_all_auth_styles_rejected(monkeypatch):
     monkeypatch.setenv("MASSIVE_API_KEY", "test-secret-key")
     session = _FakeSession(
