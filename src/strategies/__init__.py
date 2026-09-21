@@ -34,6 +34,9 @@ from src.strategies.vwap_first_hour import VwapFirstHourStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
 from src.strategies.open_reject import OpenRejectStrategy
 from src.strategies.gap_on_confirm import GapOnConfirmStrategy
+from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy
+from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy
+from src.strategies.vol_clock_fade import VolClockFadeStrategy
 from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -113,6 +116,10 @@ STRATEGIES = {
     "open_reject": OpenRejectStrategy,
     "gap_on_confirm": GapOnConfirmStrategy,
     "gap_on_confirm_lock": GapOnConfirmStrategy,
+    "gap_on_fill_only": GapOnConfirmStrategy,
+    "cross_lead_open15": CrossLeadOpen15Strategy,
+    "weekday_gap_clock": WeekdayGapClockStrategy,
+    "vol_clock_fade": VolClockFadeStrategy,
     "am_measured": AmMeasuredMoveStrategy,
     "vwap_hold_late": VwapHoldLateStrategy,
     "rvol_open15": RvolOpen15Strategy,
@@ -135,4 +142,8 @@ def get_strategy(name: str):
         return RegimeAllocatorStrategy()
     if name not in STRATEGIES:
         raise ValueError(f"Unknown strategy {name!r}; expected one of {list(STRATEGIES) + ['regime_bot']}")
+    if name == "gap_on_fill_only":
+        return GapOnConfirmStrategy(trade_mode="fill")
+    if name == "gap_on_confirm_lock":
+        return GapOnConfirmStrategy(confirm_atr=0.12, stop_atr_mult=0.25)
     return STRATEGIES[name]()

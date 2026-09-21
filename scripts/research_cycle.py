@@ -84,6 +84,9 @@ from src.strategies.vwap_first_hour import VwapFirstHourStrategy  # noqa: E402
 from src.strategies.gap_on_range import GapOnRangeStrategy  # noqa: E402
 from src.strategies.open_reject import OpenRejectStrategy  # noqa: E402
 from src.strategies.gap_on_confirm import GapOnConfirmStrategy  # noqa: E402
+from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy  # noqa: E402
+from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy  # noqa: E402
+from src.strategies.vol_clock_fade import VolClockFadeStrategy  # noqa: E402
 from src.strategies.am_measured import AmMeasuredMoveStrategy  # noqa: E402
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy  # noqa: E402
 from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
@@ -543,6 +546,31 @@ FAMILIES = {
         {"confirm_atr": [0.12], "stop_atr_mult": [0.25]},
         "hunt",
     ),
+    # Cycle 15: 2024-now tape, MNQ hunt — fill-only, cross-symbol, clock/volume.
+    "gap_on_fill_only": (
+        GapOnConfirmStrategy,
+        {
+            "trade_mode": ["fill"],
+            "confirm_atr": [0.08, 0.12, 0.16],
+            "stop_atr_mult": [0.20, 0.30],
+        },
+        "new",
+    ),
+    "cross_lead_open15": (
+        CrossLeadOpen15Strategy,
+        {"stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "weekday_gap_clock": (
+        WeekdayGapClockStrategy,
+        {"min_gap_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "vol_clock_fade": (
+        VolClockFadeStrategy,
+        {"rvol_mult": [1.05, 1.25], "min_away_atr": [0.08, 0.15]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -593,6 +621,9 @@ CYCLE_DEFAULTS = {
         "open_reject", "gap_on_confirm", "am_measured", "vwap_hold_late",
     ],
     14: ["gap_on_confirm_lock"],
+    15: [
+        "gap_on_fill_only", "cross_lead_open15", "weekday_gap_clock", "vol_clock_fade",
+    ],
 }
 
 
@@ -861,6 +892,13 @@ def main() -> None:
             pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
         pocket = write_report(pocket_payloads, cycle_dir)
         print(f"regime pockets: {pocket['verdict']}", flush=True)
+    if args.cycle == 15 and PRIMARY in args.symbol:
+        from src.data.loader import load_ohlcv as _load_clock
+        from scripts.bar_vs_clock import diagnose, write_report as write_clock
+
+        clock = diagnose(_load_clock(PRIMARY, args.timeframe), PRIMARY, args.timeframe)
+        write_clock(clock, cycle_dir)
+        print(f"bar vs clock: {clock['verdict']}", flush=True)
     seen = set()
     for r in rows:
         key = r["family"]

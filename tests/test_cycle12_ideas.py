@@ -8,11 +8,15 @@ import numpy as np
 import pandas as pd
 
 from src.strategies.am_measured import AmMeasuredMoveStrategy
+from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy
+from src.strategies.gap_on_confirm import GapOnConfirmStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
 from src.strategies.open_reject import OpenRejectStrategy
 from src.strategies.rvol_open15 import RvolOpen15Strategy
 from src.strategies.session import FLATTEN_1545, RTH_OPEN_MINUTES, session_clock
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
+from src.strategies.vol_clock_fade import VolClockFadeStrategy
+from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy
 from src.strategies.vwap_first_hour import VwapFirstHourStrategy
 
 
@@ -140,7 +144,114 @@ def test_am_measured_enters_at_1000_with_range_target():
     assert sig.target_price.loc[entry] > df.loc[entry, "close"]
 
 
-def test_trend15_chop_skip_with_huge_adx_min_has_no_entries():
+def test_trend15_chop_skip():
     df = _session(n_bars=78, price=20000.0)
     sig = Trend15Pullback5Strategy(adx_min=1000.0).generate_signals(df)
     assert int((sig.entries != 0).sum()) == 0
+
+
+def test_weekday_gap_clock_skips_weekend_and_tiny_gap():
+    df = _session(date="2024-01-03", n_bars=78, price=20000.0)  # Wednesday
+    sig = WeekdayGapClockStrategy(min_gap_atr=10.0).generate_signals(df)
+    assert int((sig.entries != 0).sum()) == 0
+    assert WeekdayGapClockStrategy().weekdays == (1, 2, 3)
+
+
+def test_weekday_gap_clock_takes_wednesday_gap_skips_friday():
+    tue = _session(date="2024-01-02", n_bars=78, price=20000.0)
+    wed = _session(date="2024-01-03", n_bars=78, price=20100.0)
+    fri = _session(date="2024-01-05", n_bars=78, price=20200.0)
+    df = pd.concat([tue, wed, fri])
+    minutes, dates = session_clock(df.index)
+    wed_open = df.index[(dates == pd.Timestamp("2024-01-03").date()) & (minutes == RTH_OPEN_MINUTES)][0]
+    fri_open = df.index[(dates == pd.Timestamp("2024-01-05").date()) & (minutes == RTH_OPEN_MINUTES)][0]
+    sig = WeekdayGapClockStrategy(min_gap_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[wed_open] == 1
+    assert sig.entries.loc[fri_open] == 0
+
+
+def _overnight_plus_rth(rth_open=20050.0, on_high=20100.0, on_low=19900.0):
+    on_start = pd.Timestamp("2024-01-02 23:00", tz="UTC")  # 18:00 ET
+    on_idx = pd.date_range(on_start, periods=30, freq="5min", tz="UTC")
+    on = pd.DataFrame(
+        {
+            "open": np.full(30, 20000.0),
+            "high": np.full(30, on_high),
+            "low": np.full(30, on_low),
+            "close": np.full(30, 20000.0),
+            "volume": np.full(30, 500.0),
+        },
+        index=on_idx,
+    )
+    rth = _session(date="2024-01-03", n_bars=78, price=rth_open)
+    return pd.concat([on, rth])
+
+
+def test_gap_on_fill_only_fades_inside_range_and_skips_go():
+    df = _overnight_plus_rth(rth_open=20050.0)
+    minutes, dates = session_clock(df.index)
+    day = pd.Timestamp("2024-01-03").date()
+    open_bar = df.index[(dates == day) & (minutes == RTH_OPEN_MINUTES)][0]
+    stretch = open_bar + pd.Timedelta(minutes=5)
+    df.loc[stretch, "high"] = 20120.0
+    df.loc[stretch, "close"] = 20040.0
+    df.loc[stretch, "low"] = 20030.0
+    fill = GapOnConfirmStrategy(trade_mode="fill", confirm_atr=0.0).generate_signals(df)
+    assert fill.entries.loc[stretch] == -1
+    go_time = df.index[(dates == day) & (minutes == RTH_OPEN_MINUTES + 15)][0]
+    assert fill.entries.loc[go_time] == 0
+
+    outside = _overnight_plus_rth(rth_open=20150.0)
+    minutes, dates = session_clock(outside.index)
+    drive = outside.index[(dates == day) & (minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 15)]
+    outside.loc[drive[0], ["open", "low"]] = 20150.0
+    outside.loc[drive[-1], ["high", "close"]] = 20200.0
+    fill_out = GapOnConfirmStrategy(trade_mode="fill", confirm_atr=0.0).generate_signals(outside)
+    assert int((fill_out.entries != 0).sum()) == 0
+    both = GapOnConfirmStrategy(trade_mode="both", confirm_atr=0.0).generate_signals(outside)
+    entry = outside.index[(dates == day) & (minutes == RTH_OPEN_MINUTES + 15)][0]
+    assert both.entries.loc[entry] == 1
+
+
+def test_cross_lead_open15_requires_agreement(monkeypatch):
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    drive = df.index[(minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 15)]
+    df.loc[drive[0], ["open", "low"]] = 20000.0
+    df.loc[drive[-1], ["high", "close"]] = 20080.0
+    entry = df.index[minutes == RTH_OPEN_MINUTES + 15][0]
+    d = pd.Timestamp("2024-01-03").date()
+    monkeypatch.setattr(
+        "src.strategies.cross_lead_open15._open15_bias_by_date",
+        lambda symbol, tf: {d: 1},
+    )
+    agree = CrossLeadOpen15Strategy(lead_symbol="MES").generate_signals(df)
+    assert agree.entries.loc[entry] == 1
+    monkeypatch.setattr(
+        "src.strategies.cross_lead_open15._open15_bias_by_date",
+        lambda symbol, tf: {d: -1},
+    )
+    clash = CrossLeadOpen15Strategy(lead_symbol="MES").generate_signals(df)
+    assert clash.entries.loc[entry] == 0
+
+
+def test_vol_clock_fade_needs_open30_rvol_then_fades_vwap():
+    days = []
+    for i, d in enumerate(
+        ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08",
+         "2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12", "2024-01-16"]
+    ):
+        sess = _session(date=d, n_bars=78, price=20000.0 + i)
+        days.append(sess)
+    df = pd.concat(days)
+    minutes, dates = session_clock(df.index)
+    last = pd.Timestamp("2024-01-16").date()
+    open30 = df.index[(dates == last) & (minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 30)]
+    df.loc[open30, "volume"] = 9000.0
+    after = df.index[(dates == last) & (minutes >= 11 * 60)][0]
+    df.loc[after, "close"] = 20150.0
+    df.loc[after, "high"] = 20160.0
+    sig = VolClockFadeStrategy(rvol_mult=1.05, min_away_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[after] == -1
+    quiet = VolClockFadeStrategy(rvol_mult=50.0, min_away_atr=0.0).generate_signals(df)
+    assert int((quiet.entries != 0).sum()) == 0

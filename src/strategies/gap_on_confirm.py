@@ -46,10 +46,16 @@ class GapOnConfirmStrategy:
         stop_atr_mult: float = STOP_ATR_MULT,
         confirm_atr: float = CONFIRM_ATR,
         max_hold_bars: int = MAX_HOLD_BARS,
+        trade_mode: str = "both",
     ):
         self.stop_atr_mult = float(stop_atr_mult)
         self.confirm_atr = float(confirm_atr)
         self.max_hold_bars = int(max_hold_bars)
+        self.trade_mode = str(trade_mode)
+        if self.trade_mode == "fill":
+            self.name = "gap_on_fill_only"
+        elif self.trade_mode == "go":
+            self.name = "gap_on_go_only"
 
     def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
         minutes, dates = session_clock(df.index)
@@ -93,6 +99,8 @@ class GapOnConfirmStrategy:
             mid = 0.5 * (onh + onl)
 
             if onl < rth_open < onh:
+                if self.trade_mode == "go":
+                    continue
                 fade = 1 if rth_open < mid else -1
                 need = self.confirm_atr * day_atr
                 stretched = False
@@ -115,6 +123,8 @@ class GapOnConfirmStrategy:
                     break
                 continue
 
+            if self.trade_mode == "fill":
+                continue
             drive = np.where(day_mask & (mins >= RTH_OPEN_MINUTES) & (mins < DRIVE_END))[0]
             entry = np.where(day_mask & (mins == DRIVE_END))[0]
             if len(drive) == 0 or len(entry) == 0:
