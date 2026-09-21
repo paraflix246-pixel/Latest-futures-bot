@@ -1,0 +1,46 @@
+{
+  "symbol": "MNQ",
+  "timeframe": "1h",
+  "strategy": "trend",
+  "hypothesis": "single_rth_higher_tf",
+  "walk_forward": {
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false
+  },
+  "splits": {
+    "full": {
+      "trade_count": 23,
+      "win_rate": 0.5217,
+      "profit_factor": 2.5215,
+      "expectancy": 49.03,
+      "total_pnl": 1127.66,
+      "max_drawdown": -209.1,
+      "total_commission": 14.26,
+      "total_slippage": 23.0
+    },
+    "in_sample": {
+      "trade_count": 22,
+      "win_rate": 0.5,
+      "profit_factor": 2.322,
+      "expectancy": 44.54,
+      "total_pnl": 979.78,
+      "max_drawdown": -209.1,
+      "total_commission": 13.64,
+      "total_slippage": 22.0
+    },
+    "holdout_oos": {
+      "trade_count": 1,
+      "win_rate": 1.0,
+      "profit_factor": null,
+      "expectancy": 147.88,
+      "total_pnl": 147.88,
+      "max_drawdown": 0.0,
+      "total_commission": 0.62,
+      "total_slippage": 1.0
+    }
+  },
+  "promising": false,
+  "disclaimer": "Paper/backtest only. Not live. Not a profit claim."
+}

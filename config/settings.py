@@ -15,7 +15,7 @@ DATA_DIR = "data"
 REPORTS_DIR = "reports"
 
 SUPPORTED_SYMBOLS = ["MNQ", "NQ", "MES", "ES"]
-SUPPORTED_TIMEFRAMES = ["1m", "5m"]
+SUPPORTED_TIMEFRAMES = ["1m", "5m", "15m", "1h"]
 SUPPORTED_STRATEGIES = [
     "trend", "mean_reversion", "breakout", "ensemble", "vwap_cross", "orb",
     "orb_failure", "vwap_pullback_trend", "vwap_pullback_trend_v2", "regime_bot",

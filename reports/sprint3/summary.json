@@ -1,0 +1,86 @@
+{
+  "hypothesis": "15m/1h single RTH-only trend or mean-reversion with realistic fills beats t>=2 on MNQ WF and replicates (positive t and PnL) on MES WF.",
+  "result": "no_validated_edge",
+  "disclaimer": "Paper/backtest only. Not live trading. No profit guarantee.",
+  "table": [
+    {
+      "timeframe": "15m",
+      "strategy": "trend",
+      "mnq_wf_t": 0.079,
+      "mnq_wf_pnl": 186.66,
+      "mnq_wf_trades": 163,
+      "mnq_holdout_pnl": 2639.49,
+      "mes_wf_t": 1.197,
+      "mes_wf_pnl": 3253.77,
+      "mes_holdout_pnl": 1521.38,
+      "mnq_wf_clears_t2": false,
+      "mes_replicates": false
+    },
+    {
+      "timeframe": "15m",
+      "strategy": "mean_reversion",
+      "mnq_wf_t": -1.174,
+      "mnq_wf_pnl": -2293.53,
+      "mnq_wf_trades": 36,
+      "mnq_holdout_pnl": -2075.21,
+      "mes_wf_t": -0.291,
+      "mes_wf_pnl": -642.21,
+      "mes_holdout_pnl": -1319.87,
+      "mnq_wf_clears_t2": false,
+      "mes_replicates": false
+    },
+    {
+      "timeframe": "1h",
+      "strategy": "trend",
+      "mnq_wf_t": null,
+      "mnq_wf_pnl": 0.0,
+      "mnq_wf_trades": 0,
+      "mnq_holdout_pnl": 147.88,
+      "mes_wf_t": -1.759,
+      "mes_wf_pnl": -1177.88,
+      "mes_holdout_pnl": 934.87,
+      "mnq_wf_clears_t2": false,
+      "mes_replicates": false
+    },
+    {
+      "timeframe": "1h",
+      "strategy": "mean_reversion",
+      "mnq_wf_t": null,
+      "mnq_wf_pnl": 0.0,
+      "mnq_wf_trades": 0,
+      "mnq_holdout_pnl": -998.98,
+      "mes_wf_t": null,
+      "mes_wf_pnl": -242.95,
+      "mes_holdout_pnl": -939.93,
+      "mnq_wf_clears_t2": false,
+      "mes_replicates": false
+    }
+  ],
+  "holdout_oos_start": "2025-09-12",
+  "engine": {
+    "15m": {
+      "fill_model": "next_open",
+      "apply_exit_slippage": true,
+      "gap_aware_stops": true,
+      "trail_update": "next_bar",
+      "cooldown_bars": 2,
+      "allow_same_bar_reentry": false,
+      "daily_loss_halt_pct": 2.0,
+      "flatten_at_rth_close": true,
+      "max_contracts": 10,
+      "rth_entries_only": true
+    },
+    "1h": {
+      "fill_model": "next_open",
+      "apply_exit_slippage": true,
+      "gap_aware_stops": true,
+      "trail_update": "next_bar",
+      "cooldown_bars": 1,
+      "allow_same_bar_reentry": false,
+      "daily_loss_halt_pct": 2.0,
+      "flatten_at_rth_close": true,
+      "max_contracts": 10,
+      "rth_entries_only": true
+    }
+  }
+}

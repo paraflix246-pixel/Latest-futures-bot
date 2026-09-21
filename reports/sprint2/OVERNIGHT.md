@@ -8,6 +8,7 @@ Engineering on `cursor/mnq-ensemble-sprint1-a8b5` (PR #1), one branch:
 
 1. **Sprint 1** — frozen MNQ 5m baseline, fill/risk realism, event-triggered router.
 2. **Sprint 2** — MES replication, a priori filter/risk walk-forward, time-of-day IS scan, adaptive-engine fill parity.
+3. **Sprint 3** — new hypothesis: 15m/1h *single* RTH trend or mean-reversion (not the 5m ensemble). Still no edge.
 
 No live broker code was touched. No credentials. No deploy.
 
@@ -23,6 +24,9 @@ Locked holdout starts 2025-09-12. WF = 180d/60d concatenated OOS. Significant me
 | Loop 2 | drop breakout from router | +1.65 | +$9,003 | +$1,471 | n/a | no |
 | Sprint 2 best filter (cooldown 6 bars) | WF-selected | +1.80 | +$10,139 | +$2,003 | **-$2,946 (t=-0.73)** | **no** |
 | Adaptive (realistic fills) | full history / last 90d | t=-2.23 / -1.42 | -$17,272 / -$2,590 | n/a | n/a | no |
+| Sprint 3 15m trend (single, RTH) | different TF, not ensemble | **0.08** | +$187 | +$2,639 | +$3,254 (t=1.20) | **no** |
+| Sprint 3 15m mean-reversion | different TF, not ensemble | -1.17 | -$2,294 | -$2,075 | -$642 | **no** |
+| Sprint 3 1h trend / MR | different TF, not ensemble | n/a (under-traded) | $0 | ~0 | negative / n/a | **no** |
 
 Sprint-1 after **did not replicate on MES**. That is the honest overnight result: MNQ looked better after we stopped overtrading and filling like a fantasy; the same rules lose on MES. Do not treat MNQ after as an edge.
 
@@ -50,16 +54,15 @@ Cooldown-6’s t-stat bump is **+0.04** — noise. MES still loses. **Defaults s
 
 ## What’s next when you wake
 
-1. **Do not go live.** Nothing cleared t≥2, and MES failed replication.
-2. Do **not** spend another sprint on 5m OHLCV pattern knobs (EMA/Donchian/VWAP/ADX grids). Two post-realism loops plus a filter grid all sat at t≈1.6–1.8 on MNQ and lost on MES.
-3. Next hypothesis has to be a different information source or timeframe (daily, or a Stage-1 feature that actually survives OOS — order-book pilots already failed).
-4. Optional engineering: there is **no CI** on this repo, so nothing was squash-merged. Review PR #1 and merge if the engine fixes are wanted on `main` as *infrastructure*, not as a trading go-live.
-5. NQ 5m file is missing in this workspace (`DERIVED_SYMBOLS` is empty); MES was the independent instrument.
+1. **Do not go live.** Nothing cleared t≥2. MES failed the 5m ensemble. 15m/1h single strategies also failed the pre-registered gate.
+2. **Stop OHLCV pattern sprints** on MNQ/MES 5m–1h. Dead-end list: `reports/sprint3/DEAD_ENDS.md`.
+3. Next work is **data/broker process**, not another knob: audit paper fills vs the next-open + 1-tick model, or a non-OHLCV hypothesis. Daily Donchian and order-book Stage 1 already failed in `reports/RESEARCH_LOG.md`.
+4. **No CI** on this repo — PR stays open, not auto-merged.
 
 Reproduce:
 
 ```bash
 python scripts/run_sprint.py --phase compare
 python scripts/run_sprint2.py
-python scripts/run_adaptive_research.py --symbol MNQ --timeframe 5m
+python scripts/run_sprint3.py
 ```

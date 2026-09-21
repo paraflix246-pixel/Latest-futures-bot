@@ -1,11 +1,9 @@
-# Next auto-loop plan (after overnight sprint 2)
+# Next steps (after sprint 3)
 
 Paper/backtest only. Do not enable live trading.
 
-**Stop the 5m OHLCV ensemble family.** MNQ sprint-1 after is t=1.76 and fails MES replication (WF t=-1.37). Filter/risk grid peaked at t=1.80 with MES still negative. Adaptive with realistic fills: t=-2.23.
+Sprint 3 (15m/1h single RTH trend or mean-reversion) **failed** the
+pre-registered gate: MNQ WF t≥2 and MES same-sign replication.
+Best MNQ WF t was **0.08** (15m trend). 1h under-traded.
 
-## When the founder wakes
-
-- Review PR #1 as **engine/risk infrastructure**, not a profitable bot.
-- Merge only if you want next-open fills and event-triggers on `main`.
-- Next research: a different hypothesis (not another 5m Donchian/EMA/ADX knob).
+Do not retune EMA/Donchian/ADX. See `reports/sprint3/DEAD_ENDS.md`.
