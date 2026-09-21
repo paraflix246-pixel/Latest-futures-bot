@@ -241,3 +241,84 @@ def test_next_open_fill_uses_following_bar_open():
     assert len(result.trades) == 1
     assert result.trades[0].entry_price == 20010
     assert result.trades[0].entry_time == df.index[30]
+
+
+def test_fill_fraction_halves_size():
+    closes = [20000] * 30 + [20050 + i * 5 for i in range(20)]
+    df = _make_df(closes)
+
+    class One:
+        name = "one"
+        def generate_signals(self, df):
+            entries = pd.Series(0, index=df.index)
+            stop = pd.Series(np.nan, index=df.index)
+            target = pd.Series(np.nan, index=df.index)
+            entries.iloc[10] = 1
+            stop.iloc[10] = 19950
+            target.iloc[10] = 20100
+            return StrategySignals(entries=entries, stop_price=stop, target_price=target)
+
+    full = run_backtest(
+        df, One(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=False, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        slippage_ticks=0, fill_fraction=1.0,
+    )
+    half = run_backtest(
+        df, One(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=False, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        slippage_ticks=0, fill_fraction=0.5,
+    )
+    assert len(full.trades) == 1 and len(half.trades) == 1
+    assert half.trades[0].contracts == full.trades[0].contracts // 2
+
+
+def test_gap_extra_ticks_worsens_gapped_stop():
+    closes = [20000] * 30 + [19900]
+    idx = pd.date_range("2026-01-01", periods=len(closes), freq="5min", tz="UTC")
+    closes = np.array(closes, dtype=float)
+    opens = closes.copy()
+    opens[-1] = 19880
+    df = pd.DataFrame(
+        {
+            "open": opens,
+            "high": np.maximum(opens, closes) + 1,
+            "low": np.minimum(opens, closes) - 1,
+            "close": closes,
+            "volume": np.full(len(closes), 1000),
+        },
+        index=idx,
+    )
+
+    class OneShot:
+        name = "one"
+        def generate_signals(self, df):
+            entries = pd.Series(0, index=df.index)
+            stop = pd.Series(np.nan, index=df.index)
+            target = pd.Series(np.nan, index=df.index)
+            entries.iloc[28] = 1
+            stop.iloc[28] = 19950
+            target.iloc[28] = 21000
+            return StrategySignals(entries=entries, stop_price=stop, target_price=target)
+
+    base = run_backtest(
+        df, OneShot(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=False, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        slippage_ticks=0, gap_extra_ticks=0,
+    )
+    worse = run_backtest(
+        df, OneShot(), "MNQ", "5m", 50_000, 0.5,
+        fill_model="next_open", apply_exit_slippage=False, gap_aware_stops=True,
+        trail_update="next_bar", cooldown_bars=0, allow_same_bar_reentry=False,
+        daily_loss_halt_pct=None, flatten_at_rth_close=False, max_contracts=10,
+        slippage_ticks=0, gap_extra_ticks=2,
+    )
+    assert base.trades[0].exit_price == 19880
+    assert worse.trades[0].exit_price == 19880 - 2 * 0.25
+    assert worse.trades[0].pnl < base.trades[0].pnl
+

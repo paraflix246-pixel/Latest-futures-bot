@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Optional
+import math
 
 import numpy as np
 import pandas as pd
@@ -57,6 +58,8 @@ ENGINE_DEFAULTS = {
     "min_atr_gate": False,
     "max_cost_frac_of_risk": None,
     "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0,
 }
 
 
@@ -125,6 +128,8 @@ def run_backtest(
     min_atr_gate: bool = ENGINE_DEFAULTS["min_atr_gate"],
     max_cost_frac_of_risk: Optional[float] = ENGINE_DEFAULTS["max_cost_frac_of_risk"],
     skip_rth_open_minutes: int = ENGINE_DEFAULTS["skip_rth_open_minutes"],
+    gap_extra_ticks: int = ENGINE_DEFAULTS["gap_extra_ticks"],
+    fill_fraction: float = ENGINE_DEFAULTS["fill_fraction"],
 ) -> BacktestResult:
     spec = get_spec(symbol)
     signals: StrategySignals = strategy.generate_signals(df)
@@ -187,15 +192,30 @@ def run_backtest(
         position = None
         just_exited = True
 
+    def _apply_fill_fraction(n: int) -> int:
+        if n <= 0:
+            return 0
+        if fill_fraction >= 1.0:
+            return n
+        return max(0, math.floor(n * fill_fraction))
+
     def _exit_fill(direction, raw_price, row, reason):
         """Apply gap-aware / slippage rules to a theoretical stop or target price."""
         mid = raw_price
+        extra = 0
         if reason in ("stop", "trail") and gap_aware_stops:
-            if direction == 1 and row["open"] <= raw_price:
+            gapped = (direction == 1 and row["open"] <= raw_price) or (
+                direction == -1 and row["open"] >= raw_price
+            )
+            if gapped:
                 mid = row["open"]
-            elif direction == -1 and row["open"] >= raw_price:
-                mid = row["open"]
-        fill = mid + _slip(direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit")
+                extra = gap_extra_ticks
+        fill = mid + _slip(
+            direction,
+            (slippage_ticks if apply_exit_slippage else 0) + extra,
+            spec.tick_size,
+            "exit",
+        )
         return fill, mid
 
     for i in range(n):
@@ -233,6 +253,7 @@ def run_backtest(
                         contracts = contracts_for_risk(
                             equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
                         )
+                        contracts = _apply_fill_fraction(contracts)
                     if contracts > 0:
                         position = {
                             "direction": direction,
@@ -405,6 +426,7 @@ def run_backtest(
                                 contracts = contracts_for_risk(
                                     equity, risk_pct, entry_price, stop, spec, max_contracts=max_contracts
                                 )
+                                contracts = _apply_fill_fraction(contracts)
                             if contracts > 0:
                                 position = {
                                     "direction": direction,

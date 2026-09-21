@@ -9,6 +9,7 @@ Engineering on `cursor/mnq-ensemble-sprint1-a8b5` (PR #1), one branch:
 1. **Sprint 1** — frozen MNQ 5m baseline, fill/risk realism, event-triggered router.
 2. **Sprint 2** — MES replication, a priori filter/risk walk-forward, time-of-day IS scan, adaptive-engine fill parity.
 3. **Sprint 3** — new hypothesis: 15m/1h *single* RTH trend or mean-reversion (not the 5m ensemble). Still no edge.
+4. **Sprint 4** — fill stress (2–4 ticks, gap extra, partials) + paper replay harness. MNQ sign survives 4 ticks but t falls (1.76→1.31); still not an edge. See `reports/STATUS.md`.
 
 No live broker code was touched. No credentials. No deploy.
 
