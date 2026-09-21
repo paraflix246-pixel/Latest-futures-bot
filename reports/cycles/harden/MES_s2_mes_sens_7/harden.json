@@ -1,0 +1,377 @@
+{
+  "generated": "2026-09-21T12:21:55.655387+00:00",
+  "family": "s2_mes_sens_7",
+  "kind": "hunt",
+  "symbol": "MES",
+  "locked_params": {
+    "or_minutes": 15,
+    "entry_window_minutes": 130,
+    "volume_mult": 1.4,
+    "require_vwap_align": true,
+    "skip_inside_overnight": true,
+    "require_retest": false,
+    "target_r": 1.0,
+    "stop_mode": "mid"
+  },
+  "tape": {
+    "rows": 138366,
+    "start": "2024-09-22 22:00:00+00:00",
+    "end": "2026-09-18 13:25:00+00:00"
+  },
+  "official_wf": {
+    "folds": 2,
+    "profitable_folds": 1,
+    "total_oos_trades": 39,
+    "total_oos_pnl": 535.0,
+    "avg_oos_win_rate": 0.5913,
+    "avg_pnl_per_fold": 267.5,
+    "t_stat": 0.414,
+    "significant": false
+  },
+  "official_holdout": {
+    "symbol": "MES",
+    "strategy": "s2_mes_sens_7",
+    "timeframe": "5m",
+    "trade_count": 41,
+    "win_rate": 0.5122,
+    "profit_factor": 0.9757,
+    "expectancy": -2.15,
+    "total_pnl": -88.24,
+    "max_drawdown": -1298.99,
+    "sharpe": -0.0328,
+    "final_equity": 49911.76,
+    "t_stat": -0.073,
+    "exit_reasons": {
+      "time_stop": 9,
+      "target": 17,
+      "stop": 15
+    },
+    "held_past_rth_close": 0
+  },
+  "gate": "KILL (WF t<2 or n<30)",
+  "diagnostic_wf_90_30": {
+    "folds": 8,
+    "profitable_folds": 5,
+    "total_oos_trades": 65,
+    "total_oos_pnl": 1749.86,
+    "avg_oos_win_rate": 0.6277,
+    "avg_pnl_per_fold": 218.73,
+    "t_stat": 1.022,
+    "significant": false
+  },
+  "discovery_n": 84,
+  "discovery_t": 0.6927796758653859,
+  "leave_one_regime_out": {
+    "quarter": {
+      "2024Q3": {
+        "left_out_n": 2,
+        "left_out_pnl": -443.09,
+        "remaining_n": 82,
+        "remaining_t": 0.937
+      },
+      "2024Q4": {
+        "left_out_n": 17,
+        "left_out_pnl": 620.34,
+        "remaining_n": 67,
+        "remaining_t": 0.409
+      },
+      "2025Q1": {
+        "left_out_n": 18,
+        "left_out_pnl": 1475.3,
+        "remaining_n": 66,
+        "remaining_t": -0.083
+      },
+      "2025Q2": {
+        "left_out_n": 32,
+        "left_out_pnl": -913.84,
+        "remaining_n": 52,
+        "remaining_t": 1.49
+      },
+      "2025Q3": {
+        "left_out_n": 15,
+        "left_out_pnl": 597.16,
+        "remaining_n": 69,
+        "remaining_t": 0.419
+      }
+    },
+    "atr_tercile": {
+      "na": {
+        "left_out_n": 84,
+        "left_out_pnl": 1335.88,
+        "remaining_n": 0,
+        "remaining_t": null
+      }
+    },
+    "trend": {
+      "down": {
+        "left_out_n": 84,
+        "left_out_pnl": 1335.88,
+        "remaining_n": 0,
+        "remaining_t": null
+      }
+    }
+  },
+  "sensitivity": [
+    {
+      "label": "locked",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 39,
+        "total_oos_pnl": 535.0,
+        "avg_oos_win_rate": 0.5913,
+        "avg_pnl_per_fold": 267.5,
+        "t_stat": 0.414,
+        "significant": false
+      },
+      "holdout_t": -0.073,
+      "holdout_n": 41,
+      "holdout_pnl": -88.24,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "or_minutes=12",
+      "params": {
+        "or_minutes": 12,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 39,
+        "total_oos_pnl": 535.0,
+        "avg_oos_win_rate": 0.5913,
+        "avg_pnl_per_fold": 267.5,
+        "t_stat": 0.414,
+        "significant": false
+      },
+      "holdout_t": -0.073,
+      "holdout_n": 41,
+      "holdout_pnl": -88.24,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "or_minutes=18",
+      "params": {
+        "or_minutes": 18,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 37,
+        "total_oos_pnl": -442.56,
+        "avg_oos_win_rate": 0.5161,
+        "avg_pnl_per_fold": -221.28,
+        "t_stat": -0.348,
+        "significant": false
+      },
+      "holdout_t": -0.283,
+      "holdout_n": 37,
+      "holdout_pnl": -322.66,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "entry_window_minutes=104",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 104,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 37,
+        "total_oos_pnl": 581.21,
+        "avg_oos_win_rate": 0.5986,
+        "avg_pnl_per_fold": 290.61,
+        "t_stat": 0.462,
+        "significant": false
+      },
+      "holdout_t": -0.251,
+      "holdout_n": 37,
+      "holdout_pnl": -290.17,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "entry_window_minutes=156",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 156,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 40,
+        "total_oos_pnl": 553.13,
+        "avg_oos_win_rate": 0.6015,
+        "avg_pnl_per_fold": 276.57,
+        "t_stat": 0.428,
+        "significant": false
+      },
+      "holdout_t": -0.073,
+      "holdout_n": 41,
+      "holdout_pnl": -88.24,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "volume_mult=1.12",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.12,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 46,
+        "total_oos_pnl": 1584.53,
+        "avg_oos_win_rate": 0.6134,
+        "avg_pnl_per_fold": 792.27,
+        "t_stat": 1.12,
+        "significant": false
+      },
+      "holdout_t": -1.555,
+      "holdout_n": 96,
+      "holdout_pnl": -2931.22,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "volume_mult=1.68",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.68,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 31,
+        "total_oos_pnl": 322.99,
+        "avg_oos_win_rate": 0.5932,
+        "avg_pnl_per_fold": 161.49,
+        "t_stat": 0.285,
+        "significant": false
+      },
+      "holdout_t": 0.204,
+      "holdout_n": 20,
+      "holdout_pnl": 162.1,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "target_r=0.8",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 0.8,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 39,
+        "total_oos_pnl": -235.62,
+        "avg_oos_win_rate": 0.5913,
+        "avg_pnl_per_fold": -117.81,
+        "t_stat": -0.2,
+        "significant": false
+      },
+      "holdout_t": -0.191,
+      "holdout_n": 41,
+      "holdout_pnl": -210.49,
+      "gate": "KILL (WF t<2 or n<30)"
+    },
+    {
+      "label": "target_r=1.2",
+      "params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.2,
+        "stop_mode": "mid"
+      },
+      "wf": {
+        "folds": 2,
+        "profitable_folds": 1,
+        "total_oos_trades": 39,
+        "total_oos_pnl": 112.13,
+        "avg_oos_win_rate": 0.5357,
+        "avg_pnl_per_fold": 56.07,
+        "t_stat": 0.075,
+        "significant": false
+      },
+      "holdout_t": 0.145,
+      "holdout_n": 41,
+      "holdout_pnl": 189.76,
+      "gate": "KILL (WF t<2 or n<30)"
+    }
+  ],
+  "engine": {
+    "fill_model": "next_open",
+    "apply_exit_slippage": true,
+    "gap_aware_stops": true,
+    "trail_update": "next_bar",
+    "cooldown_bars": 3,
+    "allow_same_bar_reentry": false,
+    "daily_loss_halt_pct": 2.0,
+    "flatten_at_rth_close": true,
+    "max_contracts": 10,
+    "rth_entries_only": true,
+    "min_atr_gate": false,
+    "max_cost_frac_of_risk": null,
+    "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0
+  },
+  "note": "Holdout n is thin if <30; sensitivity/LORO are diagnostics, not a second holdout pick. Paper only."
+}

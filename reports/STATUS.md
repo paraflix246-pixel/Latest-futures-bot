@@ -12,81 +12,60 @@ rigorous gate. MES does **not** need the same logic or params.
 
 | Label | Meaning |
 |---|---|
-| **PASS_MNQ** | MNQ walk-forward OOS t ≥ 2.0, n ≥ 30, holdout t ≥ −1.0, sprint-1 fills, RTH/hard exits, no overnight cling. Document as MNQ-only candidate. Founder will trade only MNQ. |
+| **PASS_MNQ** | MNQ walk-forward OOS t ≥ 2.0, n ≥ 30, holdout t ≥ −1.0, sprint-1 fills, RTH/hard exits, no overnight cling. |
 | **PASS_MES** | Same bar on MES with its own params/strategy. |
 | **PASS_BOTH** | Bonus if both clear (same or different strategies). |
 | **KILL** | In-sample only wins, overnight cling, live trading, fabricated data, or WF/holdout miss. |
 
 Thin holdout n<30 → `PASS_*_PROVISIONAL`, not paper-live.
 `READY_FOR_PAPER_LIVE_CANDIDATE` only after neighbor / bootstrap / LOYO / cost
-stress on the **official** sprint-1 engine. Still hunting **both** instruments.
-No `GO_LIVE_CHECKLIST`. Live stays off.
+stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays off.
 
 ## Bottom line
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | 0 | Official closest: `vwap_reclaim_90` WF t=1.609 n=41, HO t=2.116 n=158. Still KILL (t<2). Local `s2_orb_retrace_7` **DEMOTED** (robustness fail). Local `s4_spread_fade2` t=1.80 **fails robustness**. |
-| PASS_MES | 0 official | **Local sprint-4 STRONG (soft HO):** `s2_mes_sens_7`. Official sprint-1 replay is cycle 8 — do not treat local t as PASS_MES until that replay. Prior local `filtered_orb_2` **died** on official fills. |
+| PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` / `vwap_reclaim_90_vol` **WF t=1.609 n=41, HO t=2.116 n=158**. Densifying (cycle 7) did not raise WF t. Local `s2_orb_retrace_7` **DEMOTED**. Local `s4_spread_fade2` t=1.80 **fails robustness**; official `spread_fade` t=0.997. |
+| PASS_MES | **0** | Local sprint-4 `s2_mes_sens_7` was STRONG (soft HO). **Official sprint-1 replay KILL:** WF t=0.414 n=39, HO t=−0.073 n=41. Paper replay matches HO (−$88, n=41). ±20% sensitivity all KILL. Same pattern as `filtered_orb_2`. |
 | PASS_BOTH | 0 | — |
-| KILL | 34+ | Cycles 1–4 + 8 hunt-port families. Cycle 8 official numbers pending in this PR. |
+| KILL | 50 | Cycles 1–4, 6, 7, 8, 9 on the official engine |
 
-**No paper-live. No live.**
+**No paper-live. No live.** The MES winner is ported and paper-logged. It does not survive next-open + exit-slip.
 
-## Local sprint 4 — MES `s2_mes_sens_7` (STRONG, soft HO)
+## Local sprint 4 vs official engine — MES `s2_mes_sens_7`
 
-Imported 2026-09-21. Produced **outside** this repo. Hypothesis only until
-sprint-1 replay (`next_open`, exit slip, gap-aware stops, RTH flatten,
-`rth_entries_only`).
+Locked params: `or=15`, `ew=130`, `vol=1.4`, `R=1.0`, VWAP align, skip inside overnight, stop=mid.
 
-| | n | t | Notes |
-|---|---:|---:|---|
-| Walk-forward OOS | 34 | 3.93 | Local hunt |
-| Neighbor strict PASS | — | — | 42% |
-| Bootstrap | — | ci_lo=1.34 | frac≥2 = 91% |
-| LOYO | — | — | ok |
-| Holdout | 12 | — | **THIN** — soft HO, not paper-live |
+| Source | n | t | PnL |
+|---|---:|---:|---:|
+| Local hunt WF | 34 | **3.93** | — |
+| Local neighbor strict PASS | — | 42% | boot ci_lo=1.34, frac≥2 91%, LOYO ok |
+| Local holdout | 12 | — | **THIN** (soft HO) |
+| **Official WF 180/60** | **39** | **0.414** | +$535 |
+| **Official holdout** | **41** | **−0.073** | **−$88** |
+| Paper replay (holdout, sprint-1 engine) | 41 | — | −$88, WR 51%, PF 0.98 |
+| Diagnostic 90/30 WF (not the gate) | 65 | 1.022 | still <2 |
+| Best ±20% neighbor (`volume_mult=1.12`) | 46 | 1.12 | HO t=−1.555 **worse** |
 
-Locked params:
+Port: `MesSens7Strategy` / `s2_mes_sens_7`, `get_strategy`, paper harness
+(`PAPER_ENGINE` = `SPRINT1_AFTER_ENGINE` including `rth_entries_only`).
+Harden: `reports/cycles/harden/MES_s2_mes_sens_7/`.
+Paper log: `reports/paper/MES_5m_s2_mes_sens_7_replay.json`.
 
-- `or_minutes=15`
-- `entry_window_minutes=130`
-- `volume_mult=1.4`
-- `target_r=1.0`
-- `require_vwap_align=True`
-- `skip_inside_overnight=True`
-- `require_retest=False`
-- `stop_mode=mid`
-
-Official port: `MesSens7Strategy` / `s2_mes_sens_7` in `src/strategies/orb_filtered.py`,
-wired into `get_strategy`, `SUPPORTED_STRATEGIES`, paper harness (`PAPER_ENGINE`
-= sprint-1 including `rth_entries_only`), and cycle 8.
-
-`filtered_orb_2` (or=15 ew=120 vol=1.3) was the previous local MES provisional.
-Official sprint-1 replay **KILL**: WF t=0.366 n=42, HO t=−0.854 n=55. Same-ish
-n, worse t — next-open + exit-slip vs a looser fill model. ±20% sensitivity
-did not recover t≥2. See `reports/cycles/harden/MES_filtered_orb_2/`.
-`s2_mes_sens_7` is nearby (ew=130, vol=1.4). It **must** clear the official
-engine before anyone calls it PASS_MES.
+Nearby `filtered_orb_2` (ew=120, vol=1.3) already died on official fills
+(WF t=0.366 n=42, HO t=−0.854). `s2_mes_sens_7` is the same family with a
+slightly longer window and stricter volume. Sprint-1 fills eat the local t.
 
 ## Local sprint 3 — MNQ `s2_orb_retrace_7` DEMOTED
 
 Do **not** promote. Local WF t=2.13 n=40 looked like PASS_MNQ_PROVISIONAL,
-then failed robustness:
-
-- neighbor strict PASS 8.3%
-- bootstrap t=0.70, CI crosses 0
-- LOYO 2024 lost money
-- cost×2 survival is not enough
+then failed robustness: neighbor strict PASS 8.3%, bootstrap t=0.70 CI
+crosses 0, LOYO 2024 lost money. Cost×2 survival is not enough.
 
 ## Local sprint 4 — MNQ no strong PASS
 
-Best near-miss: `s4_spread_fade2` WF t=1.80, **fails robustness**. Official
-cycle 8 includes a small-grid `spread_fade` replay so sprint-1 numbers exist;
-it is **not** a PASS candidate. New MNQ families in cycle 8:
-`orb_fail_fade`, `gap_and_go`, `nr15_break`, `wick_reject_cont`,
-`onh_onl_break`, `volume_dryup_break`. Cycle 7 densifies official
-`vwap_reclaim_90`.
+Best local near-miss `s4_spread_fade2` WF t=1.80, **fails robustness**.
+Official `spread_fade` WF t=0.997 n=52, HO t=0.909 n=167 — KILL.
 
 ## Tape
 
@@ -95,55 +74,13 @@ it is **not** a PASS candidate. New MNQ families in cycle 8:
 | MNQ 5m | 137,304 | 2024-09-22 → 2026-09-18 | `data/massive/MNQ_5m.csv.gz` |
 | MES 5m | 138,366 | 2024-09-22 → 2026-09-18 | `data/massive/MES_5m.csv.gz` |
 
-~2 years, volume-rolled. Not 2020+. Discovery before locked holdout `2025-09-12`
-is ~1 year (2 WF folds at 180/60). Massive REST cannot extend pre-2024 on this
-plan: 0 results. See `reports/massive/BLOCKER.md`.
+Massive REST cannot extend pre-2024 on this plan: **0 results**.
+See `reports/massive/BLOCKER.md`. Discovery before `2025-09-12` is two
+180/60 folds. Do not fabricate bars.
 
-## Cycle 1 (KILL)
+## Cycle 1–4 (KILL)
 
-| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
-|---|---:|---:|---:|---:|---:|---|
-| ensemble | 72 | −0.96 | 104 | −1.76 | 1.30 | KILL |
-| orb_crabel | 20 | −1.08 | 30 | −1.37 | 0.80 | KILL |
-| last30_momentum | 42 | −0.90 | 16 | −0.54 | −1.41 | KILL |
-| vol_squeeze_expansion | 14 | −2.44 | 14 | −0.40 | 0.14 | KILL |
-| impulse_clock | 74 | −0.35 | 71 | −1.55 | 1.48 | KILL |
-| vol_gated_ensemble | 9 | −0.17 | 35 | 0.50 | 1.54 | KILL |
-| ib_extension | 16 | −1.35 | 48 | −0.36 | 0.10 | KILL |
-| on_inventory | 23 | 1.01 | 28 | −0.72 | −0.09 | KILL |
-| lunch_range_break | 7 | −0.13 | 24 | −0.51 | 1.30 | KILL |
-
-## Cycle 2 (KILL)
-
-| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
-|---|---:|---:|---:|---:|---:|---|
-| afternoon_momentum | 25 | −0.52 | 33 | −1.05 | −0.15 | KILL |
-| am_vwap_reclaim | 48 | −1.49 | 61 | 0.44 | −1.88 | KILL |
-| failed_ib_fade | 61 | −2.26 | 58 | 0.85 | −0.91 | KILL |
-| open_drive | 28 | −0.68 | 35 | −1.71 | 0.11 | KILL |
-
-## Cycle 3 (KILL)
-
-| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
-|---|---:|---:|---:|---:|---:|---|
-| orb_filtered_15 | 74 | 0.80 | 77 | −0.59 | −0.30 | KILL |
-| orb_filtered_5 | 75 | −1.27 | 79 | −0.53 | −0.42 | KILL |
-| orb_filtered_30 | 69 | −0.58 | 77 | −0.40 | 0.52 | KILL |
-| orb_filtered_retest | 54 | 0.16 | 55 | 0.11 | 0.61 | KILL |
-| orb_retrace | 41 | 0.39 | 58 | 0.45 | −0.76 | KILL |
-| vwap_hour_reclaim_fail | 42 | −0.23 | 51 | −0.18 | −0.15 | KILL |
-| trend15_pullback5 | 47 | 0.72 | 51 | 0.32 | 0.53 | KILL |
-
-## Cycle 4 (KILL)
-
-| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
-|---|---:|---:|---:|---:|---:|---|
-| adr_exhaust_fade | 15 | 0.91 | 16 | −0.63 | 0.14 | KILL |
-| gap_fill_go | 25 | 0.02 | 24 | 0.74 | 1.15 | KILL |
-| morning_reversal | 21 | −1.03 | 44 | 0.15 | 0.30 | KILL |
-| pdh_pdl_fail | 41 | 0.96 | 45 | 0.83 | −0.83 | KILL |
-| rvol_open15 | 1 | — | 16 | 0.12 | −0.51 | KILL |
-| vwap_band_fade | 35 | −0.22 | 12 | −2.05 | −1.25 | KILL |
+See earlier tables. 26 families. None near t=2.
 
 ## Cycle 6 (KILL) — official hunt port
 
@@ -158,27 +95,53 @@ plan: 0 results. See `reports/massive/BLOCKER.md`.
 | orb_retrace_3 | 32 | 1.25 | −0.78 | 39 | 0.40 | −1.05 | KILL |
 | orb_retrace_x | 48 | −0.08 | −0.52 | 55 | −1.04 | −0.94 | KILL |
 
-MNQ `vwap_reclaim_90`: both WF folds picked `min_away_atr=0.10`,
-`stop_atr_mult=0.20`, `entry_end=11:00`, `first_hour_bias=True`.
+## Cycle 7 (KILL) — densify MNQ `vwap_reclaim_90`
 
-## Cycle 7 / 8 (this PR)
+| Family | MNQ n | MNQ t | MNQ hold t | Label |
+|---|---:|---:|---:|---|
+| vwap_reclaim_90_dense | 45 | 1.357 | 1.391 | KILL |
+| vwap_reclaim_90_adx | 37 | 0.656 | 2.116 | KILL |
+| **vwap_reclaim_90_vol** | **41** | **1.609** | **2.116** | KILL (same as cycle 6) |
+| orb_retrace_3_dense | 29 | −0.205 | −0.913 | KILL |
 
-- Cycle 7: densify MNQ `vwap_reclaim_90` (ADX / volume / tighter stops).
-- Cycle 8: official `s2_mes_sens_7` on MES (and MNQ for completeness) plus
-  new MNQ families listed above. Paper replay of MES `s2_mes_sens_7` on the
-  locked holdout from `2025-09-12`. Harden after official WF.
+Tighter stops / ADX / volume did not lift WF t above 1.61.
+
+## Cycle 8 (KILL) — MES winner + new MNQ families
+
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **s2_mes_sens_7** | 4 | 0.008 | 0.558 | **39** | **0.414** | **−0.073** | KILL |
+| orb_fail_fade | 32 | 0.59 | 2.224 | 38 | −0.013 | −0.007 | KILL |
+| gap_and_go | 10 | −2.008 | −0.189 | 10 | −6.077 | −1.63 | KILL |
+| nr15_break | 58 | 1.044 | −0.309 | 74 | 0.359 | −2.196 | KILL |
+| wick_reject_cont | 44 | −0.497 | 0.823 | 44 | −0.458 | 1.099 | KILL |
+| onh_onl_break | 17 | 0.447 | 0.51 | 48 | 0.028 | 0.736 | KILL |
+| volume_dryup_break | 50 | −1.447 | −0.327 | 69 | −0.362 | −0.586 | KILL |
+| spread_fade | 52 | 0.997 | 0.909 | 46 | −1.182 | −0.863 | KILL |
+
+MNQ `nr15_break` 2/2 profitable folds, t=1.04 — not a PASS.
+MNQ `orb_fail_fade` holdout t=2.22 but WF t=0.59 — not a PASS.
+
+## Cycle 9 (KILL) — more MNQ inventions
+
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---:|---:|---:|---|
+| ib_hold_break | 37 | −0.936 | 0.903 | 66 | 0.094 | 0.364 | KILL |
+| inside_hour_break | 2 | 0.08 | 0.261 | 35 | −1.217 | −0.654 | KILL |
+| higher_low_vwap | 33 | −1.035 | 0.386 | 25 | 1.394 | −1.574 | KILL |
+| prior_mid_reclaim | 13 | −0.633 | −0.551 | 18 | 0.447 | −0.173 | KILL |
 
 ## Extra Massive history
 
 `reports/massive/BLOCKER.md`: 2020+ pull authenticated but **429** + **0**
-pre-2024 bars on this plan. Tape stays 2024-09 → 2026-09 (two 180/60 folds).
-Do not fabricate bars.
+pre-2024 bars. Tape stays 2024-09 → 2026-09.
 
 ## Reproduce
 
 ```bash
 python scripts/research_cycle.py --cycle 8 --symbol MES MNQ
 python scripts/research_cycle.py --cycle 7 --symbol MNQ
+python scripts/research_cycle.py --cycle 9 --symbol MNQ MES
 python scripts/harden_candidate.py --family s2_mes_sens_7 --symbol MES
 python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy s2_mes_sens_7 --start 2025-09-12
 python -m pytest tests/ -q

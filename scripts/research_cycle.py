@@ -68,6 +68,10 @@ from src.strategies.nr15_break import Nr15BreakStrategy  # noqa: E402
 from src.strategies.wick_reject_cont import WickRejectContStrategy  # noqa: E402
 from src.strategies.onh_onl_break import OnhOnlBreakStrategy  # noqa: E402
 from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy  # noqa: E402
+from src.strategies.ib_hold_break import IbHoldBreakStrategy  # noqa: E402
+from src.strategies.inside_hour_break import InsideHourBreakStrategy  # noqa: E402
+from src.strategies.higher_low_vwap import HigherLowVwapStrategy  # noqa: E402
+from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy  # noqa: E402
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E402
 from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
@@ -419,6 +423,27 @@ FAMILIES = {
         {"spread_atr": [0.40, 0.50], "stop_atr_mult": [0.25, 0.35]},
         "near_miss",
     ),
+    # Cycle 9: more MNQ inventions after cycle-8 KILL.
+    "ib_hold_break": (
+        IbHoldBreakStrategy,
+        {"hold_bars": [2, 3, 4], "ib_minutes": [60]},
+        "new",
+    ),
+    "inside_hour_break": (
+        InsideHourBreakStrategy,
+        {"hour_minutes": [60], "require_vwap_align": [True, False]},
+        "new",
+    ),
+    "higher_low_vwap": (
+        HigherLowVwapStrategy,
+        {"stop_atr_mult": [0.20, 0.30, 0.40]},
+        "new",
+    ),
+    "prior_mid_reclaim": (
+        PriorMidReclaimStrategy,
+        {"min_away_atr": [0.10, 0.20], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -454,6 +479,9 @@ CYCLE_DEFAULTS = {
         "orb_fail_fade", "gap_and_go", "nr15_break",
         "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
         "spread_fade",
+    ],
+    9: [
+        "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",
     ],
 }
 

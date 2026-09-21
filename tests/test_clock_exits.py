@@ -274,6 +274,23 @@ def test_cycle8_modules_are_rth_flat():
         assert strat.max_hold_bars is not None
 
 
+def test_cycle9_modules_are_rth_flat():
+    from src.strategies.higher_low_vwap import HigherLowVwapStrategy
+    from src.strategies.ib_hold_break import IbHoldBreakStrategy
+    from src.strategies.inside_hour_break import InsideHourBreakStrategy
+    from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy
+
+    for strat in (
+        IbHoldBreakStrategy(),
+        InsideHourBreakStrategy(),
+        HigherLowVwapStrategy(),
+        PriorMidReclaimStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes is not None
+        assert strat.max_hold_bars is not None
+
+
 def test_paper_engine_matches_sprint1():
     from scripts.run_paper_replay import PAPER_ENGINE
     from src.research.presets import SPRINT1_AFTER_ENGINE

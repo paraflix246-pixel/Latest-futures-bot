@@ -20,6 +20,10 @@ from src.strategies.nr15_break import Nr15BreakStrategy
 from src.strategies.wick_reject_cont import WickRejectContStrategy
 from src.strategies.onh_onl_break import OnhOnlBreakStrategy
 from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy
+from src.strategies.ib_hold_break import IbHoldBreakStrategy
+from src.strategies.inside_hour_break import InsideHourBreakStrategy
+from src.strategies.higher_low_vwap import HigherLowVwapStrategy
+from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -83,6 +87,10 @@ STRATEGIES = {
     "wick_reject_cont": WickRejectContStrategy,
     "onh_onl_break": OnhOnlBreakStrategy,
     "volume_dryup_break": VolumeDryupBreakStrategy,
+    "ib_hold_break": IbHoldBreakStrategy,
+    "inside_hour_break": InsideHourBreakStrategy,
+    "higher_low_vwap": HigherLowVwapStrategy,
+    "prior_mid_reclaim": PriorMidReclaimStrategy,
     "vwap_hour_reclaim_fail": VwapHourReclaimFailStrategy,
     "trend15_pullback5": Trend15Pullback5Strategy,
     "gap_fill_go": GapFillGoStrategy,

@@ -32,6 +32,7 @@ SUPPORTED_STRATEGIES = [
     "three_bar_vwap_fade", "rsi2_vwap_fade", "vwap_reclaim",
     "orb_fail_fade", "gap_and_go", "spread_fade", "nr15_break",
     "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
+    "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",
 ]
 
 # NQ now has its own real Databento feed (data/NQ_1m.csv, NQ_5m.csv) — no
