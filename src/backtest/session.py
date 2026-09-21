@@ -47,3 +47,19 @@ def minutes_since_rth_open(index: pd.DatetimeIndex) -> pd.Series:
     local = _local_index(index)
     minutes = local.hour * 60 + local.minute
     return pd.Series(minutes - RTH_START_MINUTES, index=index)
+
+
+def minutes_of_day(index: pd.DatetimeIndex) -> pd.Series:
+    """Minutes since local midnight in America/New_York for each bar start."""
+    local = _local_index(index)
+    return pd.Series(local.hour * 60 + local.minute, index=index)
+
+
+def local_minutes(ts: pd.Timestamp) -> int:
+    """Minutes since midnight in America/New_York for one timestamp."""
+    if ts.tzinfo is None:
+        ts = pd.Timestamp(ts).tz_localize("UTC")
+    else:
+        ts = pd.Timestamp(ts)
+    local = ts.tz_convert(SESSION_TZ)
+    return int(local.hour * 60 + local.minute)

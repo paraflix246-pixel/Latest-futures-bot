@@ -1,0 +1,305 @@
+{
+  "symbol": "MNQ",
+  "strategy": "orb_crabel",
+  "split": "2025-10-01 13:10:00+00:00",
+  "protocol": {
+    "discovery_frac": 0.8,
+    "train_days": 180,
+    "test_days": 60,
+    "holdout_params": "constructor_defaults",
+    "fills": "sprint1_close_plus_1tick",
+    "paper_only": true
+  },
+  "walk_forward_oos": {
+    "folds": 7,
+    "profitable_folds": 3,
+    "total_oos_trades": 99,
+    "total_oos_pnl": -4607.92,
+    "avg_oos_win_rate": 0.3468,
+    "avg_pnl_per_fold": -658.27,
+    "t_stat": -2.042,
+    "significant": false
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_start": "2024-01-01 23:00:00+00:00",
+      "train_end": "2024-06-29 23:00:00+00:00",
+      "test_start": "2024-06-29 23:00:00+00:00",
+      "test_end": "2024-08-28 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "rvol_mult": 1.5
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 56,
+        "win_rate": 0.4821,
+        "profit_factor": 1.6381,
+        "expectancy": 57.89,
+        "total_pnl": 3241.91,
+        "max_drawdown": -1363.66,
+        "sharpe": 0.962,
+        "final_equity": 53241.91
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 16,
+        "win_rate": 0.1875,
+        "profit_factor": 0.3753,
+        "expectancy": -89.69,
+        "total_pnl": -1435.03,
+        "max_drawdown": -1435.03,
+        "sharpe": -2.1968,
+        "final_equity": 48564.97
+      }
+    },
+    {
+      "fold": 1,
+      "train_start": "2024-03-01 23:00:00+00:00",
+      "train_end": "2024-08-28 23:00:00+00:00",
+      "test_start": "2024-08-28 23:00:00+00:00",
+      "test_end": "2024-10-27 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "rvol_mult": 2.0
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 55,
+        "win_rate": 0.3455,
+        "profit_factor": 0.8662,
+        "expectancy": -15.21,
+        "total_pnl": -836.53,
+        "max_drawdown": -3038.45,
+        "sharpe": -0.2872,
+        "final_equity": 49163.47
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 17,
+        "win_rate": 0.5294,
+        "profit_factor": 1.3149,
+        "expectancy": 22.32,
+        "total_pnl": 379.37,
+        "max_drawdown": -690.68,
+        "sharpe": 0.5565,
+        "final_equity": 50379.37
+      }
+    },
+    {
+      "fold": 2,
+      "train_start": "2024-04-30 23:00:00+00:00",
+      "train_end": "2024-10-27 23:00:00+00:00",
+      "test_start": "2024-10-27 23:00:00+00:00",
+      "test_end": "2024-12-26 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 30,
+        "rvol_mult": 1.5
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 39,
+        "win_rate": 0.2821,
+        "profit_factor": 0.7425,
+        "expectancy": -26.49,
+        "total_pnl": -1033.16,
+        "max_drawdown": -1216.28,
+        "sharpe": -0.5514,
+        "final_equity": 48966.84
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 11,
+        "win_rate": 0.4545,
+        "profit_factor": 1.1162,
+        "expectancy": 10.97,
+        "total_pnl": 120.66,
+        "max_drawdown": -432.18,
+        "sharpe": 0.1893,
+        "final_equity": 50120.66
+      }
+    },
+    {
+      "fold": 3,
+      "train_start": "2024-06-29 23:00:00+00:00",
+      "train_end": "2024-12-26 23:00:00+00:00",
+      "test_start": "2024-12-26 23:00:00+00:00",
+      "test_end": "2025-02-24 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 30,
+        "rvol_mult": 1.5
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 46,
+        "win_rate": 0.3478,
+        "profit_factor": 0.8184,
+        "expectancy": -17.23,
+        "total_pnl": -792.42,
+        "max_drawdown": -1268.12,
+        "sharpe": -0.4052,
+        "final_equity": 49207.58
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 11,
+        "win_rate": 0.2727,
+        "profit_factor": 0.1406,
+        "expectancy": -128.69,
+        "total_pnl": -1415.58,
+        "max_drawdown": -1500.72,
+        "sharpe": -3.1109,
+        "final_equity": 48584.42
+      }
+    },
+    {
+      "fold": 4,
+      "train_start": "2024-08-28 23:00:00+00:00",
+      "train_end": "2025-02-24 23:00:00+00:00",
+      "test_start": "2025-02-24 23:00:00+00:00",
+      "test_end": "2025-04-25 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "rvol_mult": 2.0
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 52,
+        "win_rate": 0.4038,
+        "profit_factor": 0.8018,
+        "expectancy": -20.33,
+        "total_pnl": -1057.31,
+        "max_drawdown": -1854.54,
+        "sharpe": -0.4584,
+        "final_equity": 48942.69
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 11,
+        "win_rate": 0.2727,
+        "profit_factor": 0.6882,
+        "expectancy": -38.22,
+        "total_pnl": -420.42,
+        "max_drawdown": -976.7,
+        "sharpe": -0.6479,
+        "final_equity": 49579.58
+      }
+    },
+    {
+      "fold": 5,
+      "train_start": "2024-10-27 23:00:00+00:00",
+      "train_end": "2025-04-25 23:00:00+00:00",
+      "test_start": "2025-04-25 23:00:00+00:00",
+      "test_end": "2025-06-24 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 30,
+        "rvol_mult": 2.0
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 39,
+        "win_rate": 0.4872,
+        "profit_factor": 0.8599,
+        "expectancy": -13.81,
+        "total_pnl": -538.5,
+        "max_drawdown": -1342.62,
+        "sharpe": -0.2826,
+        "final_equity": 49461.5
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 14,
+        "win_rate": 0.5,
+        "profit_factor": 1.071,
+        "expectancy": 6.9,
+        "total_pnl": 96.64,
+        "max_drawdown": -566.04,
+        "sharpe": 0.152,
+        "final_equity": 50096.64
+      }
+    },
+    {
+      "fold": 6,
+      "train_start": "2024-12-26 23:00:00+00:00",
+      "train_end": "2025-06-24 23:00:00+00:00",
+      "test_start": "2025-06-24 23:00:00+00:00",
+      "test_end": "2025-08-23 23:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "rvol_mult": 2.0
+      },
+      "train_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 50,
+        "win_rate": 0.42,
+        "profit_factor": 1.0416,
+        "expectancy": 4.07,
+        "total_pnl": 203.62,
+        "max_drawdown": -1250.68,
+        "sharpe": 0.1021,
+        "final_equity": 50203.62
+      },
+      "test_metrics": {
+        "symbol": "MNQ",
+        "strategy": "orb_crabel",
+        "timeframe": "5m",
+        "trade_count": 19,
+        "win_rate": 0.2105,
+        "profit_factor": 0.3638,
+        "expectancy": -101.77,
+        "total_pnl": -1933.56,
+        "max_drawdown": -1933.56,
+        "sharpe": -2.3657,
+        "final_equity": 48066.44
+      }
+    }
+  ],
+  "holdout": {
+    "symbol": "MNQ",
+    "strategy": "orb_crabel",
+    "timeframe": "5m",
+    "trade_count": 53,
+    "win_rate": 0.3019,
+    "profit_factor": 0.7092,
+    "expectancy": -36.01,
+    "total_pnl": -1908.29,
+    "max_drawdown": -3640.11,
+    "sharpe": -0.7712,
+    "final_equity": 48091.71,
+    "t_stat": -0.991,
+    "exit_reasons": {
+      "stop": 30,
+      "time_stop": 18,
+      "target": 5
+    },
+    "held_past_rth_close": 0
+  },
+  "verdict": "KILLED (walk-forward OOS t<2 or not significant)"
+}

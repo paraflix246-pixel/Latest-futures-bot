@@ -113,3 +113,90 @@ def test_oversized_risk_skips_trade():
         account_size=100, risk_pct=0.1,
     )
     assert len(result.trades) == 0
+
+
+class _TimedLongStrategy:
+    """Single long with optional clock / RTH flatten attrs."""
+
+    name = "timed_long"
+
+    def __init__(self, entry_idx: int, stop: float, target: float, max_hold_bars=None, flatten_rth=False):
+        self.entry_idx = entry_idx
+        self.stop = stop
+        self.target = target
+        self.max_hold_bars = max_hold_bars
+        self.flatten_rth = flatten_rth
+
+    def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
+        entries = pd.Series(0, index=df.index)
+        stop_price = pd.Series(np.nan, index=df.index)
+        target_price = pd.Series(np.nan, index=df.index)
+        entries.iloc[self.entry_idx] = 1
+        stop_price.iloc[self.entry_idx] = self.stop
+        target_price.iloc[self.entry_idx] = self.target
+        return StrategySignals(entries=entries, stop_price=stop_price, target_price=target_price)
+
+
+def test_max_hold_bars_exits_at_close():
+    idx = pd.date_range("2024-01-03 15:00", periods=12, freq="5min", tz="UTC")
+    close = np.full(12, 20000.0)
+    df = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close, "volume": 1000},
+        index=idx,
+    )
+    strategy = _TimedLongStrategy(entry_idx=2, stop=19900, target=22000, max_hold_bars=3)
+    result = run_backtest(df=df, strategy=strategy, symbol="MNQ", timeframe="5m",
+                          account_size=50_000, risk_pct=0.5, fill_model="next_open")
+    assert len(result.trades) == 1
+    trade = result.trades[0]
+    assert trade.exit_reason == "time_stop"
+    assert trade.entry_time == idx[3]
+
+
+def test_rth_flatten_closes_before_overnight():
+    idx = pd.date_range("2024-01-03 20:00", periods=20, freq="5min", tz="UTC")
+    close = np.full(20, 20000.0)
+    df = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close, "volume": 1000},
+        index=idx,
+    )
+    strategy = _TimedLongStrategy(entry_idx=0, stop=19900, target=22000, flatten_rth=True)
+    result = run_backtest(df=df, strategy=strategy, symbol="MNQ", timeframe="5m",
+                          account_size=50_000, risk_pct=0.5)
+    assert len(result.trades) == 1
+    trade = result.trades[0]
+    assert trade.exit_reason in ("flatten", "rth_flatten")
+    local_exit = trade.exit_time.tz_convert("America/New_York")
+    assert local_exit.hour < 17
+    assert not (local_exit.hour > 16 or (local_exit.hour == 16 and local_exit.minute > 5))
+
+
+def test_session_exit_minutes_flattens_at_clock():
+    idx = pd.date_range("2024-01-03 14:50", periods=20, freq="5min", tz="UTC")
+    close = np.full(20, 20000.0)
+    df = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close, "volume": 1000},
+        index=idx,
+    )
+    strategy = _TimedLongStrategy(entry_idx=0, stop=19900, target=22000, flatten_rth=True)
+    strategy.session_exit_minutes = 11 * 60
+    strategy.rth_entry_cutoff_minutes = 11 * 60
+    result = run_backtest(df=df, strategy=strategy, symbol="MNQ", timeframe="5m",
+                          account_size=50_000, risk_pct=0.5)
+    assert len(result.trades) == 1
+    assert result.trades[0].exit_reason == "time_stop"
+    assert result.trades[0].exit_time.tz_convert("America/New_York").hour == 11
+
+
+def test_rth_flatten_blocks_entries_after_cutoff():
+    idx = pd.date_range("2024-01-03 20:40", periods=8, freq="5min", tz="UTC")
+    close = np.full(8, 20000.0)
+    df = pd.DataFrame(
+        {"open": close, "high": close + 1, "low": close - 1, "close": close, "volume": 1000},
+        index=idx,
+    )
+    strategy = _TimedLongStrategy(entry_idx=1, stop=19900, target=22000, flatten_rth=True)
+    strategy.rth_entry_cutoff_minutes = 15 * 60 + 30
+    result = run_backtest(df=df, strategy=strategy, symbol="MNQ", timeframe="5m",
+                          account_size=50_000, risk_pct=0.5)
+    assert result.trades == []

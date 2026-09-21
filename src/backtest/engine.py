@@ -34,7 +34,7 @@ import pandas as pd
 
 from config.instruments import get_spec
 from config.settings import DEFAULT_MAX_CONTRACTS, DEFAULT_SLIPPAGE_TICKS
-from src.backtest.session import last_rth_bar_mask, rth_mask, session_date
+from src.backtest.session import last_rth_bar_mask, minutes_of_day, rth_mask, session_date
 from src.risk.position_sizing import contracts_for_risk
 from src.strategies.base import Strategy, StrategySignals
 from src.strategies.indicators import atr
@@ -75,7 +75,7 @@ class Trade:
     gross_pnl: float
     commission: float
     pnl: float  # net = gross_pnl - commission
-    exit_reason: str  # "stop" | "target" | "trail" | "eod" | "flatten"
+    exit_reason: str  # "stop" | "target" | "trail" | "eod" | "flatten" | "time_stop" | "rth_flatten"
     slippage_cost: float = 0.0
 
 
@@ -137,6 +137,15 @@ def run_backtest(
     slippage_price = slippage_ticks * spec.tick_size
     exit_slip_price = slippage_price if apply_exit_slippage else 0.0
     breakeven_r_mult = getattr(strategy, "breakeven_r_mult", None)
+    # Optional anti-cling clock exits. Existing strategies leave these unset so
+    # fill/stop/target behavior stays identical to the sprint-1 engine.
+    max_hold_bars = getattr(strategy, "max_hold_bars", None)
+    flatten_rth = bool(getattr(strategy, "flatten_rth", False))
+    flatten_minutes = getattr(strategy, "rth_flatten_minutes", None)
+    entry_cutoff_minutes = getattr(strategy, "rth_entry_cutoff_minutes", None)
+    session_exit_minutes = getattr(strategy, "session_exit_minutes", None)
+    if flatten_rth:
+        flatten_at_rth_close = True
 
     need_rth = bool(flatten_at_rth_close or rth_entries_only or skip_rth_open_minutes)
     rth = rth_mask(df.index) if need_rth else None
@@ -147,6 +156,14 @@ def run_backtest(
         from src.backtest.session import minutes_since_rth_open
 
         rth_open_mins = minutes_since_rth_open(df.index)
+    need_clock = bool(
+        max_hold_bars is not None
+        or flatten_rth
+        or flatten_minutes is not None
+        or entry_cutoff_minutes is not None
+        or session_exit_minutes is not None
+    )
+    clock_mins = minutes_of_day(df.index) if need_clock else None
 
     trades: List[Trade] = []
     equity = account_size
@@ -230,6 +247,7 @@ def run_backtest(
                 day_start_equity = equity
                 day_realized = 0.0
 
+        filled_this_bar = False
         # Fill a pending next-open entry at this bar's open.
         if position is None and pending is not None:
             if rth is not None and (flatten_at_rth_close or rth_entries_only) and not bool(rth.iloc[i]):
@@ -267,10 +285,14 @@ def run_backtest(
                             "trail_extreme": mid_entry,
                             "initial_risk": abs(entry_price - stop),
                             "breakeven_triggered": False,
+                            "bars_held": 0,
                         }
+                        filled_this_bar = True
             pending = None
 
         if position is not None:
+            if not filled_this_bar:
+                position["bars_held"] = int(position.get("bars_held", 0)) + 1
             direction = position["direction"]
             stop_at_open = position["stop"]
             target_at_open = position["target"]
@@ -313,6 +335,17 @@ def run_backtest(
             exit_reason = None
             mid_exit = None
             flatten_now = bool(flatten_at_rth_close and last_rth is not None and last_rth.iloc[i])
+            bar_minutes = int(clock_mins.iloc[i]) if clock_mins is not None else None
+            at_session_exit = (
+                session_exit_minutes is not None
+                and bar_minutes is not None
+                and bar_minutes >= int(session_exit_minutes)
+            )
+            at_rth_clock = (
+                flatten_minutes is not None
+                and bar_minutes is not None
+                and bar_minutes >= int(flatten_minutes)
+            )
 
             if direction == 1:
                 if row["low"] <= stop_for_exit:
@@ -338,12 +371,30 @@ def run_backtest(
                     )
                     exit_reason = "target"
 
+            if exit_price is None and max_hold_bars is not None and position["bars_held"] >= int(max_hold_bars):
+                mid_exit = float(row["close"])
+                exit_price = mid_exit + _slip(
+                    direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                )
+                exit_reason = "time_stop"
+            if exit_price is None and at_session_exit:
+                mid_exit = float(row["close"])
+                exit_price = mid_exit + _slip(
+                    direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                )
+                exit_reason = "time_stop"
             if flatten_now and exit_price is None:
                 mid_exit = float(row["close"])
                 exit_price = mid_exit + _slip(
                     direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
                 )
                 exit_reason = "flatten"
+            if exit_price is None and at_rth_clock:
+                mid_exit = float(row["close"])
+                exit_price = mid_exit + _slip(
+                    direction, slippage_ticks if apply_exit_slippage else 0, spec.tick_size, "exit"
+                )
+                exit_reason = "rth_flatten"
 
             if i == n - 1 and exit_price is None:
                 mid_exit = float(row["close"])
@@ -402,6 +453,9 @@ def run_backtest(
             mins = int(rth_open_mins.iloc[i])
             if mins < skip_rth_open_minutes:
                 can_signal = False
+        if can_signal and entry_cutoff_minutes is not None and clock_mins is not None:
+            if int(clock_mins.iloc[i]) >= int(entry_cutoff_minutes):
+                can_signal = False
         if can_signal and min_atr_gate:
             atr_i = trail_atr.iloc[i]
             if pd.isna(atr_i) or float(atr_i) < spec.atr_minimum:
@@ -440,6 +494,7 @@ def run_backtest(
                                     "trail_extreme": row["high"] if direction == 1 else row["low"],
                                     "initial_risk": abs(entry_price - stop),
                                     "breakeven_triggered": False,
+                                    "bars_held": 0,
                                 }
                     else:
                         if i < n - 1:
