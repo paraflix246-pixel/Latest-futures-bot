@@ -37,6 +37,9 @@ from src.strategies.gap_on_confirm import GapOnConfirmStrategy
 from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy
 from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy
 from src.strategies.vol_clock_fade import VolClockFadeStrategy
+from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy
+from src.strategies.first30_fade import First30FadeStrategy
+from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy
 from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -120,6 +123,10 @@ STRATEGIES = {
     "cross_lead_open15": CrossLeadOpen15Strategy,
     "weekday_gap_clock": WeekdayGapClockStrategy,
     "vol_clock_fade": VolClockFadeStrategy,
+    "gap_on_go_only": GapOnConfirmStrategy,
+    "overnight_gap_fade": OvernightGapFadeStrategy,
+    "first30_fade": First30FadeStrategy,
+    "lunch_or_magnet": LunchOrMagnetStrategy,
     "am_measured": AmMeasuredMoveStrategy,
     "vwap_hold_late": VwapHoldLateStrategy,
     "rvol_open15": RvolOpen15Strategy,
@@ -144,6 +151,8 @@ def get_strategy(name: str):
         raise ValueError(f"Unknown strategy {name!r}; expected one of {list(STRATEGIES) + ['regime_bot']}")
     if name == "gap_on_fill_only":
         return GapOnConfirmStrategy(trade_mode="fill")
+    if name == "gap_on_go_only":
+        return GapOnConfirmStrategy(trade_mode="go")
     if name == "gap_on_confirm_lock":
         return GapOnConfirmStrategy(confirm_atr=0.12, stop_atr_mult=0.25)
     return STRATEGIES[name]()

@@ -9,9 +9,12 @@ import pandas as pd
 
 from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy
+from src.strategies.first30_fade import First30FadeStrategy
 from src.strategies.gap_on_confirm import GapOnConfirmStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
+from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy
 from src.strategies.open_reject import OpenRejectStrategy
+from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy
 from src.strategies.rvol_open15 import RvolOpen15Strategy
 from src.strategies.session import FLATTEN_1545, RTH_OPEN_MINUTES, session_clock
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
@@ -255,3 +258,51 @@ def test_vol_clock_fade_needs_open30_rvol_then_fades_vwap():
     assert sig.entries.loc[after] == -1
     quiet = VolClockFadeStrategy(rvol_mult=50.0, min_away_atr=0.0).generate_signals(df)
     assert int((quiet.entries != 0).sum()) == 0
+
+
+def test_overnight_gap_fade_shorts_up_gap():
+    tue = _session(date="2024-01-02", n_bars=78, price=20000.0)
+    wed = _session(date="2024-01-03", n_bars=78, price=20100.0)
+    df = pd.concat([tue, wed])
+    minutes, dates = session_clock(df.index)
+    wed_open = df.index[(dates == pd.Timestamp("2024-01-03").date()) & (minutes == RTH_OPEN_MINUTES)][0]
+    sig = OvernightGapFadeStrategy(min_gap_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[wed_open] == -1
+
+
+def test_first30_fade_shorts_up_drive():
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    drive = df.index[(minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 30)]
+    df.loc[drive[0], ["open", "low"]] = 20000.0
+    df.loc[drive[-1], ["high", "close"]] = 20080.0
+    entry = df.index[minutes == RTH_OPEN_MINUTES + 30][0]
+    sig = First30FadeStrategy(min_atr_frac=0.0).generate_signals(df)
+    assert sig.entries.loc[entry] == -1
+    quiet = First30FadeStrategy(min_atr_frac=10.0).generate_signals(df)
+    assert quiet.entries.loc[entry] == 0
+
+
+def test_lunch_or_magnet_fades_extended_open_range():
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    orb = df.index[(minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 30)]
+    df.loc[orb, "high"] = 20020.0
+    df.loc[orb, "low"] = 20000.0
+    noon = df.index[minutes == 12 * 60][0]
+    df.loc[noon, "close"] = 20100.0
+    df.loc[noon, "high"] = 20110.0
+    sig = LunchOrMagnetStrategy(min_away_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[noon] == -1
+    assert sig.target_price.loc[noon] == 20010.0
+
+
+def test_gap_on_go_only_skips_inside_range_fill():
+    df = _overnight_plus_rth(rth_open=20050.0)
+    minutes, dates = session_clock(df.index)
+    day = pd.Timestamp("2024-01-03").date()
+    stretch = df.index[(dates == day) & (minutes == RTH_OPEN_MINUTES)][0] + pd.Timedelta(minutes=5)
+    df.loc[stretch, "high"] = 20120.0
+    df.loc[stretch, "close"] = 20040.0
+    go = GapOnConfirmStrategy(trade_mode="go", confirm_atr=0.0).generate_signals(df)
+    assert int((go.entries != 0).sum()) == 0

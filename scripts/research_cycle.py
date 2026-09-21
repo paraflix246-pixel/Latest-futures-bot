@@ -87,6 +87,9 @@ from src.strategies.gap_on_confirm import GapOnConfirmStrategy  # noqa: E402
 from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy  # noqa: E402
 from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy  # noqa: E402
 from src.strategies.vol_clock_fade import VolClockFadeStrategy  # noqa: E402
+from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy  # noqa: E402
+from src.strategies.first30_fade import First30FadeStrategy  # noqa: E402
+from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy  # noqa: E402
 from src.strategies.am_measured import AmMeasuredMoveStrategy  # noqa: E402
 from src.strategies.vwap_hold_late import VwapHoldLateStrategy  # noqa: E402
 from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
@@ -571,6 +574,28 @@ FAMILIES = {
         {"rvol_mult": [1.05, 1.25], "min_away_atr": [0.08, 0.15]},
         "new",
     ),
+    # Cycle 16: MNQ still 0 — go-only ON-break, fade overnight gap,
+    # fade first-30m drive, lunch OR magnet (clock + location).
+    "gap_on_go_only": (
+        GapOnConfirmStrategy,
+        {"trade_mode": ["go"], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "overnight_gap_fade": (
+        OvernightGapFadeStrategy,
+        {"min_gap_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "first30_fade": (
+        First30FadeStrategy,
+        {"min_atr_frac": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "lunch_or_magnet": (
+        LunchOrMagnetStrategy,
+        {"min_away_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -623,6 +648,9 @@ CYCLE_DEFAULTS = {
     14: ["gap_on_confirm_lock"],
     15: [
         "gap_on_fill_only", "cross_lead_open15", "weekday_gap_clock", "vol_clock_fade",
+    ],
+    16: [
+        "gap_on_go_only", "overnight_gap_fade", "first30_fade", "lunch_or_magnet",
     ],
 }
 
@@ -892,7 +920,7 @@ def main() -> None:
             pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
         pocket = write_report(pocket_payloads, cycle_dir)
         print(f"regime pockets: {pocket['verdict']}", flush=True)
-    if args.cycle == 15 and PRIMARY in args.symbol:
+    if args.cycle in (15, 16) and PRIMARY in args.symbol:
         from src.data.loader import load_ohlcv as _load_clock
         from scripts.bar_vs_clock import diagnose, write_report as write_clock
 
