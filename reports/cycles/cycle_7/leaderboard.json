@@ -1,0 +1,62 @@
+[
+  {
+    "family": "vwap_reclaim_90_dense",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 2,
+    "profitable_folds": 2,
+    "total_oos_trades": 45,
+    "total_oos_pnl": 1807.48,
+    "avg_oos_win_rate": 0.5971,
+    "avg_pnl_per_fold": 903.74,
+    "t_stat": 1.357,
+    "significant": false,
+    "holdout_t": 1.391,
+    "holdout_pnl": 2991.46
+  },
+  {
+    "family": "vwap_reclaim_90_adx",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 2,
+    "profitable_folds": 1,
+    "total_oos_trades": 37,
+    "total_oos_pnl": 828.97,
+    "avg_oos_win_rate": 0.5834,
+    "avg_pnl_per_fold": 414.48,
+    "t_stat": 0.656,
+    "significant": false,
+    "holdout_t": 2.116,
+    "holdout_pnl": 4890.09
+  },
+  {
+    "family": "vwap_reclaim_90_vol",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 2,
+    "profitable_folds": 2,
+    "total_oos_trades": 41,
+    "total_oos_pnl": 2102.2,
+    "avg_oos_win_rate": 0.641,
+    "avg_pnl_per_fold": 1051.1,
+    "t_stat": 1.609,
+    "significant": false,
+    "holdout_t": 2.116,
+    "holdout_pnl": 4890.09
+  },
+  {
+    "family": "orb_retrace_3_dense",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 2,
+    "profitable_folds": 0,
+    "total_oos_trades": 29,
+    "total_oos_pnl": -208.39,
+    "avg_oos_win_rate": 0.4256,
+    "avg_pnl_per_fold": -104.2,
+    "t_stat": -0.205,
+    "significant": false,
+    "holdout_t": -0.913,
+    "holdout_pnl": -1405.24
+  }
+]

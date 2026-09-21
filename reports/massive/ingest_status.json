@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "auth_style": "bearer",
+  "status_code": 200,
+  "has_env_key": true,
+  "start": "2020-01-01",
+  "end": "2026-09-21",
+  "products": [
+    "MNQ",
+    "MES"
+  ],
+  "resolutions": [
+    "5min"
+  ],
+  "ts": "2026-09-21T05:46:19.466174+00:00",
+  "auth_probes": [
+    {
+      "style": "bearer",
+      "status_code": 200,
+      "ok": true
+    }
+  ]
+}

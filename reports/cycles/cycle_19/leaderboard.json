@@ -1,0 +1,17 @@
+[
+  {
+    "family": "vwap_reclaim_90_lock",
+    "symbol": "MNQ",
+    "verdict": "PASS_MNQ",
+    "folds": 7,
+    "profitable_folds": 7,
+    "total_oos_trades": 259,
+    "total_oos_pnl": 10093.72,
+    "avg_oos_win_rate": 0.6368,
+    "avg_pnl_per_fold": 1441.96,
+    "t_stat": 3.943,
+    "significant": true,
+    "holdout_t": 3.696,
+    "holdout_pnl": 4892.52
+  }
+]

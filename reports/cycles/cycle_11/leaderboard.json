@@ -1,0 +1,46 @@
+[
+  {
+    "family": "vwap_reclaim_90_target",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false,
+    "holdout_t": null,
+    "holdout_pnl": 0.0
+  },
+  {
+    "family": "morning_range_break",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false,
+    "holdout_t": null,
+    "holdout_pnl": 0.0
+  },
+  {
+    "family": "keltner_am_fade",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false,
+    "holdout_t": null,
+    "holdout_pnl": 0.0
+  },
+  {
+    "family": "pivot_bounce",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false,
+    "holdout_t": null,
+    "holdout_pnl": 0.0
+  }
+]

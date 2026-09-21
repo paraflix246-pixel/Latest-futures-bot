@@ -1,0 +1,975 @@
+#!/usr/bin/env python
+"""
+Massive-era research cycle: re-eval prior candidates + new families.
+
+Protocol (locked):
+  - Sprint-1 after engine (next-open fill, exit slip, gap-aware stops,
+    RTH flatten, daily halt, contract cap).
+  - Walk-forward 180d/60d on discovery (all bars before HOLDOUT_OOS_START).
+  - Holdout once with constructor defaults (never WF winners).
+  - Per-symbol gate (founder 2026-09-21): WF OOS t ≥ 2.0, n ≥ 30,
+    holdout not strongly negative (t ≥ −1.0), no overnight cling.
+  - PASS_MNQ / PASS_MES are independent. Same logic/params on both is
+    NOT required. PASS_BOTH is a bonus. MNQ-only is an acceptable candidate.
+  - KILL: in-sample only, overnight cling, fabricated data, live trading.
+
+Usage:
+    python scripts/research_cycle.py --cycle 1
+    python scripts/research_cycle.py --cycle 1 --family ensemble last30_momentum
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List
+
+import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from config.settings import REPORTS_DIR  # noqa: E402
+from src.backtest.engine import run_backtest  # noqa: E402
+from src.backtest.metrics import compute_metrics  # noqa: E402
+from src.backtest.walk_forward import aggregate_oos, walk_forward_search  # noqa: E402
+from src.data.loader import load_ohlcv  # noqa: E402
+from src.research.presets import (  # noqa: E402
+    ACCOUNT_SIZE,
+    HOLDOUT_OOS_START,
+    KILL_MIN_TRADES,
+    KILL_T_STAT,
+    PRIMARY,
+    REPLICATION,
+    RISK_PCT,
+    SPRINT1_AFTER_ENGINE,
+    WF_TEST_DAYS,
+    WF_TRAIN_DAYS,
+)
+from src.strategies.ensemble import EnsembleStrategy  # noqa: E402
+from src.strategies.ib_extension import IbExtensionStrategy  # noqa: E402
+from src.strategies.impulse_clock import ImpulseClockStrategy  # noqa: E402
+from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
+from src.strategies.lunch_range_break import LunchRangeBreakStrategy  # noqa: E402
+from src.strategies.on_inventory import OnInventoryStrategy  # noqa: E402
+from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
+from src.strategies.afternoon_momentum import AfternoonMomentumStrategy  # noqa: E402
+from src.strategies.am_vwap_reclaim import AmVwapReclaimStrategy  # noqa: E402
+from src.strategies.failed_ib_fade import FailedIbFadeStrategy  # noqa: E402
+from src.strategies.open_drive import OpenDriveStrategy  # noqa: E402
+from src.strategies.orb_filtered import MesSens7Strategy, OrbFilteredStrategy  # noqa: E402
+from src.strategies.orb_retrace import OrbRetraceStrategy  # noqa: E402
+from src.strategies.orb_fail_fade import OrbFailFadeStrategy  # noqa: E402
+from src.strategies.gap_and_go import GapAndGoStrategy  # noqa: E402
+from src.strategies.spread_fade import SpreadFadeStrategy  # noqa: E402
+from src.strategies.nr15_break import Nr15BreakStrategy  # noqa: E402
+from src.strategies.wick_reject_cont import WickRejectContStrategy  # noqa: E402
+from src.strategies.onh_onl_break import OnhOnlBreakStrategy  # noqa: E402
+from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy  # noqa: E402
+from src.strategies.ib_hold_break import IbHoldBreakStrategy  # noqa: E402
+from src.strategies.inside_hour_break import InsideHourBreakStrategy  # noqa: E402
+from src.strategies.higher_low_vwap import HigherLowVwapStrategy  # noqa: E402
+from src.strategies.prior_mid_reclaim import PriorMidReclaimStrategy  # noqa: E402
+from src.strategies.morning_range_break import MorningRangeBreakStrategy  # noqa: E402
+from src.strategies.keltner_am_fade import KeltnerAmFadeStrategy  # noqa: E402
+from src.strategies.inside_day_orb import InsideDayOrbStrategy  # noqa: E402
+from src.strategies.pivot_bounce import PivotBounceStrategy  # noqa: E402
+from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E402
+from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
+from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
+from src.strategies.vwap_hour import VwapHourReclaimFailStrategy  # noqa: E402
+from src.strategies.vwap_first_hour import VwapFirstHourStrategy  # noqa: E402
+from src.strategies.gap_on_range import GapOnRangeStrategy  # noqa: E402
+from src.strategies.open_reject import OpenRejectStrategy  # noqa: E402
+from src.strategies.gap_on_confirm import GapOnConfirmStrategy  # noqa: E402
+from src.strategies.cross_lead_open15 import CrossLeadOpen15Strategy  # noqa: E402
+from src.strategies.weekday_gap_clock import WeekdayGapClockStrategy  # noqa: E402
+from src.strategies.vol_clock_fade import VolClockFadeStrategy  # noqa: E402
+from src.strategies.overnight_gap_fade import OvernightGapFadeStrategy  # noqa: E402
+from src.strategies.first30_fade import First30FadeStrategy  # noqa: E402
+from src.strategies.lunch_or_magnet import LunchOrMagnetStrategy  # noqa: E402
+from src.strategies.first5_break import First5BreakStrategy  # noqa: E402
+from src.strategies.am_measured import AmMeasuredMoveStrategy  # noqa: E402
+from src.strategies.vwap_hold_late import VwapHoldLateStrategy  # noqa: E402
+from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
+from src.strategies.rvol_open15 import RvolOpen15Strategy  # noqa: E402
+from src.strategies.vwap_band_fade import VwapBandFadeStrategy  # noqa: E402
+from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy  # noqa: E402
+from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy  # noqa: E402
+from src.strategies.morning_reversal import MorningReversalStrategy  # noqa: E402
+from src.strategies.vwap_reclaim import VwapReclaimStrategy  # noqa: E402
+from src.strategies.vwap_pullback_cont import VwapPullbackContStrategy  # noqa: E402
+from src.strategies.ema_stack_pullback import EmaStackPullbackStrategy  # noqa: E402
+from src.strategies.ib_mid_fade import IbMidFadeStrategy  # noqa: E402
+from src.strategies.three_bar_vwap_fade import ThreeBarVwapFadeStrategy  # noqa: E402
+from src.strategies.rsi2_vwap_fade import Rsi2VwapFadeStrategy  # noqa: E402
+
+FAMILIES = {
+    "ensemble": (
+        EnsembleStrategy,
+        {"rth_only": [True], "breakout_in_range": [False], "event_trigger": [True]},
+        "prior",
+    ),
+    "orb_crabel": (
+        OrbCrabelStrategy,
+        {"or_minutes": [15, 30], "rvol_mult": [1.5, 2.0]},
+        "prior",
+    ),
+    "last30_momentum": (
+        Last30MomentumStrategy,
+        {"min_ret_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40]},
+        "prior",
+    ),
+    "vol_squeeze_expansion": (
+        VolSqueezeExpansionStrategy,
+        {"squeeze_percentile": [15, 25], "volume_mult": [1.2, 1.5]},
+        "prior",
+    ),
+    "impulse_clock": (
+        ImpulseClockStrategy,
+        {"impulse_atr_mult": [1.5, 2.0], "max_hold_bars": [6, 12]},
+        "prior",
+    ),
+    "vol_gated_ensemble": (
+        VolGatedEnsembleStrategy,
+        {"atr_pct_lo": [15.0, 25.0], "atr_pct_hi": [75.0, 85.0]},
+        "new",
+    ),
+    "ib_extension": (
+        IbExtensionStrategy,
+        {"ib_minutes": [60], "volume_mult": [1.1, 1.4]},
+        "new",
+    ),
+    "on_inventory": (
+        OnInventoryStrategy,
+        {"on_atr_min": [0.15, 0.25], "stop_atr_mult": [0.30, 0.45]},
+        "new",
+    ),
+    "lunch_range_break": (
+        LunchRangeBreakStrategy,
+        {"lunch_atr_max": [0.35, 0.50], "volume_mult": [1.0, 1.3]},
+        "new",
+    ),
+    "open_drive": (
+        OpenDriveStrategy,
+        {"min_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "failed_ib_fade": (
+        FailedIbFadeStrategy,
+        {"failure_bars": [3, 5], "target_ib_mult": [1.0, 1.5]},
+        "new",
+    ),
+    "afternoon_momentum": (
+        AfternoonMomentumStrategy,
+        {"min_atr_frac": [0.08, 0.16], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "am_vwap_reclaim": (
+        AmVwapReclaimStrategy,
+        {"stop_atr_mult": [0.25, 0.45]},
+        "new",
+    ),
+    # Cycle 3: same constructor params on MNQ and MES (single-combo grids).
+    "orb_filtered_15": (OrbFilteredStrategy, {"or_minutes": [15], "retest": [False]}, "new"),
+    "orb_filtered_5": (OrbFilteredStrategy, {"or_minutes": [5], "retest": [False]}, "new"),
+    "orb_filtered_30": (OrbFilteredStrategy, {"or_minutes": [30], "retest": [False]}, "new"),
+    "orb_filtered_retest": (OrbFilteredStrategy, {"or_minutes": [15], "retest": [True]}, "new"),
+    "orb_retrace": (OrbRetraceStrategy, {}, "new"),
+    "vwap_hour_reclaim_fail": (VwapHourReclaimFailStrategy, {}, "new"),
+    "trend15_pullback5": (Trend15Pullback5Strategy, {}, "new"),
+    # Cycle 4: independent per-symbol edges (params may differ by symbol).
+    "gap_fill_go": (
+        GapFillGoStrategy,
+        {"min_gap_atr": [0.30, 0.50], "stop_atr_mult": [0.30, 0.45]},
+        "new",
+    ),
+    "rvol_open15": (
+        RvolOpen15Strategy,
+        {"rvol_mult": [1.3, 1.8], "min_atr_frac": [0.08, 0.15]},
+        "new",
+    ),
+    "vwap_band_fade": (
+        VwapBandFadeStrategy,
+        {"band_atr": [0.30, 0.50], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "adr_exhaust_fade": (
+        AdrExhaustFadeStrategy,
+        {"exhaust_mult": [0.75, 1.00], "stop_atr_mult": [0.20, 0.35]},
+        "new",
+    ),
+    "pdh_pdl_fail": (
+        PdhPdlFailStrategy,
+        {"stop_atr_mult": [0.15, 0.30]},
+        "new",
+    ),
+    "morning_reversal": (
+        MorningReversalStrategy,
+        {"stop_atr_mult": [0.15, 0.30]},
+        "new",
+    ),
+    "vwap_pullback_cont": (
+        VwapPullbackContStrategy,
+        {"align_bars": [4, 8], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "ema_stack_pullback": (
+        EmaStackPullbackStrategy,
+        {"stop_atr_mult": [0.25, 0.45]},
+        "new",
+    ),
+    "ib_mid_fade": (
+        IbMidFadeStrategy,
+        {"ext_atr": [0.25, 0.45], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "three_bar_vwap_fade": (
+        ThreeBarVwapFadeStrategy,
+        {"stop_atr_mult": [0.20, 0.35]},
+        "new",
+    ),
+    "rsi2_vwap_fade": (
+        Rsi2VwapFadeStrategy,
+        {"rsi_lo": [5.0, 15.0], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "orb_filtered_am": (
+        OrbFilteredStrategy,
+        {"or_minutes": [15], "retest": [False], "volume_mult": [1.5], "entry_end_minutes": [11 * 60 + 30]},
+        "new",
+    ),
+    "trend15_breakeven": (
+        Trend15Pullback5Strategy,
+        {"stop_atr_mult": [0.30, 0.50], "breakeven_r_mult": [0.7]},
+        "new",
+    ),
+    "on_inventory_loose": (
+        OnInventoryStrategy,
+        {"on_atr_min": [0.08, 0.12], "stop_atr_mult": [0.30, 0.45]},
+        "new",
+    ),
+    # Cycle 6: official port of local-hunt filtered_orb / vwap_reclaim / orb_retrace.
+    "filtered_orb_2": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "require_retest": [False],
+            "target_r": [1.0],
+        },
+        "hunt",
+    ),
+    "filtered_orb_90": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [75],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "entry_end_minutes": [11 * 60],
+        },
+        "hunt",
+    ),
+    "filtered_orb_5m": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [5],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+        },
+        "hunt",
+    ),
+    "filtered_orb_adx": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "adx_min": [18.0, 25.0],
+            "stop_mode": ["mid", "atr"],
+            "stop_atr_mult": [0.20],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10, 0.15, 0.20],
+            "stop_atr_mult": [0.20, 0.30, 0.40],
+            "entry_end_minutes": [11 * 60, 15 * 60 + 45],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10, 0.20],
+            "stop_atr_mult": [0.20, 0.30],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True, False],
+        },
+        "hunt",
+    ),
+    # Cycle 19: lock the other cycle-18 fold winner (stop 0.30, 3/7 folds).
+    # Grid-first 0.20 failed locked WF t=1.847 on harden.
+    "vwap_reclaim_90_lock": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.30],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+        },
+        "hunt",
+    ),
+    "orb_retrace_3": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "skip_inside_overnight": [True],
+            "require_vwap_align": [True],
+            "extended": [False],
+        },
+        "hunt",
+    ),
+    "orb_retrace_x": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15, 5],
+            "entry_window_minutes": [120, 180],
+            "extended": [True],
+            "stop_mode": ["opposite", "atr"],
+            "stop_atr_mult": [0.20],
+        },
+        "hunt",
+    ),
+    # Cycle 7: densify MNQ vwap_reclaim_90 (WF t=1.609, holdout t=2.116).
+    "vwap_reclaim_90_dense": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.08, 0.10, 0.12, 0.14],
+            "stop_atr_mult": [0.16, 0.18, 0.20, 0.22, 0.24],
+            "entry_end_minutes": [10 * 60 + 30, 11 * 60, 11 * 60 + 30],
+            "first_hour_bias": [True],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90_adx": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "adx_min": [0.0, 12.0, 18.0, 22.0],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90_vol": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "volume_mult": [0.0, 1.0, 1.3],
+        },
+        "hunt",
+    ),
+    "orb_retrace_3_dense": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [90, 120, 150],
+            "skip_inside_overnight": [True, False],
+            "stop_mode": ["opposite", "atr"],
+            "stop_atr_mult": [0.18, 0.25],
+        },
+        "hunt",
+    ),
+    # Cycle 8: official MES winner + new MNQ families (not the failed spread_fade2).
+    "s2_mes_sens_7": (
+        MesSens7Strategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [130],
+            "volume_mult": [1.4],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "require_retest": [False],
+            "target_r": [1.0],
+            "stop_mode": ["mid"],
+        },
+        "hunt",
+    ),
+    "orb_fail_fade": (
+        OrbFailFadeStrategy,
+        {
+            "or_minutes": [10, 15],
+            "entry_window_minutes": [120, 150],
+            "require_vwap_align": [True],
+        },
+        "new",
+    ),
+    "gap_and_go": (
+        GapAndGoStrategy,
+        {"min_gap_atr": [0.20, 0.30], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
+    "nr15_break": (
+        Nr15BreakStrategy,
+        {"nr_frac": [0.55, 0.65, 0.75]},
+        "new",
+    ),
+    "wick_reject_cont": (
+        WickRejectContStrategy,
+        {"or_minutes": [10, 15], "entry_window_minutes": [120, 150]},
+        "new",
+    ),
+    "onh_onl_break": (
+        OnhOnlBreakStrategy,
+        {"volume_mult": [1.0, 1.3], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
+    "volume_dryup_break": (
+        VolumeDryupBreakStrategy,
+        {"nr_frac": [0.40, 0.55], "vol_dry": [0.60, 0.80]},
+        "new",
+    ),
+    # Official replay of the local near-miss only — not a PASS candidate.
+    "spread_fade": (
+        SpreadFadeStrategy,
+        {"spread_atr": [0.40, 0.50], "stop_atr_mult": [0.25, 0.35]},
+        "near_miss",
+    ),
+    # Cycle 9: more MNQ inventions after cycle-8 KILL.
+    "ib_hold_break": (
+        IbHoldBreakStrategy,
+        {"hold_bars": [2, 3, 4], "ib_minutes": [60]},
+        "new",
+    ),
+    "inside_hour_break": (
+        InsideHourBreakStrategy,
+        {"hour_minutes": [60], "require_vwap_align": [True, False]},
+        "new",
+    ),
+    "higher_low_vwap": (
+        HigherLowVwapStrategy,
+        {"stop_atr_mult": [0.20, 0.30, 0.40]},
+        "new",
+    ),
+    "prior_mid_reclaim": (
+        PriorMidReclaimStrategy,
+        {"min_away_atr": [0.10, 0.20], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
+    "vwap_reclaim_90_target": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "target_r": [0.75, 1.0, 1.25, 1.5],
+            "one_per_session": [False, True],
+        },
+        "hunt",
+    ),
+    "morning_range_break": (
+        MorningRangeBreakStrategy,
+        {"range_end_minutes": [10 * 60 + 30, 11 * 60]},
+        "new",
+    ),
+    "keltner_am_fade": (
+        KeltnerAmFadeStrategy,
+        {"keltner_mult": [1.25, 1.5, 1.75]},
+        "new",
+    ),
+    "inside_day_orb": (
+        InsideDayOrbStrategy,
+        {"or_minutes": [15]},
+        "new",
+    ),
+    "pivot_bounce": (
+        PivotBounceStrategy,
+        {"stop_atr_mult": [0.20, 0.30]},
+        "new",
+    ),
+    # Cycle 12: improved founder ideas (not identical cycle 3/4 grids).
+    "vwap_fh_reclaim": (
+        VwapFirstHourStrategy,
+        {"stop_atr_mult": [0.25, 0.40], "min_away_atr": [0.05, 0.12]},
+        "new",
+    ),
+    "gap_on_range": (
+        GapOnRangeStrategy,
+        {"stop_atr_mult": [0.25, 0.40], "min_outside_atr": [0.0, 0.10]},
+        "new",
+    ),
+    "rvol_dir_open15": (
+        RvolOpen15Strategy,
+        {
+            "rvol_mult": [1.0, 1.15, 1.30],
+            "min_atr_frac": [0.05, 0.10],
+            "min_body_pct": [0.0],
+            "flatten_minutes": [15 * 60 + 45],
+        },
+        "new",
+    ),
+    "trend15_pb5_chop": (
+        Trend15Pullback5Strategy,
+        {
+            "adx_min": [15.0, 22.0],
+            "stop_atr_mult": [0.30, 0.45],
+            "pullback_mode": ["ema", "either"],
+        },
+        "new",
+    ),
+    # Cycle 13: new inventions after cycle-12 founder-idea KILL.
+    "open_reject": (
+        OpenRejectStrategy,
+        {"extreme_frac": [0.20, 0.30], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "gap_on_confirm": (
+        GapOnConfirmStrategy,
+        {"confirm_atr": [0.05, 0.12], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "am_measured": (
+        AmMeasuredMoveStrategy,
+        {"min_body_atr": [0.08, 0.15]},
+        "new",
+    ),
+    "vwap_hold_late": (
+        VwapHoldLateStrategy,
+        {"hold_bars": [3, 4], "min_away_atr": [0.10, 0.18]},
+        "new",
+    ),
+    # Cycle 14: lock cycle-13 MES WF fold consensus (discovery only).
+    "gap_on_confirm_lock": (
+        GapOnConfirmStrategy,
+        {"confirm_atr": [0.12], "stop_atr_mult": [0.25]},
+        "hunt",
+    ),
+    # Cycle 15: 2024-now tape, MNQ hunt — fill-only, cross-symbol, clock/volume.
+    "gap_on_fill_only": (
+        GapOnConfirmStrategy,
+        {
+            "trade_mode": ["fill"],
+            "confirm_atr": [0.08, 0.12, 0.16],
+            "stop_atr_mult": [0.20, 0.30],
+        },
+        "new",
+    ),
+    "cross_lead_open15": (
+        CrossLeadOpen15Strategy,
+        {"stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "weekday_gap_clock": (
+        WeekdayGapClockStrategy,
+        {"min_gap_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "vol_clock_fade": (
+        VolClockFadeStrategy,
+        {"rvol_mult": [1.05, 1.25], "min_away_atr": [0.08, 0.15]},
+        "new",
+    ),
+    # Cycle 16: MNQ still 0 — go-only ON-break, fade overnight gap,
+    # fade first-30m drive, lunch OR magnet (clock + location).
+    "gap_on_go_only": (
+        GapOnConfirmStrategy,
+        {"trade_mode": ["go"], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "overnight_gap_fade": (
+        OvernightGapFadeStrategy,
+        {"min_gap_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "first30_fade": (
+        First30FadeStrategy,
+        {"min_atr_frac": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "lunch_or_magnet": (
+        LunchOrMagnetStrategy,
+        {"min_away_atr": [0.08, 0.15], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    # Cycle 17: 1m path (not the 5m candle). First-5m OR break.
+    "first5_break": (
+        First5BreakStrategy,
+        {"min_or_atr": [0.03, 0.08], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+}
+
+CYCLE_DEFAULTS = {
+    1: [
+        "ensemble", "orb_crabel", "last30_momentum", "vol_squeeze_expansion",
+        "impulse_clock", "vol_gated_ensemble", "ib_extension", "on_inventory",
+        "lunch_range_break",
+    ],
+    2: ["open_drive", "failed_ib_fade", "afternoon_momentum", "am_vwap_reclaim"],
+    3: [
+        "orb_filtered_15", "orb_filtered_5", "orb_filtered_30", "orb_filtered_retest",
+        "orb_retrace", "vwap_hour_reclaim_fail", "trend15_pullback5",
+    ],
+    4: [
+        "gap_fill_go", "rvol_open15", "vwap_band_fade",
+        "adr_exhaust_fade", "pdh_pdl_fail", "morning_reversal",
+    ],
+    5: [
+        "vwap_pullback_cont", "ema_stack_pullback", "ib_mid_fade",
+        "three_bar_vwap_fade", "rsi2_vwap_fade", "orb_filtered_am",
+        "trend15_breakeven", "on_inventory_loose",
+    ],
+    6: [
+        "filtered_orb_2", "filtered_orb_90", "filtered_orb_5m", "filtered_orb_adx",
+        "vwap_reclaim", "vwap_reclaim_90", "orb_retrace_3", "orb_retrace_x",
+    ],
+    7: [
+        "vwap_reclaim_90_dense", "vwap_reclaim_90_adx", "vwap_reclaim_90_vol",
+        "orb_retrace_3_dense",
+    ],
+    8: [
+        "s2_mes_sens_7",
+        "orb_fail_fade", "gap_and_go", "nr15_break",
+        "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
+        "spread_fade",
+    ],
+    9: [
+        "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",
+    ],
+    10: [
+        "vwap_reclaim_90_target",
+        "morning_range_break", "keltner_am_fade", "inside_day_orb", "pivot_bounce",
+    ],
+    12: [
+        "vwap_fh_reclaim", "gap_on_range", "rvol_dir_open15", "trend15_pb5_chop",
+    ],
+    13: [
+        "open_reject", "gap_on_confirm", "am_measured", "vwap_hold_late",
+    ],
+    14: ["gap_on_confirm_lock"],
+    15: [
+        "gap_on_fill_only", "cross_lead_open15", "weekday_gap_clock", "vol_clock_fade",
+    ],
+    16: [
+        "gap_on_go_only", "overnight_gap_fade", "first30_fade", "lunch_or_magnet",
+    ],
+    17: [
+        "first5_break", "overnight_gap_fade", "first30_fade",
+    ],
+    18: [
+        "vwap_reclaim_90", "gap_on_confirm_lock",
+    ],
+    19: [
+        "vwap_reclaim_90_lock",
+    ],
+}
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--cycle", type=int, default=1)
+    p.add_argument("--family", nargs="+", default=None, choices=list(FAMILIES) + ["all"])
+    p.add_argument("--symbol", nargs="+", default=[PRIMARY, REPLICATION])
+    p.add_argument("--timeframe", default="5m")
+    p.add_argument("--train-days", type=int, default=WF_TRAIN_DAYS)
+    p.add_argument("--test-days", type=int, default=WF_TEST_DAYS)
+    return p.parse_args()
+
+
+def _t_from_trades(trades) -> float | None:
+    from src.backtest.walk_forward import _t_stat
+
+    return _t_stat([t.pnl for t in trades])
+
+
+def _locked_params(grid: dict) -> dict:
+    """Single-combo grids → identical constructor kwargs on MNQ and MES."""
+    return {k: v[0] for k, v in grid.items()} if grid else {}
+
+
+def run_holdout(
+    df, strategy_cls, symbol, timeframe, params: dict | None = None, engine_kwargs: dict | None = None
+) -> Dict[str, Any]:
+    strat = strategy_cls(**(params or {}))
+    kw = dict(SPRINT1_AFTER_ENGINE)
+    if engine_kwargs:
+        kw.update(engine_kwargs)
+    result = run_backtest(df, strat, symbol, timeframe, ACCOUNT_SIZE, RISK_PCT, **kw)
+    metrics = compute_metrics(result, ACCOUNT_SIZE)
+    t_stat = _t_from_trades(result.trades)
+    metrics["t_stat"] = round(t_stat, 3) if t_stat is not None else None
+    metrics["exit_reasons"] = dict(Counter(t.exit_reason for t in result.trades))
+    overnight = 0
+    for t in result.trades:
+        local_exit = t.exit_time.tz_convert("America/New_York")
+        if local_exit.hour > 16 or (local_exit.hour == 16 and local_exit.minute > 5):
+            overnight += 1
+    metrics["held_past_rth_close"] = overnight
+    return metrics
+
+
+HOLDOUT_STRONG_NEG = -1.0
+
+
+def symbol_gate(wf: Dict[str, Any], ho: Dict[str, Any] | None) -> tuple[bool, str]:
+    """Per-symbol gate. MNQ-only is an acceptable candidate (PASS_MNQ)."""
+    t = wf.get("t_stat")
+    n = wf.get("total_oos_trades") or 0
+    if t is None or n < KILL_MIN_TRADES or t < KILL_T_STAT:
+        return False, "KILL (WF t<2 or n<30)"
+    if ho:
+        ht = ho.get("t_stat")
+        if ht is not None and ht < HOLDOUT_STRONG_NEG:
+            return False, f"KILL (holdout strongly negative t={ht})"
+        if int(ho.get("held_past_rth_close") or 0) > 0:
+            return False, "KILL (overnight cling)"
+    return True, "PASS"
+
+
+def _thin_holdout(ho: Dict[str, Any] | None) -> bool:
+    return bool(ho) and int(ho.get("trade_count") or 0) < KILL_MIN_TRADES
+
+
+def family_label(mnq_ok: bool, mes_ok: bool, mnq_thin: bool = False, mes_thin: bool = False) -> str:
+    if mnq_ok and mes_ok:
+        return "PASS_BOTH_PROVISIONAL" if (mnq_thin or mes_thin) else "PASS_BOTH"
+    if mnq_ok:
+        return "PASS_MNQ_PROVISIONAL" if mnq_thin else "PASS_MNQ"
+    if mes_ok:
+        return "PASS_MES_PROVISIONAL" if mes_thin else "PASS_MES"
+    return "KILL"
+
+
+def data_span(df: pd.DataFrame) -> Dict[str, Any]:
+    tf_guess = "1m" if len(df) > 1 and (df.index[1] - df.index[0]).total_seconds() <= 90 else "5m"
+    return {
+        "rows": int(len(df)),
+        "start": str(df.index[0]) if len(df) else None,
+        "end": str(df.index[-1]) if len(df) else None,
+        "source": f"load_ohlcv (Massive gzip preferred for 5m; Databento CSV for 1m) [{tf_guess}]",
+    }
+
+
+def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Dict[str, Any]) -> None:
+    lines = [
+        f"# Research cycle {cycle}",
+        "",
+        "Paper / backtest only. Sprint-1 realistic fills. No live trading.",
+        "",
+        f"Generated: `{datetime.now(timezone.utc).isoformat()}`",
+        "",
+        "## Tape",
+        "",
+        f"- MNQ: `{spans.get('MNQ')}`",
+        f"- MES: `{spans.get('MES')}`",
+        f"- Holdout start (locked): `{HOLDOUT_OOS_START}`",
+        f"- WF: see run log (default {WF_TRAIN_DAYS}d/{WF_TEST_DAYS}d)",
+        "",
+        "## Metrics",
+        "",
+        "| Family | Kind | MNQ n | MNQ t | MNQ hold t | MNQ | MES n | MES t | MES hold t | MES | Label |",
+        "|---|---|---:|---:|---:|---|---:|---:|---:|---|---|",
+    ]
+    by = {(r["symbol"], r["family"]): r for r in rows}
+    families = sorted({r["family"] for r in rows})
+    for name in families:
+        mnq = by.get((PRIMARY, name), {})
+        mes = by.get((REPLICATION, name), {})
+        kind = FAMILIES.get(name, (None, None, "new"))[2]
+        wf = mnq.get("walk_forward_oos", {})
+        mes_wf = mes.get("walk_forward_oos", {})
+        ho = mnq.get("holdout", {})
+        mes_ho = mes.get("holdout", {})
+        lines.append(
+            "| {name} | {kind} | {n} | {t} | {ht} | {mv} | {mn} | {mt} | {mht} | {mev} | {v} |".format(
+                name=name,
+                kind=kind,
+                n=wf.get("total_oos_trades"),
+                t=wf.get("t_stat"),
+                ht=ho.get("t_stat"),
+                mv=mnq.get("symbol_verdict", ""),
+                mn=mes_wf.get("total_oos_trades"),
+                mt=mes_wf.get("t_stat"),
+                mht=mes_ho.get("t_stat"),
+                mev=mes.get("symbol_verdict", ""),
+                v=mnq.get("verdict", mes.get("verdict", "")),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "Labels: **PASS_MNQ** / **PASS_MNQ_PROVISIONAL** (thin holdout n<30), "
+            "**PASS_MES** / **PASS_MES_PROVISIONAL**, **PASS_BOTH**, **KILL**. "
+            "Paper only. No live trading. READY_FOR_PAPER_LIVE_CANDIDATE only after harden.",
+            "",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines))
+
+
+def main() -> None:
+    args = parse_args()
+    if args.cycle in (17, 18, 19):
+        args.timeframe = "1m"
+        print(
+            f"cycle {args.cycle}: 1m Databento path (2024-01-01→2026-03-11), not 5m candles",
+            flush=True,
+        )
+    if args.family is None:
+        families = CYCLE_DEFAULTS.get(args.cycle, list(FAMILIES))
+    elif "all" in args.family:
+        families = list(FAMILIES)
+    else:
+        families = args.family
+    cycle_dir = Path(__file__).resolve().parent.parent / REPORTS_DIR / "cycles" / f"cycle_{args.cycle}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    spans = {}
+    payloads = {}
+
+    for symbol in args.symbol:
+        df = load_ohlcv(symbol, args.timeframe)
+        spans[symbol] = data_span(df)
+        cut = pd.Timestamp(HOLDOUT_OOS_START, tz=df.index.tz)
+        discovery = df[df.index < cut]
+        holdout = df[df.index >= cut]
+        print(
+            f"\n=== {symbol} {args.timeframe} discovery={len(discovery)} "
+            f"holdout={len(holdout)} {spans[symbol]['start']} -> {spans[symbol]['end']} ===",
+            flush=True,
+        )
+        for name in families:
+            cls, grid, kind = FAMILIES[name]
+            print(f"-- {symbol} / {name} ({kind}) WF --", flush=True)
+            folds = walk_forward_search(
+                df=discovery,
+                strategy_cls=cls,
+                param_grid=grid,
+                symbol=symbol,
+                timeframe=args.timeframe,
+                account_size=ACCOUNT_SIZE,
+                risk_pct=RISK_PCT,
+                train_days=args.train_days,
+                test_days=args.test_days,
+                engine_kwargs=SPRINT1_AFTER_ENGINE,
+            )
+            oos = aggregate_oos(folds)
+            print(f"  WF OOS {oos}", flush=True)
+            locked = _locked_params(grid)
+            hold = run_holdout(holdout, cls, symbol, args.timeframe, params=locked)
+            print(f"  Holdout {hold.get('total_pnl')} t={hold.get('t_stat')} n={hold.get('trade_count')}", flush=True)
+            payload = {
+                "cycle": args.cycle,
+                "symbol": symbol,
+                "family": name,
+                "kind": kind,
+                "tape": spans[symbol],
+                "engine": SPRINT1_AFTER_ENGINE,
+                "walk_forward_oos": oos,
+                "folds": [
+                    {
+                        "fold": f.fold,
+                        "train_start": str(f.train_start),
+                        "train_end": str(f.train_end),
+                        "test_start": str(f.test_start),
+                        "test_end": str(f.test_end),
+                        "best_params": f.best_params,
+                        "train_metrics": f.train_metrics,
+                        "test_metrics": f.test_metrics,
+                    }
+                    for f in folds
+                ],
+                "holdout": hold,
+            }
+            payloads[(symbol, name)] = payload
+            (cycle_dir / f"{symbol}_{name}.json").write_text(json.dumps(payload, indent=2, default=str))
+
+    for name in families:
+        mnq = payloads.get((PRIMARY, name))
+        mes = payloads.get((REPLICATION, name))
+        mnq_ok = mes_ok = False
+        mnq_thin = mes_thin = False
+        if mnq is not None:
+            mnq_ok, mnq_sv = symbol_gate(mnq["walk_forward_oos"], mnq.get("holdout"))
+            mnq_thin = _thin_holdout(mnq.get("holdout"))
+            if mnq_ok:
+                mnq["symbol_verdict"] = "PASS_MNQ_PROVISIONAL" if mnq_thin else "PASS_MNQ"
+            else:
+                mnq["symbol_verdict"] = mnq_sv
+        if mes is not None:
+            mes_ok, mes_sv = symbol_gate(mes["walk_forward_oos"], mes.get("holdout"))
+            mes_thin = _thin_holdout(mes.get("holdout"))
+            if mes_ok:
+                mes["symbol_verdict"] = "PASS_MES_PROVISIONAL" if mes_thin else "PASS_MES"
+            else:
+                mes["symbol_verdict"] = mes_sv
+        label = family_label(mnq_ok, mes_ok, mnq_thin, mes_thin)
+        if mnq is not None:
+            mnq["verdict"] = label
+            (cycle_dir / f"{PRIMARY}_{name}.json").write_text(json.dumps(mnq, indent=2, default=str))
+        if mes is not None:
+            mes["verdict"] = label
+            (cycle_dir / f"{REPLICATION}_{name}.json").write_text(json.dumps(mes, indent=2, default=str))
+        rows.extend([r for r in (mnq, mes) if r])
+
+    write_cycle_md(cycle_dir / "SUMMARY.md", args.cycle, rows, spans)
+    board = [
+        {
+            "family": r["family"],
+            "symbol": r["symbol"],
+            "verdict": r.get("verdict"),
+            **r["walk_forward_oos"],
+            "holdout_t": r["holdout"].get("t_stat"),
+            "holdout_pnl": r["holdout"].get("total_pnl"),
+        }
+        for r in rows
+    ]
+    (cycle_dir / "leaderboard.json").write_text(json.dumps(board, indent=2))
+    print(f"\nWrote {cycle_dir}")
+    if args.cycle == 12:
+        from src.data.loader import load_ohlcv as _load
+        from scripts.regime_pocket import diagnose_symbol, write_report
+
+        pocket_payloads = []
+        for symbol in args.symbol:
+            pocket_payloads.append(diagnose_symbol(_load(symbol, args.timeframe), symbol, args.timeframe))
+        pocket = write_report(pocket_payloads, cycle_dir)
+        print(f"regime pockets: {pocket['verdict']}", flush=True)
+    if args.cycle in (15, 16, 17, 18, 19) and PRIMARY in args.symbol:
+        from src.data.loader import load_ohlcv as _load_clock
+        from scripts.bar_vs_clock import diagnose, write_report as write_clock
+
+        clock = diagnose(_load_clock(PRIMARY, args.timeframe), PRIMARY, args.timeframe)
+        write_clock(clock, cycle_dir)
+        print(f"bar vs clock: {clock['verdict']}", flush=True)
+    seen = set()
+    for r in rows:
+        key = r["family"]
+        if key in seen:
+            continue
+        seen.add(key)
+        print(f"{key:28} {r.get('verdict')}")
+
+
+if __name__ == "__main__":
+    main()

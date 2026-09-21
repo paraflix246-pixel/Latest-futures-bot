@@ -1,0 +1,149 @@
+{
+  "cycle": 8,
+  "symbol": "MES",
+  "family": "s2_mes_sens_7",
+  "kind": "hunt",
+  "tape": {
+    "rows": 138366,
+    "start": "2024-09-22 22:00:00+00:00",
+    "end": "2026-09-18 13:25:00+00:00",
+    "source": "data/{SYM}_5m.csv (Massive if promoted, else existing Databento 2024+ tape)"
+  },
+  "engine": {
+    "fill_model": "next_open",
+    "apply_exit_slippage": true,
+    "gap_aware_stops": true,
+    "trail_update": "next_bar",
+    "cooldown_bars": 3,
+    "allow_same_bar_reentry": false,
+    "daily_loss_halt_pct": 2.0,
+    "flatten_at_rth_close": true,
+    "max_contracts": 10,
+    "rth_entries_only": true,
+    "min_atr_gate": false,
+    "max_cost_frac_of_risk": null,
+    "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0
+  },
+  "walk_forward_oos": {
+    "folds": 2,
+    "profitable_folds": 1,
+    "total_oos_trades": 39,
+    "total_oos_pnl": 535.0,
+    "avg_oos_win_rate": 0.5913,
+    "avg_pnl_per_fold": 267.5,
+    "t_stat": 0.414,
+    "significant": false
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_start": "2024-09-22 22:00:00+00:00",
+      "train_end": "2025-03-21 22:00:00+00:00",
+      "test_start": "2025-03-21 22:00:00+00:00",
+      "test_end": "2025-05-20 22:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "train_metrics": {
+        "symbol": "MES",
+        "strategy": "s2_mes_sens_7",
+        "timeframe": "5m",
+        "trade_count": 33,
+        "win_rate": 0.5758,
+        "profit_factor": 1.3123,
+        "expectancy": 27.35,
+        "total_pnl": 902.51,
+        "max_drawdown": -619.33,
+        "sharpe": 0.5464,
+        "final_equity": 50902.52
+      },
+      "test_metrics": {
+        "symbol": "MES",
+        "strategy": "s2_mes_sens_7",
+        "timeframe": "5m",
+        "trade_count": 21,
+        "win_rate": 0.5714,
+        "profit_factor": 0.9552,
+        "expectancy": -4.57,
+        "total_pnl": -95.9,
+        "max_drawdown": -1069.8,
+        "sharpe": -0.1355,
+        "final_equity": 49904.1
+      }
+    },
+    {
+      "fold": 1,
+      "train_start": "2024-11-21 22:00:00+00:00",
+      "train_end": "2025-05-20 22:00:00+00:00",
+      "test_start": "2025-05-20 22:00:00+00:00",
+      "test_end": "2025-07-19 22:00:00+00:00",
+      "best_params": {
+        "or_minutes": 15,
+        "entry_window_minutes": 130,
+        "volume_mult": 1.4,
+        "require_vwap_align": true,
+        "skip_inside_overnight": true,
+        "require_retest": false,
+        "target_r": 1.0,
+        "stop_mode": "mid"
+      },
+      "train_metrics": {
+        "symbol": "MES",
+        "strategy": "s2_mes_sens_7",
+        "timeframe": "5m",
+        "trade_count": 43,
+        "win_rate": 0.5814,
+        "profit_factor": 1.1765,
+        "expectancy": 16.5,
+        "total_pnl": 709.53,
+        "max_drawdown": -1069.8,
+        "sharpe": 0.4014,
+        "final_equity": 50709.53
+      },
+      "test_metrics": {
+        "symbol": "MES",
+        "strategy": "s2_mes_sens_7",
+        "timeframe": "5m",
+        "trade_count": 18,
+        "win_rate": 0.6111,
+        "profit_factor": 1.4327,
+        "expectancy": 35.05,
+        "total_pnl": 630.9,
+        "max_drawdown": -639.33,
+        "sharpe": 0.9603,
+        "final_equity": 50630.91
+      }
+    }
+  ],
+  "holdout": {
+    "symbol": "MES",
+    "strategy": "s2_mes_sens_7",
+    "timeframe": "5m",
+    "trade_count": 41,
+    "win_rate": 0.5122,
+    "profit_factor": 0.9757,
+    "expectancy": -2.15,
+    "total_pnl": -88.24,
+    "max_drawdown": -1298.99,
+    "sharpe": -0.0328,
+    "final_equity": 49911.76,
+    "t_stat": -0.073,
+    "exit_reasons": {
+      "time_stop": 9,
+      "target": 17,
+      "stop": 15
+    },
+    "held_past_rth_close": 0
+  },
+  "symbol_verdict": "KILL (WF t<2 or n<30)",
+  "verdict": "KILL"
+}

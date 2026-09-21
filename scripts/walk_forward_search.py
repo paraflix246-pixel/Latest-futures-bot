@@ -26,20 +26,24 @@ from src.regime.allocator import RegimeAllocatorStrategy  # noqa: E402
 from src.strategies.breakout import BreakoutStrategy  # noqa: E402
 from src.strategies.ensemble import EnsembleStrategy  # noqa: E402
 from src.strategies.extreme_displacement_reversion import ExtremeDisplacementReversionStrategy  # noqa: E402
-from src.strategies.impulse_clock import ImpulseClockStrategy  # noqa: E402
-from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
 from src.strategies.mean_reversion import MeanReversionStrategy  # noqa: E402
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy  # noqa: E402
 from src.strategies.orb_break_fade import OrbBreakFadeStrategy  # noqa: E402
-from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
 from src.strategies.orb_failure import OrbFailureStrategy  # noqa: E402
 from src.strategies.trend_following import TrendFollowingStrategy  # noqa: E402
 from src.strategies.vol_expansion_momentum import VolExpansionMomentumStrategy  # noqa: E402
-from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
 from src.strategies.volume_shock_continuation import VolumeShockContinuationStrategy  # noqa: E402
 from src.strategies.vwap_ema_cross import VwapEmaCrossStrategy  # noqa: E402
 from src.strategies.vwap_pullback_trend import VwapPullbackTrendStrategy  # noqa: E402
 from src.strategies.vwap_pullback_trend_v2 import VwapPullbackTrendV2Strategy  # noqa: E402
+from src.strategies.ib_extension import IbExtensionStrategy  # noqa: E402
+from src.strategies.impulse_clock import ImpulseClockStrategy  # noqa: E402
+from src.strategies.last30_momentum import Last30MomentumStrategy  # noqa: E402
+from src.strategies.lunch_range_break import LunchRangeBreakStrategy  # noqa: E402
+from src.strategies.on_inventory import OnInventoryStrategy  # noqa: E402
+from src.strategies.orb_crabel import OrbCrabelStrategy  # noqa: E402
+from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
+from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
 
 # Kept intentionally small — this is a grid search re-run per fold, so combo
 # count multiplies directly into runtime.
@@ -85,17 +89,29 @@ STRATEGY_GRIDS = {
     "orb_break_fade": (OrbBreakFadeStrategy, {
         "or_minutes": [15, 30], "failure_bars": [3, 5],
     }),
+    "orb_crabel": (OrbCrabelStrategy, {
+        "or_minutes": [15, 30], "rvol_mult": [1.5, 2.0],
+    }),
+    "last30_momentum": (Last30MomentumStrategy, {
+        "min_ret_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40],
+    }),
     "vol_squeeze_expansion": (VolSqueezeExpansionStrategy, {
         "squeeze_percentile": [15, 25], "volume_mult": [1.2, 1.5],
     }),
     "impulse_clock": (ImpulseClockStrategy, {
         "impulse_atr_mult": [1.5, 2.0], "max_hold_bars": [6, 12],
     }),
-    "orb_crabel": (OrbCrabelStrategy, {
-        "or_minutes": [15, 30], "rvol_mult": [1.5, 2.0],
+    "ib_extension": (IbExtensionStrategy, {
+        "ib_minutes": [60], "volume_mult": [1.1, 1.4],
     }),
-    "last30_momentum": (Last30MomentumStrategy, {
-        "min_ret_atr_frac": [0.10, 0.20], "stop_atr_mult": [0.25, 0.40],
+    "on_inventory": (OnInventoryStrategy, {
+        "on_atr_min": [0.15, 0.25], "stop_atr_mult": [0.30, 0.45],
+    }),
+    "lunch_range_break": (LunchRangeBreakStrategy, {
+        "lunch_atr_max": [0.35, 0.50], "volume_mult": [1.0, 1.3],
+    }),
+    "vol_gated_ensemble": (VolGatedEnsembleStrategy, {
+        "atr_pct_lo": [15.0, 25.0], "atr_pct_hi": [75.0, 85.0],
     }),
 }
 

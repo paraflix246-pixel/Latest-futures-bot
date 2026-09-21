@@ -49,7 +49,6 @@ def bollinger_bands(series: pd.Series, period: int = 20, num_std: float = 2.0):
     return upper, mid, lower
 
 
-
 def keltner_channels(
     high: pd.Series,
     low: pd.Series,

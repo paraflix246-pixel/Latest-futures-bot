@@ -1,0 +1,57 @@
+{
+  "cycle": 16,
+  "symbol": "MES",
+  "family": "gap_on_go_only",
+  "kind": "new",
+  "tape": {
+    "rows": 138366,
+    "start": "2024-09-22 22:00:00+00:00",
+    "end": "2026-09-18 13:25:00+00:00",
+    "source": "data/{SYM}_5m.csv (Massive if promoted, else existing Databento 2024+ tape)"
+  },
+  "engine": {
+    "fill_model": "next_open",
+    "apply_exit_slippage": true,
+    "gap_aware_stops": true,
+    "trail_update": "next_bar",
+    "cooldown_bars": 3,
+    "allow_same_bar_reentry": false,
+    "daily_loss_halt_pct": 2.0,
+    "flatten_at_rth_close": true,
+    "max_contracts": 10,
+    "rth_entries_only": true,
+    "min_atr_gate": false,
+    "max_cost_frac_of_risk": null,
+    "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0
+  },
+  "walk_forward_oos": {
+    "folds": 0,
+    "total_oos_trades": 0,
+    "total_oos_pnl": 0.0,
+    "significant": false
+  },
+  "folds": [],
+  "holdout": {
+    "symbol": "MES",
+    "strategy": "gap_on_go_only",
+    "timeframe": "5m",
+    "trade_count": 2,
+    "win_rate": 0.5,
+    "profit_factor": 5.7301,
+    "expectancy": 87.2,
+    "total_pnl": 174.4,
+    "max_drawdown": -36.87,
+    "sharpe": 0.4252,
+    "final_equity": 50174.4,
+    "t_stat": 0.703,
+    "exit_reasons": {
+      "target": 1,
+      "time_stop": 1
+    },
+    "held_past_rth_close": 0
+  },
+  "symbol_verdict": "KILL (WF t<2 or n<30)",
+  "verdict": "KILL"
+}

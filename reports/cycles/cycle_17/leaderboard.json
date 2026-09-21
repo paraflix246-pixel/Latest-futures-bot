@@ -1,0 +1,47 @@
+[
+  {
+    "family": "first5_break",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 7,
+    "profitable_folds": 3,
+    "total_oos_trades": 263,
+    "total_oos_pnl": -81.65,
+    "avg_oos_win_rate": 0.5191,
+    "avg_pnl_per_fold": -11.66,
+    "t_stat": -0.029,
+    "significant": false,
+    "holdout_t": 0.342,
+    "holdout_pnl": 686.73
+  },
+  {
+    "family": "overnight_gap_fade",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 7,
+    "profitable_folds": 6,
+    "total_oos_trades": 190,
+    "total_oos_pnl": 1442.08,
+    "avg_oos_win_rate": 0.5641,
+    "avg_pnl_per_fold": 206.01,
+    "t_stat": 0.607,
+    "significant": false,
+    "holdout_t": 1.173,
+    "holdout_pnl": 1895.66
+  },
+  {
+    "family": "first30_fade",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 7,
+    "profitable_folds": 2,
+    "total_oos_trades": 188,
+    "total_oos_pnl": -2952.11,
+    "avg_oos_win_rate": 0.4169,
+    "avg_pnl_per_fold": -421.73,
+    "t_stat": -1.486,
+    "significant": false,
+    "holdout_t": -1.161,
+    "holdout_pnl": -1444.35
+  }
+]

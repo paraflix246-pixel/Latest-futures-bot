@@ -1,0 +1,137 @@
+{
+  "cycle": 8,
+  "symbol": "MES",
+  "family": "spread_fade",
+  "kind": "near_miss",
+  "tape": {
+    "rows": 138366,
+    "start": "2024-09-22 22:00:00+00:00",
+    "end": "2026-09-18 13:25:00+00:00",
+    "source": "data/{SYM}_5m.csv (Massive if promoted, else existing Databento 2024+ tape)"
+  },
+  "engine": {
+    "fill_model": "next_open",
+    "apply_exit_slippage": true,
+    "gap_aware_stops": true,
+    "trail_update": "next_bar",
+    "cooldown_bars": 3,
+    "allow_same_bar_reentry": false,
+    "daily_loss_halt_pct": 2.0,
+    "flatten_at_rth_close": true,
+    "max_contracts": 10,
+    "rth_entries_only": true,
+    "min_atr_gate": false,
+    "max_cost_frac_of_risk": null,
+    "skip_rth_open_minutes": 0,
+    "gap_extra_ticks": 0,
+    "fill_fraction": 1.0
+  },
+  "walk_forward_oos": {
+    "folds": 2,
+    "profitable_folds": 1,
+    "total_oos_trades": 46,
+    "total_oos_pnl": -1148.16,
+    "avg_oos_win_rate": 0.5209,
+    "avg_pnl_per_fold": -574.08,
+    "t_stat": -1.182,
+    "significant": false
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "train_start": "2024-09-22 22:00:00+00:00",
+      "train_end": "2025-03-21 22:00:00+00:00",
+      "test_start": "2025-03-21 22:00:00+00:00",
+      "test_end": "2025-05-20 22:00:00+00:00",
+      "best_params": {
+        "spread_atr": 0.4,
+        "stop_atr_mult": 0.35
+      },
+      "train_metrics": {
+        "symbol": "MES",
+        "strategy": "spread_fade",
+        "timeframe": "5m",
+        "trade_count": 117,
+        "win_rate": 0.547,
+        "profit_factor": 0.7442,
+        "expectancy": -18.77,
+        "total_pnl": -2196.26,
+        "max_drawdown": -2687.61,
+        "sharpe": -1.0066,
+        "final_equity": 47803.74
+      },
+      "test_metrics": {
+        "symbol": "MES",
+        "strategy": "spread_fade",
+        "timeframe": "5m",
+        "trade_count": 16,
+        "win_rate": 0.375,
+        "profit_factor": 0.2661,
+        "expectancy": -101.53,
+        "total_pnl": -1624.49,
+        "max_drawdown": -1649.35,
+        "sharpe": -3.0081,
+        "final_equity": 48375.51
+      }
+    },
+    {
+      "fold": 1,
+      "train_start": "2024-11-21 22:00:00+00:00",
+      "train_end": "2025-05-20 22:00:00+00:00",
+      "test_start": "2025-05-20 22:00:00+00:00",
+      "test_end": "2025-07-19 22:00:00+00:00",
+      "best_params": {
+        "spread_atr": 0.5,
+        "stop_atr_mult": 0.35
+      },
+      "train_metrics": {
+        "symbol": "MES",
+        "strategy": "spread_fade",
+        "timeframe": "5m",
+        "trade_count": 80,
+        "win_rate": 0.575,
+        "profit_factor": 1.0455,
+        "expectancy": 3.56,
+        "total_pnl": 284.48,
+        "max_drawdown": -1556.67,
+        "sharpe": 0.1524,
+        "final_equity": 50284.48
+      },
+      "test_metrics": {
+        "symbol": "MES",
+        "strategy": "spread_fade",
+        "timeframe": "5m",
+        "trade_count": 30,
+        "win_rate": 0.6667,
+        "profit_factor": 1.4317,
+        "expectancy": 15.88,
+        "total_pnl": 476.33,
+        "max_drawdown": -603.43,
+        "sharpe": 1.0892,
+        "final_equity": 50476.33
+      }
+    }
+  ],
+  "holdout": {
+    "symbol": "MES",
+    "strategy": "spread_fade",
+    "timeframe": "5m",
+    "trade_count": 240,
+    "win_rate": 0.5583,
+    "profit_factor": 0.8843,
+    "expectancy": -8.91,
+    "total_pnl": -2139.25,
+    "max_drawdown": -4085.27,
+    "sharpe": -0.4296,
+    "final_equity": 47860.75,
+    "t_stat": -0.863,
+    "exit_reasons": {
+      "target": 121,
+      "time_stop": 28,
+      "stop": 91
+    },
+    "held_past_rth_close": 0
+  },
+  "symbol_verdict": "KILL (WF t<2 or n<30)",
+  "verdict": "KILL"
+}
