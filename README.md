@@ -25,8 +25,10 @@ Results (trade log, equity curve, summary metrics) are written to `reports/`.
 | `ensemble` | ADX regime router: trend when ADX≥25, mean-reversion when ADX<20, breakout evaluated independently and given priority |
 | `vwap_cross` | EMA(10/20) cross + session VWAP filter + 3-candle confirmation delay before entering |
 | `orb_break_fade` | RTH opening-range break; fade a failed break with a tight stop; flatten at cash close |
+| `orb_crabel` | Filtered ORB (VWAP + RVOL + OR-width/ATR) with 11:00 ET clock; fade failed breaks |
 | `vol_squeeze_expansion` | Bollinger-inside-Keltner width-percentile squeeze, then volume break; time stop + RTH flatten |
 | `impulse_clock` | Short-horizon continuation after a large-range RTH bar; max bars in trade; flatten EOD |
+| `last30_momentum` | First-30m RTH return → last-30m continuation; flatten at cash close |
 
 Run any strategy against any symbol/timeframe via `scripts/run_backtest.py
 --strategy {trend,mean_reversion,breakout,ensemble}`.
