@@ -1,0 +1,32 @@
+[
+  {
+    "family": "vwap_reclaim_90",
+    "symbol": "MNQ",
+    "verdict": "PASS_MNQ",
+    "folds": 7,
+    "profitable_folds": 6,
+    "total_oos_trades": 282,
+    "total_oos_pnl": 9363.03,
+    "avg_oos_win_rate": 0.6323,
+    "avg_pnl_per_fold": 1337.58,
+    "t_stat": 3.096,
+    "significant": true,
+    "holdout_t": 2.481,
+    "holdout_pnl": 4129.19
+  },
+  {
+    "family": "gap_on_confirm_lock",
+    "symbol": "MNQ",
+    "verdict": "KILL",
+    "folds": 7,
+    "profitable_folds": 3,
+    "total_oos_trades": 168,
+    "total_oos_pnl": -2746.01,
+    "avg_oos_win_rate": 0.487,
+    "avg_pnl_per_fold": -392.29,
+    "t_stat": -1.26,
+    "significant": false,
+    "holdout_t": 0.245,
+    "holdout_pnl": 298.75
+  }
+]

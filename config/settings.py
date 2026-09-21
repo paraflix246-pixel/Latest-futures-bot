@@ -29,7 +29,7 @@ SUPPORTED_STRATEGIES = [
     "gap_fill_go", "rvol_open15", "vwap_band_fade", "adr_exhaust_fade",
     "pdh_pdl_fail", "morning_reversal",
     "vwap_pullback_cont", "ema_stack_pullback", "ib_mid_fade",
-    "three_bar_vwap_fade", "rsi2_vwap_fade", "vwap_reclaim",
+    "three_bar_vwap_fade", "rsi2_vwap_fade", "vwap_reclaim", "vwap_reclaim_90",
     "orb_fail_fade", "gap_and_go", "spread_fade", "nr15_break",
     "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
     "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",

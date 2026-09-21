@@ -142,6 +142,7 @@ STRATEGIES = {
     "three_bar_vwap_fade": ThreeBarVwapFadeStrategy,
     "rsi2_vwap_fade": Rsi2VwapFadeStrategy,
     "vwap_reclaim": VwapReclaimStrategy,
+    "vwap_reclaim_90": VwapReclaimStrategy,
 }
 
 
@@ -157,4 +158,11 @@ def get_strategy(name: str):
         return GapOnConfirmStrategy(trade_mode="go")
     if name == "gap_on_confirm_lock":
         return GapOnConfirmStrategy(confirm_atr=0.12, stop_atr_mult=0.25)
+    if name == "vwap_reclaim_90":
+        return VwapReclaimStrategy(
+            min_away_atr=0.10,
+            stop_atr_mult=0.20,
+            entry_end_minutes=11 * 60,
+            first_hour_bias=True,
+        )
     return STRATEGIES[name]()

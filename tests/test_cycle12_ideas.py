@@ -322,3 +322,14 @@ def test_first5_break_enters_beyond_open_range():
     assert sig.entries.loc[nxt] == 1
     inside = First5BreakStrategy(min_or_atr=10.0).generate_signals(df)
     assert inside.entries.loc[nxt] == 0
+
+
+def test_vwap_reclaim_90_lock_matches_cycle18_holdout():
+    from src.strategies import get_strategy
+
+    s = get_strategy("vwap_reclaim_90")
+    assert s.min_away_atr == 0.10
+    assert s.stop_atr_mult == 0.20
+    assert s.entry_end_minutes == 11 * 60
+    assert s.first_hour_bias is True
+    assert s.max_hold_bars == 36

@@ -744,11 +744,12 @@ def family_label(mnq_ok: bool, mes_ok: bool, mnq_thin: bool = False, mes_thin: b
 
 
 def data_span(df: pd.DataFrame) -> Dict[str, Any]:
+    tf_guess = "1m" if len(df) > 1 and (df.index[1] - df.index[0]).total_seconds() <= 90 else "5m"
     return {
         "rows": int(len(df)),
         "start": str(df.index[0]) if len(df) else None,
         "end": str(df.index[-1]) if len(df) else None,
-        "source": "data/{SYM}_5m.csv (Massive if promoted, else existing Databento 2024+ tape)",
+        "source": f"load_ohlcv (Massive gzip preferred for 5m; Databento CSV for 1m) [{tf_guess}]",
     }
 
 
