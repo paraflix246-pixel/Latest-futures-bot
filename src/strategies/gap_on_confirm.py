@@ -28,8 +28,8 @@ from src.strategies.session import (
 )
 
 DRIVE_END = RTH_OPEN_MINUTES + 15
-STOP_ATR_MULT = 0.35
-CONFIRM_ATR = 0.08
+STOP_ATR_MULT = 0.25
+CONFIRM_ATR = 0.12
 MAX_HOLD_BARS = 72
 
 

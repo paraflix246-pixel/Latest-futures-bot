@@ -35,7 +35,7 @@ SUPPORTED_STRATEGIES = [
     "ib_hold_break", "inside_hour_break", "higher_low_vwap", "prior_mid_reclaim",
     "morning_range_break", "keltner_am_fade", "inside_day_orb", "pivot_bounce",
     "vwap_fh_reclaim", "gap_on_range", "open_reject", "gap_on_confirm",
-    "am_measured", "vwap_hold_late",
+    "gap_on_confirm_lock", "am_measured", "vwap_hold_late",
 ]
 
 # NQ now has its own real Databento feed (data/NQ_1m.csv, NQ_5m.csv) — no

@@ -1,6 +1,8 @@
 # Status — Massive tape research
 
-Paper/backtest only. **Not live trading. No profit guarantee. No validated edge.**
+Paper/backtest only. **Not live trading. No profit guarantee.** Statistical
+**PASS_MES** on `gap_on_confirm_lock`; holdout expectancy is slightly negative
+so this is **not** a paper-live candidate.
 
 PR: https://github.com/paraflix246-pixel/Latest-futures-bot/pull/3
 Branch: `cursor/massive-long-tape-research-6b77`
@@ -26,13 +28,13 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 | Label | Count | Notes |
 |---|---:|---|
 | PASS_MNQ | **0** | Closest official: `vwap_reclaim_90` **WF t=1.609 n=41, HO t=2.116 n=158**. Cycle 10 target grid t=1.546. Local `s2_orb_retrace_7` **DEMOTED**. |
-| PASS_MES | **0** | Official `s2_mes_sens_7` KILL (t=0.414). Cycle 13 MES `gap_on_confirm` WF **t=3.656 n=36** but HO t=−1.594 (grid-first defaults, not fold winners). |
-| PASS_BOTH | 0 | — |
-| KILL | 63+ | Cycles 1–4, 6–13. Cycle 11 (MNQ 15m) produced 0 WF trades. |
+| PASS_MES | **1** | `gap_on_confirm_lock` (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140, overnight=0. **Not paper-live.** |
+| PASS_BOTH | 0 | MNQ of the same family is KILL (WF t=−1.699 n=28). |
+| KILL | 63+ | Cycles 1–4, 6–13. Cycle 14 MNQ lock KILL. |
 
-**No paper-live. No live.**
+**PASS_MES on overnight-range confirmed fill/go. No paper-live. No live.**
 
-`MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth probe: earliest bar **2024-09-23**, 2022–2023 tickers **n=0**. This is Massive Basic/Starter **2-year history**, not a missing-key blocker. Tape cannot thicken until the founder upgrades the Massive plan. Hunt continues on the 2y tape.
+`MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth probe: earliest bar **2024-09-23**, 2022–2023 tickers **n=0**. This is Massive Basic/Starter **2-year history**, not a missing-key blocker. Tape cannot thicken until the founder upgrades the Massive plan. MNQ hunt continues on the 2y tape.
 
 ## PR #2 squash-merge
 
@@ -195,14 +197,27 @@ Holdout uses constructor-grid *first* values (`confirm_atr=0.05`) and is
 strongly negative (t=−1.594) → **KILL**, not PASS_MES. Do not promote. Cycle 14
 locks those discovery fold-consensus defaults and re-holdouts once.
 
-## Cycle 14 (running)
+## Cycle 14 — PASS_MES `gap_on_confirm_lock`
 
-`gap_on_confirm_lock` — single combo `confirm_atr=0.12`, `stop=0.25` (WF
-consensus from cycle 13 discovery; holdout never used to pick).
+Locked from cycle-13 discovery fold consensus (both folds): `confirm_atr=0.12`,
+`stop_atr_mult=0.25`. Sprint-1 fills. RTH. Flatten 15:45. Overnight cling=0.
 
-```bash
-python scripts/research_cycle.py --cycle 14
-```
+| Source | n | t | PnL |
+|---|---:|---:|---|
+| Official WF 180/60 | **36** | **3.656** | +$3411 |
+| Official holdout (2025-09-12) | **140** | **−0.166** | **−$309** |
+| Paper replay (holdout) | 140 | — | −$309, WR 50.7%, PF 0.96 |
+| Diagnostic 90/30 WF (not the gate) | 84 | 1.846 | still <2 |
+| ±20% neighbors | 5/5 | all t≥2.5 | all HO t≥−0.62 **PASS_MES** |
+
+Gate: **PASS_MES**. Holdout is *not* strongly negative, n≥30, no overnight.
+Holdout expectancy is slightly negative — this is a statistical pass, not an
+economic one. Diagnostic 90/30 t=1.846 and LORO remaining t=0.596 if 2025Q2
+is dropped. **Not** `READY_FOR_PAPER_LIVE_CANDIDATE`. No bootstrap/cost×2 yet.
+MNQ same lock: WF t=−1.699 n=28 KILL.
+
+See `reports/cycles/cycle_14/` and `reports/cycles/harden/MES_gap_on_confirm_lock/`.
+Paper log: `reports/paper/MES_5m_gap_on_confirm_replay.json`.
 
 ## Extra Massive history
 
@@ -214,5 +229,7 @@ Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earli
 python scripts/download_massive_futures.py --plan-depth
 python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
 python scripts/research_cycle.py --cycle 14
+python scripts/harden_candidate.py --family gap_on_confirm_lock --symbol MES
+python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy gap_on_confirm --start 2025-09-12
 python -m pytest tests/ -q
 ```

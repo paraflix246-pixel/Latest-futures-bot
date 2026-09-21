@@ -1,0 +1,32 @@
+[
+  {
+    "family": "gap_on_confirm_lock",
+    "symbol": "MNQ",
+    "verdict": "PASS_MES",
+    "folds": 2,
+    "profitable_folds": 0,
+    "total_oos_trades": 28,
+    "total_oos_pnl": -1375.83,
+    "avg_oos_win_rate": 0.4298,
+    "avg_pnl_per_fold": -687.91,
+    "t_stat": -1.699,
+    "significant": false,
+    "holdout_t": -0.633,
+    "holdout_pnl": -1000.1
+  },
+  {
+    "family": "gap_on_confirm_lock",
+    "symbol": "MES",
+    "verdict": "PASS_MES",
+    "folds": 2,
+    "profitable_folds": 2,
+    "total_oos_trades": 36,
+    "total_oos_pnl": 3411.47,
+    "avg_oos_win_rate": 0.7771,
+    "avg_pnl_per_fold": 1705.73,
+    "t_stat": 3.656,
+    "significant": true,
+    "holdout_t": -0.166,
+    "holdout_pnl": -309.04
+  }
+]

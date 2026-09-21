@@ -112,6 +112,7 @@ STRATEGIES = {
     "gap_on_range": GapOnRangeStrategy,
     "open_reject": OpenRejectStrategy,
     "gap_on_confirm": GapOnConfirmStrategy,
+    "gap_on_confirm_lock": GapOnConfirmStrategy,
     "am_measured": AmMeasuredMoveStrategy,
     "vwap_hold_late": VwapHoldLateStrategy,
     "rvol_open15": RvolOpen15Strategy,
