@@ -30,6 +30,11 @@ from config.settings import DEFAULT_SLIPPAGE_TICKS
 from src.risk.position_sizing import contracts_for_risk
 from src.strategies.base import Strategy, StrategySignals
 from src.strategies.indicators import atr
+from src.strategies.session import (
+    RTH_CLOSE_MINUTES,
+    RTH_ENTRY_CUTOFF_MINUTES,
+    local_minutes,
+)
 
 TRAIL_ATR_PERIOD = 14
 TRAIL_ATR_MULT = 2.0
@@ -47,7 +52,7 @@ class Trade:
     gross_pnl: float
     commission: float
     pnl: float  # net = gross_pnl - commission
-    exit_reason: str  # "stop" | "target" | "trail" | "eod"
+    exit_reason: str  # "stop" | "target" | "trail" | "eod" | "time_stop" | "rth_flatten"
 
 
 @dataclass
@@ -73,6 +78,12 @@ def run_backtest(
     trail_atr = atr(df["high"], df["low"], df["close"], TRAIL_ATR_PERIOD)
     slippage_price = slippage_ticks * spec.tick_size
     breakeven_r_mult = getattr(strategy, "breakeven_r_mult", None)
+    # Optional anti-cling exits. Existing strategies leave these unset so
+    # fill/stop/target behavior stays identical to the sprint-1 engine.
+    max_hold_bars = getattr(strategy, "max_hold_bars", None)
+    flatten_rth = bool(getattr(strategy, "flatten_rth", False))
+    flatten_minutes = int(getattr(strategy, "rth_flatten_minutes", RTH_CLOSE_MINUTES))
+    entry_cutoff_minutes = int(getattr(strategy, "rth_entry_cutoff_minutes", RTH_ENTRY_CUTOFF_MINUTES))
 
     trades: List[Trade] = []
     equity = account_size
@@ -84,9 +95,13 @@ def run_backtest(
     for i in range(n):
         ts = df.index[i]
         row = df.iloc[i]
+        bar_minutes = local_minutes(ts) if flatten_rth else None
+        at_rth_flatten = flatten_rth and bar_minutes is not None and bar_minutes >= flatten_minutes
+        past_entry_cutoff = flatten_rth and bar_minutes is not None and bar_minutes >= entry_cutoff_minutes
 
         if position is not None:
             direction = position["direction"]
+            position["bars_held"] += 1
             if direction == 1:
                 position["trail_extreme"] = max(position["trail_extreme"], row["high"])
                 if breakeven_r_mult is not None and not position["breakeven_triggered"]:
@@ -121,6 +136,14 @@ def run_backtest(
                 elif position["target"] is not None and row["low"] <= position["target"]:
                     exit_price, exit_reason = position["target"], "target"
 
+            # Clock exits fill at close ± the same 1-tick slippage as entries.
+            # Price stops/targets still win if they printed on this bar.
+            if exit_price is None and max_hold_bars is not None and position["bars_held"] >= max_hold_bars:
+                exit_price = row["close"] - direction * slippage_price
+                exit_reason = "time_stop"
+            if exit_price is None and at_rth_flatten:
+                exit_price = row["close"] - direction * slippage_price
+                exit_reason = "rth_flatten"
             if i == n - 1 and exit_price is None:
                 exit_price, exit_reason = row["close"], "eod"
 
@@ -147,7 +170,7 @@ def run_backtest(
                 )
                 position = None
 
-        if position is None and i < n - 1:
+        if position is None and i < n - 1 and not past_entry_cutoff:
             entry_signal = signals.entries.iloc[i]
             if entry_signal != 0:
                 direction = int(entry_signal)
@@ -170,6 +193,7 @@ def run_backtest(
                             "trail_extreme": row["high"] if direction == 1 else row["low"],
                             "initial_risk": abs(entry_price - stop),
                             "breakeven_triggered": False,
+                            "bars_held": 0,
                         }
 
         equity_curve.append((ts, equity))

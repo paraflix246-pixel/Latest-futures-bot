@@ -1,11 +1,14 @@
 from src.strategies.breakout import BreakoutStrategy
 from src.strategies.ensemble import EnsembleStrategy
 from src.strategies.extreme_displacement_reversion import ExtremeDisplacementReversionStrategy
+from src.strategies.impulse_clock import ImpulseClockStrategy
 from src.strategies.mean_reversion import MeanReversionStrategy
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy
+from src.strategies.orb_break_fade import OrbBreakFadeStrategy
 from src.strategies.orb_failure import OrbFailureStrategy
 from src.strategies.trend_following import TrendFollowingStrategy
 from src.strategies.vol_expansion_momentum import VolExpansionMomentumStrategy
+from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy
 from src.strategies.volume_shock_continuation import VolumeShockContinuationStrategy
 from src.strategies.vwap_ema_cross import VwapEmaCrossStrategy
 from src.strategies.vwap_pullback_trend import VwapPullbackTrendStrategy
@@ -24,6 +27,9 @@ STRATEGIES = {
     "vol_expansion_momentum": VolExpansionMomentumStrategy,
     "extreme_displacement_reversion": ExtremeDisplacementReversionStrategy,
     "volume_shock_continuation": VolumeShockContinuationStrategy,
+    "orb_break_fade": OrbBreakFadeStrategy,
+    "vol_squeeze_expansion": VolSqueezeExpansionStrategy,
+    "impulse_clock": ImpulseClockStrategy,
 }
 
 
