@@ -27,12 +27,12 @@ stress on the **official** sprint-1 engine. No `GO_LIVE_CHECKLIST`. Live stays o
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | **1** | **1m** `vwap_reclaim_90_lock` (`min_away_atr=0.10`, `stop_atr_mult=0.30`, 11:00, first-hour bias). WF t=**3.943** n=259 (7/7 folds), HO t=**3.696** n=87 +$4893, overnight=0. **Not paper-live until harden neighbors.** |
+| PASS_MNQ | **1** | **1m** `vwap_reclaim_90_lock` (`min_away_atr=0.10`, `stop_atr_mult=0.30`, 11:00, first-hour bias). WF t=**3.943** n=259 (7/7 folds), HO t=**3.696** n=87 +$4893, overnight=0. Neighbors 5/5, cost×2 t=3.78, bootstrap CI lo=1.61. **READY_FOR_PAPER_LIVE_CANDIDATE. No live.** |
 | PASS_MES | **1** | 5m `gap_on_confirm_lock` (`confirm_atr=0.12`, `stop_atr_mult=0.25`). WF t=3.656 n=36, HO t=−0.166 n=140. **Not paper-live.** |
 | PASS_BOTH | 0 | Independent symbols/tapes. MES 1m of the MNQ lock not yet run. |
 | KILL | 74+ | Cycles 1–4, 6–13, 15–17. Cycle 18 MES lock on MNQ 1m KILL. Grid-first stop=0.20 lock WF t=1.847. |
 
-**PASS_MNQ on 1m VWAP reclaim lock (stop=0.30). PASS_MES on 5m overnight-range confirm. No paper-live. No live.**
+**PASS_MNQ READY_FOR_PAPER_LIVE_CANDIDATE (1m VWAP reclaim lock). PASS_MES statistical only. No live.**
 
 `MASSIVE_API_KEY` **is present** (`os.environ` only, never printed). Live plan-depth: earliest bar **2024-09-23**. Founder: **2024–now is the working tape** — do not wait for a plan upgrade. MNQ hunt continues here.
 
@@ -306,9 +306,23 @@ Single-combo lock of the other cycle-18 fold winner (3/7 folds picked 0.30). Sam
 | Max DD (holdout) | | | −$684 |
 | Paper replay | 87 | — | matches holdout |
 
-This is the official MNQ candidate (cycle-14 style lock), stronger than the grid-first 0.20 combo. **Not** `READY_FOR_PAPER_LIVE_CANDIDATE` until neighbors / bootstrap / cost×2. No live.
+This is the official MNQ candidate (cycle-14 style lock), stronger than the grid-first 0.20 combo.
 
-See `reports/cycles/cycle_19/`. Paper: `reports/paper/MNQ_1m_vwap_reclaim_90_lock_replay.json`.
+Harden (locked combo):
+
+| Check | n | t | Note |
+|---|---:|---:|---|
+| Locked WF 180/60 | 259 | **3.943** | 7/7 folds; harden gate **PASS_MNQ** |
+| Locked holdout | 87 | 3.696 | overnight=0 |
+| Diagnostic 90/30 | 376 | **4.462** | not the gate |
+| Valid ±20% neighbors | 5/5 | all t≥2.97 | `entry=528` invalid (pre-RTH), ignored |
+| Cost×2 WF | 258 | **3.776** | still 7/7 |
+| Cost×2 holdout | 86 | **3.964** | +$5073 |
+| Holdout bootstrap | 87 | mean 3.741 | 95% CI [1.612, 5.967], 95% of draws t≥2, none <0 |
+
+**READY_FOR_PAPER_LIVE_CANDIDATE.** Caveats: 1m holdout ends 2026-03-11 (not Massive Sep 2026); 36-minute max hold; bootstrap CI lo=1.61 <2 but >0. **No `GO_LIVE`. No live trading.**
+
+See `reports/cycles/cycle_19/` and `reports/cycles/harden/MNQ_vwap_reclaim_90_lock/`. Paper: `reports/paper/MNQ_1m_vwap_reclaim_90_lock_replay.json`.
 
 ## Extra Massive history
 

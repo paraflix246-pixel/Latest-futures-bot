@@ -1,0 +1,32 @@
+{
+  "costx2_holdout": {
+    "trade_count": 86,
+    "t_stat": 3.964,
+    "total_pnl": 5072.86,
+    "win_rate": 0.6628,
+    "profit_factor": 2.879,
+    "expectancy": 58.99,
+    "held_past_rth_close": 0
+  },
+  "costx2_wf": {
+    "folds": 7,
+    "profitable_folds": 7,
+    "total_oos_trades": 258,
+    "total_oos_pnl": 9604.9,
+    "avg_oos_win_rate": 0.6303,
+    "avg_pnl_per_fold": 1372.13,
+    "t_stat": 3.776,
+    "significant": true
+  },
+  "bootstrap_holdout": {
+    "n": 87,
+    "draws": 2000,
+    "mean_t": 3.741,
+    "ci_95": [
+      1.612,
+      5.967
+    ],
+    "frac_t_ge_2": 0.95,
+    "frac_t_gt_0": 1.0
+  }
+}
