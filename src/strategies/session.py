@@ -90,8 +90,8 @@ def adr20_by_date(df: pd.DataFrame, lookback: int = ADR_LOOKBACK) -> Dict:
     return {ts.date(): float(v) for ts, v in adr.items()}
 
 
-def overnight_range_by_date(df: pd.DataFrame) -> Dict:
-    """High-low from prior 18:00 ET through 09:30 ET, keyed by the RTH date."""
+def overnight_hl_by_date(df: pd.DataFrame) -> Dict:
+    """Overnight high/low from prior 18:00 ET through 09:30 ET, keyed by RTH date."""
     minutes, dates = session_clock(df.index)
     high = df["high"].to_numpy()
     low = df["low"].to_numpy()
@@ -107,8 +107,13 @@ def overnight_range_by_date(df: pd.DataFrame) -> Dict:
         idx.extend(np.where((date_vals == d) & (mins < RTH_OPEN_MINUTES))[0].tolist())
         if not idx:
             continue
-        out[d] = float(high[idx].max() - low[idx].min())
+        out[d] = {"high": float(high[idx].max()), "low": float(low[idx].min())}
     return out
+
+
+def overnight_range_by_date(df: pd.DataFrame) -> Dict:
+    """High-low from prior 18:00 ET through 09:30 ET, keyed by the RTH date."""
+    return {d: hl["high"] - hl["low"] for d, hl in overnight_hl_by_date(df).items()}
 
 
 def short_session_dates(df: pd.DataFrame, min_rth_bars: int = SHORT_SESSION_RTH_BARS) -> set:

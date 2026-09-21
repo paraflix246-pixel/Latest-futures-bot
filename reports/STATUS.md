@@ -23,14 +23,41 @@ Still hunting **both** instruments in parallel. No `GO_LIVE_CHECKLIST`. Live sta
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | 0 | None yet |
-| PASS_MES | 0 | None yet |
+| PASS_MNQ | 0 | Official engine: none yet. Local-hunt near-miss `vwap_reclaim_4` t=1.59 n=167 is being ported. |
+| PASS_MES | 0 | Local hunt `filtered_orb_2` is **provisional** (WF t=2.53 n=39, holdout t=1.94 n=14 **THIN**). Not official until sprint-1 replay + sensitivity + LORO. |
 | PASS_BOTH | 0 | — |
-| KILL | 13 | Cycles 1–2 (cycle-3 ORB/VWAP/retrace running) |
+| KILL | 26 | Cycles 1–4 on official engine |
 
-Closest historical MNQ print remains `on_inventory` (cycle 1, t=1.01, n=23 — under-traded, **KILL**).
+## Local hunt (imported 2026-09-21 — not yet official)
 
-Cycle 3 (filtered ORB 5/15/30/retest, ORB retrace, first-hour VWAP reclaim/fail, 15m-trend+5m-pullback) is next on the Massive tape. Cycle 4 (gap fill/go, opening rvol, VWAP-band fade, ADR exhaustion, PDH/PDL fail, morning reversal) is wired and will run if cycle 3 has no PASS_MNQ.
+These numbers were produced **outside** this repo. They are imported here as
+hypotheses to replay on the sprint-1 engine (`next_open`, exit slip, gap-aware
+stops, RTH flatten). Until that replay, they are **not** PASS_MES / PASS_MNQ.
+
+### MES provisional — `filtered_orb_2`
+
+| | n | t | PnL |
+|---|---:|---:|---:|
+| Walk-forward OOS | 39 | 2.53 | +$1474 |
+| Holdout | 14 | 1.94 | +$669 |
+
+Params: `or_minutes=15`, `entry_window_minutes=120`, `volume_mult=1.3`,
+`require_vwap_align=true`, `skip_inside_overnight=true`,
+`require_retest=false`, `target_r=1.0`.
+
+Holdout n=14 is **thin**. Official harden: ±20% sensitivity, leave-one-regime-out,
+90/30 diagnostic WF for more OOS trades. Do not GO_LIVE on 14 holdout trades.
+
+### MNQ KILL — local near-misses
+
+| Variant | WF t | n | WF PnL | Holdout |
+|---|---:|---:|---:|---|
+| vwap_reclaim_4 | 1.59 | 167 | +$6653 | t=1.04 +$2399 |
+| orb_retrace_3 | 1.48 | — | — | — |
+| orb_retrace_x_1 | 1.37 | — | — | — |
+
+MNQ push on official engine: denser grid around those three, plus MNQ-specific
+tighter ATR stops, first-90-minute cutoff, ADX floor, 5-minute vs 15-minute OR.
 
 ## Tape
 
@@ -39,7 +66,10 @@ Cycle 3 (filtered ORB 5/15/30/retest, ORB retrace, first-hour VWAP reclaim/fail,
 | MNQ 5m | 137,304 | 2024-09-22 → 2026-09-18 | `data/massive/MNQ_5m.csv.gz` |
 | MES 5m | 138,366 | 2024-09-22 → 2026-09-18 | `data/massive/MES_5m.csv.gz` |
 
-~2 years, volume-rolled. Not 2020+. Discovery before locked holdout `2025-09-12` is ~1 year (2 WF folds at 180/60).
+~2 years, volume-rolled. Not 2020+. Discovery before locked holdout `2025-09-12`
+is ~1 year (2 WF folds at 180/60). A Massive REST pull from 2020-01-01 is in
+flight (`MASSIVE_API_KEY` present this run) to thicken samples if the plan
+allows it. Failures will be written under `reports/massive/`.
 
 ## Cycle 1 (KILL)
 
@@ -64,10 +94,45 @@ Cycle 3 (filtered ORB 5/15/30/retest, ORB retrace, first-hour VWAP reclaim/fail,
 | failed_ib_fade | 61 | −2.26 | 58 | 0.85 | −0.91 | KILL |
 | open_drive | 28 | −0.68 | 35 | −1.71 | 0.11 | KILL |
 
+## Cycle 3 (KILL)
+
+| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
+|---|---:|---:|---:|---:|---:|---|
+| orb_filtered_15 | 74 | 0.80 | 77 | −0.59 | −0.30 | KILL |
+| orb_filtered_5 | 75 | −1.27 | 79 | −0.53 | −0.42 | KILL |
+| orb_filtered_30 | 69 | −0.58 | 77 | −0.40 | 0.52 | KILL |
+| orb_filtered_retest | 54 | 0.16 | 55 | 0.11 | 0.61 | KILL |
+| orb_retrace | 41 | 0.39 | 58 | 0.45 | −0.76 | KILL |
+| vwap_hour_reclaim_fail | 42 | −0.23 | 51 | −0.18 | −0.15 | KILL |
+| trend15_pullback5 | 47 | 0.72 | 51 | 0.32 | 0.53 | KILL |
+
+All-day entry window (to 15:45) is why these diverged from the local hunt’s
+120-minute window.
+
+## Cycle 4 (KILL)
+
+| Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
+|---|---:|---:|---:|---:|---:|---|
+| adr_exhaust_fade | 15 | 0.91 | 16 | −0.63 | 0.14 | KILL |
+| gap_fill_go | 25 | 0.02 | 24 | 0.74 | 1.15 | KILL |
+| morning_reversal | 21 | −1.03 | 44 | 0.15 | 0.30 | KILL |
+| pdh_pdl_fail | 41 | 0.96 | 45 | 0.83 | −0.83 | KILL |
+| rvol_open15 | 1 | — | 16 | 0.12 | −0.51 | KILL |
+| vwap_band_fade | 35 | −0.22 | 12 | −2.05 | −1.25 | KILL |
+
+## Cycle 6 (in progress) — official hunt port
+
+`scripts/research_cycle.py --cycle 6` and `scripts/harden_candidate.py`:
+
+- `filtered_orb_2` locked hunt params on the sprint-1 engine (MES harden + MNQ)
+- MNQ denser `vwap_reclaim` / `vwap_reclaim_90` / `orb_retrace_3` / `orb_retrace_x`
+- MNQ-specific: 5m OR, first-90-min, ADX, tighter ATR stops
+
 ## Reproduce
 
 ```bash
-python scripts/research_cycle.py --cycle 3
-python scripts/research_cycle.py --cycle 4
+python scripts/research_cycle.py --cycle 6
+python scripts/harden_candidate.py --family filtered_orb_2 --symbol MES
+python scripts/harden_candidate.py --family vwap_reclaim --symbol MNQ
 python -m pytest tests/ -q
 ```

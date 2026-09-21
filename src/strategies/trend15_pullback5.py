@@ -49,11 +49,14 @@ class Trend15Pullback5Strategy:
         slow: int = SLOW,
         stop_atr_mult: float = STOP_ATR_MULT,
         max_hold_bars: int = MAX_HOLD_BARS,
+        breakeven_r_mult: float | None = None,
     ):
         self.fast = fast
         self.slow = slow
         self.stop_atr_mult = stop_atr_mult
         self.max_hold_bars = max_hold_bars
+        if breakeven_r_mult is not None:
+            self.breakeven_r_mult = breakeven_r_mult
 
     def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
         minutes, dates = session_clock(df.index)

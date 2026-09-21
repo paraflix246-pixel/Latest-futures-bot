@@ -71,6 +71,12 @@ from src.strategies.vwap_band_fade import VwapBandFadeStrategy  # noqa: E402
 from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy  # noqa: E402
 from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy  # noqa: E402
 from src.strategies.morning_reversal import MorningReversalStrategy  # noqa: E402
+from src.strategies.vwap_reclaim import VwapReclaimStrategy  # noqa: E402
+from src.strategies.vwap_pullback_cont import VwapPullbackContStrategy  # noqa: E402
+from src.strategies.ema_stack_pullback import EmaStackPullbackStrategy  # noqa: E402
+from src.strategies.ib_mid_fade import IbMidFadeStrategy  # noqa: E402
+from src.strategies.three_bar_vwap_fade import ThreeBarVwapFadeStrategy  # noqa: E402
+from src.strategies.rsi2_vwap_fade import Rsi2VwapFadeStrategy  # noqa: E402
 
 FAMILIES = {
     "ensemble": (
@@ -177,6 +183,136 @@ FAMILIES = {
         {"stop_atr_mult": [0.15, 0.30]},
         "new",
     ),
+    "vwap_pullback_cont": (
+        VwapPullbackContStrategy,
+        {"align_bars": [4, 8], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "ema_stack_pullback": (
+        EmaStackPullbackStrategy,
+        {"stop_atr_mult": [0.25, 0.45]},
+        "new",
+    ),
+    "ib_mid_fade": (
+        IbMidFadeStrategy,
+        {"ext_atr": [0.25, 0.45], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "three_bar_vwap_fade": (
+        ThreeBarVwapFadeStrategy,
+        {"stop_atr_mult": [0.20, 0.35]},
+        "new",
+    ),
+    "rsi2_vwap_fade": (
+        Rsi2VwapFadeStrategy,
+        {"rsi_lo": [5.0, 15.0], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "orb_filtered_am": (
+        OrbFilteredStrategy,
+        {"or_minutes": [15], "retest": [False], "volume_mult": [1.5], "entry_end_minutes": [11 * 60 + 30]},
+        "new",
+    ),
+    "trend15_breakeven": (
+        Trend15Pullback5Strategy,
+        {"stop_atr_mult": [0.30, 0.50], "breakeven_r_mult": [0.7]},
+        "new",
+    ),
+    "on_inventory_loose": (
+        OnInventoryStrategy,
+        {"on_atr_min": [0.08, 0.12], "stop_atr_mult": [0.30, 0.45]},
+        "new",
+    ),
+    # Cycle 6: official port of local-hunt filtered_orb / vwap_reclaim / orb_retrace.
+    "filtered_orb_2": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "require_retest": [False],
+            "target_r": [1.0],
+        },
+        "hunt",
+    ),
+    "filtered_orb_90": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [75],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "entry_end_minutes": [11 * 60],
+        },
+        "hunt",
+    ),
+    "filtered_orb_5m": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [5],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+        },
+        "hunt",
+    ),
+    "filtered_orb_adx": (
+        OrbFilteredStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "volume_mult": [1.3],
+            "adx_min": [18.0, 25.0],
+            "stop_mode": ["mid", "atr"],
+            "stop_atr_mult": [0.20],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10, 0.15, 0.20],
+            "stop_atr_mult": [0.20, 0.30, 0.40],
+            "entry_end_minutes": [11 * 60, 15 * 60 + 45],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10, 0.20],
+            "stop_atr_mult": [0.20, 0.30],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True, False],
+        },
+        "hunt",
+    ),
+    "orb_retrace_3": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [120],
+            "skip_inside_overnight": [True],
+            "require_vwap_align": [True],
+            "extended": [False],
+        },
+        "hunt",
+    ),
+    "orb_retrace_x": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15, 5],
+            "entry_window_minutes": [120, 180],
+            "extended": [True],
+            "stop_mode": ["opposite", "atr"],
+            "stop_atr_mult": [0.20],
+        },
+        "hunt",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -193,6 +329,15 @@ CYCLE_DEFAULTS = {
     4: [
         "gap_fill_go", "rvol_open15", "vwap_band_fade",
         "adr_exhaust_fade", "pdh_pdl_fail", "morning_reversal",
+    ],
+    5: [
+        "vwap_pullback_cont", "ema_stack_pullback", "ib_mid_fade",
+        "three_bar_vwap_fade", "rsi2_vwap_fade", "orb_filtered_am",
+        "trend15_breakeven", "on_inventory_loose",
+    ],
+    6: [
+        "filtered_orb_2", "filtered_orb_90", "filtered_orb_5m", "filtered_orb_adx",
+        "vwap_reclaim", "vwap_reclaim_90", "orb_retrace_3", "orb_retrace_x",
     ],
 }
 

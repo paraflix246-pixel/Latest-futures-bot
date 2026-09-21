@@ -21,6 +21,12 @@ from src.strategies.vwap_band_fade import VwapBandFadeStrategy
 from src.strategies.adr_exhaust_fade import AdrExhaustFadeStrategy
 from src.strategies.pdh_pdl_fail import PdhPdlFailStrategy
 from src.strategies.morning_reversal import MorningReversalStrategy
+from src.strategies.vwap_pullback_cont import VwapPullbackContStrategy
+from src.strategies.ema_stack_pullback import EmaStackPullbackStrategy
+from src.strategies.ib_mid_fade import IbMidFadeStrategy
+from src.strategies.three_bar_vwap_fade import ThreeBarVwapFadeStrategy
+from src.strategies.rsi2_vwap_fade import Rsi2VwapFadeStrategy
+from src.strategies.vwap_reclaim import VwapReclaimStrategy
 from src.strategies.opening_range_breakout import OpeningRangeBreakoutStrategy
 from src.strategies.orb_break_fade import OrbBreakFadeStrategy
 from src.strategies.orb_crabel import OrbCrabelStrategy
@@ -70,6 +76,12 @@ STRATEGIES = {
     "adr_exhaust_fade": AdrExhaustFadeStrategy,
     "pdh_pdl_fail": PdhPdlFailStrategy,
     "morning_reversal": MorningReversalStrategy,
+    "vwap_pullback_cont": VwapPullbackContStrategy,
+    "ema_stack_pullback": EmaStackPullbackStrategy,
+    "ib_mid_fade": IbMidFadeStrategy,
+    "three_bar_vwap_fade": ThreeBarVwapFadeStrategy,
+    "rsi2_vwap_fade": Rsi2VwapFadeStrategy,
+    "vwap_reclaim": VwapReclaimStrategy,
 }
 
 

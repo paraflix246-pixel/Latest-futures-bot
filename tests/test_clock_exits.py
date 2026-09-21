@@ -138,6 +138,49 @@ def test_cycle4_modules_are_rth_flat():
         assert strat.max_hold_bars is not None
 
 
+def test_cycle5_modules_are_rth_flat():
+    from src.strategies.ema_stack_pullback import EmaStackPullbackStrategy
+    from src.strategies.ib_mid_fade import IbMidFadeStrategy
+    from src.strategies.rsi2_vwap_fade import Rsi2VwapFadeStrategy
+    from src.strategies.three_bar_vwap_fade import ThreeBarVwapFadeStrategy
+    from src.strategies.vwap_pullback_cont import VwapPullbackContStrategy
+
+    for strat in (
+        VwapPullbackContStrategy(),
+        EmaStackPullbackStrategy(),
+        IbMidFadeStrategy(),
+        ThreeBarVwapFadeStrategy(),
+        Rsi2VwapFadeStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes is not None
+
+
+def test_filtered_orb_2_defaults_match_local_hunt():
+    from src.strategies.orb_filtered import OrbFilteredStrategy
+
+    s = OrbFilteredStrategy()
+    assert s.or_minutes == 15
+    assert s.entry_window_minutes == 120
+    assert s.volume_mult == 1.3
+    assert s.require_vwap_align is True
+    assert s.skip_inside_overnight is True
+    assert s.require_retest is False
+    assert s.target_r == 1.0
+    assert s.flatten_rth is True
+    assert s.entry_end_minutes == 9 * 60 + 30 + 15 + 120
+
+
+def test_vwap_reclaim_and_orb_retrace_x_are_rth_flat():
+    from src.strategies.orb_retrace import OrbRetraceStrategy
+    from src.strategies.vwap_reclaim import VwapReclaimStrategy
+
+    for strat in (VwapReclaimStrategy(), OrbRetraceStrategy(extended=True)):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes >= 15 * 60 + 30
+    assert OrbRetraceStrategy(extended=True).name == "orb_retrace_x"
+
+
 def test_symbol_gate_and_family_label():
     from scripts.research_cycle import family_label, symbol_gate
 
