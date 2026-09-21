@@ -180,6 +180,15 @@ versions. ADX chop skip did not lift the 15m/5m family.
 
 See `reports/cycles/cycle_12/` and `REGIME_POCKETS.md`.
 
+## Cycle 13 (running)
+
+New inventions after cycle-12 KILL (not retunes of dead EMA/Donchian):
+`open_reject`, `gap_on_confirm`, `am_measured`, `vwap_hold_late`.
+
+```bash
+python scripts/research_cycle.py --cycle 13
+```
+
 ## Extra Massive history
 
 Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earliest bar 2024-09-23. 2022–2023 tickers empty. See `reports/massive/BLOCKER.md`. Not a missing-key stop.
@@ -189,6 +198,6 @@ Live `--plan-depth` with the cloud `MASSIVE_API_KEY`: **plan_history_2y**, earli
 ```bash
 python scripts/download_massive_futures.py --plan-depth
 python scripts/research_cycle.py --cycle 10 --symbol MNQ MES
-python scripts/research_cycle.py --cycle 12
+python scripts/research_cycle.py --cycle 13
 python -m pytest tests/ -q
 ```

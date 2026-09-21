@@ -32,6 +32,10 @@ from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
 from src.strategies.vwap_first_hour import VwapFirstHourStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
+from src.strategies.open_reject import OpenRejectStrategy
+from src.strategies.gap_on_confirm import GapOnConfirmStrategy
+from src.strategies.am_measured import AmMeasuredMoveStrategy
+from src.strategies.vwap_hold_late import VwapHoldLateStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
 from src.strategies.rvol_open15 import RvolOpen15Strategy
 from src.strategies.vwap_band_fade import VwapBandFadeStrategy
@@ -106,6 +110,10 @@ STRATEGIES = {
     "trend15_pullback5": Trend15Pullback5Strategy,
     "gap_fill_go": GapFillGoStrategy,
     "gap_on_range": GapOnRangeStrategy,
+    "open_reject": OpenRejectStrategy,
+    "gap_on_confirm": GapOnConfirmStrategy,
+    "am_measured": AmMeasuredMoveStrategy,
+    "vwap_hold_late": VwapHoldLateStrategy,
     "rvol_open15": RvolOpen15Strategy,
     "vwap_band_fade": VwapBandFadeStrategy,
     "adr_exhaust_fade": AdrExhaustFadeStrategy,

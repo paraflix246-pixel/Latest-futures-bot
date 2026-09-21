@@ -82,6 +82,10 @@ from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # 
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy  # noqa: E402
 from src.strategies.vwap_first_hour import VwapFirstHourStrategy  # noqa: E402
 from src.strategies.gap_on_range import GapOnRangeStrategy  # noqa: E402
+from src.strategies.open_reject import OpenRejectStrategy  # noqa: E402
+from src.strategies.gap_on_confirm import GapOnConfirmStrategy  # noqa: E402
+from src.strategies.am_measured import AmMeasuredMoveStrategy  # noqa: E402
+from src.strategies.vwap_hold_late import VwapHoldLateStrategy  # noqa: E402
 from src.strategies.gap_fill_go import GapFillGoStrategy  # noqa: E402
 from src.strategies.rvol_open15 import RvolOpen15Strategy  # noqa: E402
 from src.strategies.vwap_band_fade import VwapBandFadeStrategy  # noqa: E402
@@ -512,6 +516,27 @@ FAMILIES = {
         },
         "new",
     ),
+    # Cycle 13: new inventions after cycle-12 founder-idea KILL.
+    "open_reject": (
+        OpenRejectStrategy,
+        {"extreme_frac": [0.20, 0.30], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "gap_on_confirm": (
+        GapOnConfirmStrategy,
+        {"confirm_atr": [0.05, 0.12], "stop_atr_mult": [0.25, 0.40]},
+        "new",
+    ),
+    "am_measured": (
+        AmMeasuredMoveStrategy,
+        {"min_body_atr": [0.08, 0.15]},
+        "new",
+    ),
+    "vwap_hold_late": (
+        VwapHoldLateStrategy,
+        {"hold_bars": [3, 4], "min_away_atr": [0.10, 0.18]},
+        "new",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -557,6 +582,9 @@ CYCLE_DEFAULTS = {
     ],
     12: [
         "vwap_fh_reclaim", "gap_on_range", "rvol_dir_open15", "trend15_pb5_chop",
+    ],
+    13: [
+        "open_reject", "gap_on_confirm", "am_measured", "vwap_hold_late",
     ],
 }
 

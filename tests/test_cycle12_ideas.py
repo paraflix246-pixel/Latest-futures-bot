@@ -7,7 +7,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import numpy as np
 import pandas as pd
 
+from src.strategies.am_measured import AmMeasuredMoveStrategy
 from src.strategies.gap_on_range import GapOnRangeStrategy
+from src.strategies.open_reject import OpenRejectStrategy
 from src.strategies.rvol_open15 import RvolOpen15Strategy
 from src.strategies.session import FLATTEN_1545, RTH_OPEN_MINUTES, session_clock
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
@@ -110,6 +112,32 @@ def test_rvol_dir_open15_fires_on_directional_close_and_flattens_1545():
     signals = strat.generate_signals(df)
     assert strat.session_exit_minutes == FLATTEN_1545
     assert signals.entries.loc[entry] == 1
+
+
+def test_open_reject_fades_extreme_first15_close():
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    drive = df.index[(minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 15)]
+    df.loc[drive[0], ["open", "low"]] = 20000.0
+    df.loc[drive, "high"] = 20080.0
+    df.loc[drive[-1], "close"] = 20075.0
+    df.loc[drive[-1], "low"] = 20000.0
+    entry = df.index[minutes == RTH_OPEN_MINUTES + 15][0]
+    sig = OpenRejectStrategy(extreme_frac=0.25).generate_signals(df)
+    assert sig.entries.loc[entry] == -1
+
+
+def test_am_measured_enters_at_1000_with_range_target():
+    df = _session(n_bars=78, price=20000.0)
+    minutes, _ = session_clock(df.index)
+    win = df.index[(minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 30)]
+    df.loc[win[0], ["open", "low"]] = 20000.0
+    df.loc[win, "high"] = 20050.0
+    df.loc[win[-1], "close"] = 20040.0
+    entry = df.index[minutes == RTH_OPEN_MINUTES + 30][0]
+    sig = AmMeasuredMoveStrategy(min_body_atr=0.0).generate_signals(df)
+    assert sig.entries.loc[entry] == 1
+    assert sig.target_price.loc[entry] > df.loc[entry, "close"]
 
 
 def test_trend15_chop_skip_with_huge_adx_min_has_no_entries():
