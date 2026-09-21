@@ -7,6 +7,8 @@ This is NOT live trading. There is no --live flag. No broker is contacted.
 Example:
     python scripts/run_paper_replay.py --symbol MNQ --timeframe 5m --strategy ensemble \
         --start 2025-09-12
+    python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy s2_mes_sens_7 \
+        --start 2025-09-12
 """
 from __future__ import annotations
 
@@ -29,20 +31,11 @@ from config.settings import (  # noqa: E402
 from src.backtest.metrics import compute_metrics  # noqa: E402
 from src.data.loader import load_ohlcv, slice_range  # noqa: E402
 from src.paper.harness import PaperReplay  # noqa: E402
+from src.research.presets import SPRINT1_AFTER_ENGINE  # noqa: E402
 from src.strategies import get_strategy  # noqa: E402
 
-# Same overlay as sprint-1 "after" (realistic fills, hard risk).
-PAPER_ENGINE = dict(
-    fill_model="next_open",
-    apply_exit_slippage=True,
-    gap_aware_stops=True,
-    trail_update="next_bar",
-    cooldown_bars=3,
-    allow_same_bar_reentry=False,
-    daily_loss_halt_pct=2.0,
-    flatten_at_rth_close=True,
-    max_contracts=10,
-)
+# Same overlay as sprint-1 "after" (realistic fills, RTH entries, hard risk).
+PAPER_ENGINE = dict(SPRINT1_AFTER_ENGINE)
 
 
 def parse_args() -> argparse.Namespace:

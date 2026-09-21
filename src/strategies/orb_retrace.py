@@ -1,19 +1,21 @@
 """
 ORB break → pullback into OR mid / session VWAP → continuation.
 
-Official port of the local-hunt `orb_retrace` family (MNQ near-misses
-`orb_retrace_3` t=1.48 and `orb_retrace_x_1` t=1.37).
+Official port of the local-hunt `orb_retrace` family, including
+`s2_orb_retrace_7` (MNQ provisional PASS):
 
+  or_minutes=10, retrace to OR mid, entry_window=150,
+  volume_mult=1.0 vs OR-average volume, VWAP align,
+  skip_inside_overnight=False, stop at mid, target 2.0R.
+
+Sequence:
   1. Opening range = first `or_minutes` after 09:30 ET.
   2. A close beyond the OR registers the break direction.
-  3. Price must then pull back *into* the OR and touch the OR midpoint
-     or RTH VWAP. `extended=True` (`orb_retrace_x`) also counts a VWAP
-     touch *outside* the OR.
+  3. Price pulls back into the OR and touches the midpoint (and/or VWAP).
   4. A close back in the break direction, still VWAP-aligned, enters.
-  5. Stop: opposite OR extreme (or ATR). Target target_r R. Flatten 15:45.
+  5. Stop: OR mid (or opposite / ATR). Target target_r R. Flatten 15:45.
 
-Optional: entry_window_minutes, skip_inside_overnight, ADX floor,
-first-90-minute cutoff. Paper / backtest only.
+Paper / backtest only. No live trading.
 """
 from __future__ import annotations
 
@@ -37,6 +39,7 @@ from src.strategies.session import (
 OR_MINUTES = 15
 ENTRY_WINDOW_MINUTES = 180
 TARGET_R = 1.0
+VOLUME_MULT = 0.0
 MAX_HOLD_BARS = 72
 
 
@@ -59,6 +62,8 @@ class OrbRetraceStrategy:
         stop_mode: str = "opposite",
         stop_atr_mult: float = 0.25,
         adx_min: float = 0.0,
+        volume_mult: float = VOLUME_MULT,
+        retrace_to: str = "mid_or_vwap",
         max_hold_bars: int = MAX_HOLD_BARS,
         entry_end_minutes: int | None = None,
     ):
@@ -71,6 +76,8 @@ class OrbRetraceStrategy:
         self.stop_mode = str(stop_mode)
         self.stop_atr_mult = float(stop_atr_mult)
         self.adx_min = float(adx_min)
+        self.volume_mult = float(volume_mult)
+        self.retrace_to = str(retrace_to)
         self.max_hold_bars = int(max_hold_bars)
         if entry_end_minutes is not None:
             self.entry_end_minutes = int(entry_end_minutes)
@@ -79,6 +86,8 @@ class OrbRetraceStrategy:
         self.rth_entry_cutoff_minutes = min(self.entry_end_minutes, FLATTEN_1545)
         if self.extended:
             self.name = "orb_retrace_x"
+        if self.or_minutes == 10 and abs(self.target_r - 2.0) < 1e-9 and self.stop_mode == "mid":
+            self.name = "s2_orb_retrace_7"
 
     def generate_signals(self, df: pd.DataFrame) -> StrategySignals:
         minutes, dates = session_clock(df.index)
@@ -87,6 +96,7 @@ class OrbRetraceStrategy:
         high = df["high"].to_numpy()
         low = df["low"].to_numpy()
         close = df["close"].to_numpy()
+        volume = df["volume"].to_numpy()
         vwap = rth_session_vwap(df["high"], df["low"], df["close"], df["volume"]).to_numpy()
         atr_ = prior_day_atr(df, dates).to_numpy()
         adx_px = adx_ind(df["high"], df["low"], df["close"], 14).to_numpy() if self.adx_min > 0 else None
@@ -117,6 +127,7 @@ class OrbRetraceStrategy:
             or_high = float(high[or_idx].max())
             or_low = float(low[or_idx].min())
             or_mid = (or_high + or_low) / 2.0
+            or_vol = float(volume[or_idx].mean()) if len(or_idx) else 0.0
             if or_high <= or_low:
                 continue
 
@@ -139,13 +150,18 @@ class OrbRetraceStrategy:
                 inside = (low[i] <= or_high) and (high[i] >= or_low)
                 touch_mid = low[i] <= or_mid <= high[i]
                 touch_vwap = (not np.isnan(vwap[i])) and (low[i] <= vwap[i] <= high[i])
-                if self.extended:
+                if self.retrace_to == "mid":
+                    if inside and touch_mid:
+                        pulled = True
+                elif self.extended:
                     if touch_vwap or (inside and touch_mid):
                         pulled = True
                 else:
                     if inside and (touch_mid or touch_vwap):
                         pulled = True
                 if not pulled:
+                    continue
+                if self.volume_mult > 0 and (or_vol <= 0 or volume[i] < self.volume_mult * or_vol):
                     continue
                 aligned = True
                 if self.require_vwap_align:

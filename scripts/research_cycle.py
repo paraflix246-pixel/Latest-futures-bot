@@ -59,8 +59,15 @@ from src.strategies.afternoon_momentum import AfternoonMomentumStrategy  # noqa:
 from src.strategies.am_vwap_reclaim import AmVwapReclaimStrategy  # noqa: E402
 from src.strategies.failed_ib_fade import FailedIbFadeStrategy  # noqa: E402
 from src.strategies.open_drive import OpenDriveStrategy  # noqa: E402
-from src.strategies.orb_filtered import OrbFilteredStrategy  # noqa: E402
+from src.strategies.orb_filtered import MesSens7Strategy, OrbFilteredStrategy  # noqa: E402
 from src.strategies.orb_retrace import OrbRetraceStrategy  # noqa: E402
+from src.strategies.orb_fail_fade import OrbFailFadeStrategy  # noqa: E402
+from src.strategies.gap_and_go import GapAndGoStrategy  # noqa: E402
+from src.strategies.spread_fade import SpreadFadeStrategy  # noqa: E402
+from src.strategies.nr15_break import Nr15BreakStrategy  # noqa: E402
+from src.strategies.wick_reject_cont import WickRejectContStrategy  # noqa: E402
+from src.strategies.onh_onl_break import OnhOnlBreakStrategy  # noqa: E402
+from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy  # noqa: E402
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy  # noqa: E402
 from src.strategies.vol_gated_ensemble import VolGatedEnsembleStrategy  # noqa: E402
 from src.strategies.vol_squeeze_expansion import VolSqueezeExpansionStrategy  # noqa: E402
@@ -313,6 +320,105 @@ FAMILIES = {
         },
         "hunt",
     ),
+    # Cycle 7: densify MNQ vwap_reclaim_90 (WF t=1.609, holdout t=2.116).
+    "vwap_reclaim_90_dense": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.08, 0.10, 0.12, 0.14],
+            "stop_atr_mult": [0.16, 0.18, 0.20, 0.22, 0.24],
+            "entry_end_minutes": [10 * 60 + 30, 11 * 60, 11 * 60 + 30],
+            "first_hour_bias": [True],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90_adx": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "adx_min": [0.0, 12.0, 18.0, 22.0],
+        },
+        "hunt",
+    ),
+    "vwap_reclaim_90_vol": (
+        VwapReclaimStrategy,
+        {
+            "min_away_atr": [0.10],
+            "stop_atr_mult": [0.20],
+            "entry_end_minutes": [11 * 60],
+            "first_hour_bias": [True],
+            "volume_mult": [0.0, 1.0, 1.3],
+        },
+        "hunt",
+    ),
+    "orb_retrace_3_dense": (
+        OrbRetraceStrategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [90, 120, 150],
+            "skip_inside_overnight": [True, False],
+            "stop_mode": ["opposite", "atr"],
+            "stop_atr_mult": [0.18, 0.25],
+        },
+        "hunt",
+    ),
+    # Cycle 8: official MES winner + new MNQ families (not the failed spread_fade2).
+    "s2_mes_sens_7": (
+        MesSens7Strategy,
+        {
+            "or_minutes": [15],
+            "entry_window_minutes": [130],
+            "volume_mult": [1.4],
+            "require_vwap_align": [True],
+            "skip_inside_overnight": [True],
+            "require_retest": [False],
+            "target_r": [1.0],
+            "stop_mode": ["mid"],
+        },
+        "hunt",
+    ),
+    "orb_fail_fade": (
+        OrbFailFadeStrategy,
+        {
+            "or_minutes": [10, 15],
+            "entry_window_minutes": [120, 150],
+            "require_vwap_align": [True],
+        },
+        "new",
+    ),
+    "gap_and_go": (
+        GapAndGoStrategy,
+        {"min_gap_atr": [0.20, 0.30], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
+    "nr15_break": (
+        Nr15BreakStrategy,
+        {"nr_frac": [0.55, 0.65, 0.75]},
+        "new",
+    ),
+    "wick_reject_cont": (
+        WickRejectContStrategy,
+        {"or_minutes": [10, 15], "entry_window_minutes": [120, 150]},
+        "new",
+    ),
+    "onh_onl_break": (
+        OnhOnlBreakStrategy,
+        {"volume_mult": [1.0, 1.3], "stop_atr_mult": [0.25, 0.35]},
+        "new",
+    ),
+    "volume_dryup_break": (
+        VolumeDryupBreakStrategy,
+        {"nr_frac": [0.40, 0.55], "vol_dry": [0.60, 0.80]},
+        "new",
+    ),
+    # Official replay of the local near-miss only — not a PASS candidate.
+    "spread_fade": (
+        SpreadFadeStrategy,
+        {"spread_atr": [0.40, 0.50], "stop_atr_mult": [0.25, 0.35]},
+        "near_miss",
+    ),
 }
 
 CYCLE_DEFAULTS = {
@@ -339,6 +445,16 @@ CYCLE_DEFAULTS = {
         "filtered_orb_2", "filtered_orb_90", "filtered_orb_5m", "filtered_orb_adx",
         "vwap_reclaim", "vwap_reclaim_90", "orb_retrace_3", "orb_retrace_x",
     ],
+    7: [
+        "vwap_reclaim_90_dense", "vwap_reclaim_90_adx", "vwap_reclaim_90_vol",
+        "orb_retrace_3_dense",
+    ],
+    8: [
+        "s2_mes_sens_7",
+        "orb_fail_fade", "gap_and_go", "nr15_break",
+        "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
+        "spread_fade",
+    ],
 }
 
 
@@ -364,11 +480,14 @@ def _locked_params(grid: dict) -> dict:
     return {k: v[0] for k, v in grid.items()} if grid else {}
 
 
-def run_holdout(df, strategy_cls, symbol, timeframe, params: dict | None = None) -> Dict[str, Any]:
+def run_holdout(
+    df, strategy_cls, symbol, timeframe, params: dict | None = None, engine_kwargs: dict | None = None
+) -> Dict[str, Any]:
     strat = strategy_cls(**(params or {}))
-    result = run_backtest(
-        df, strat, symbol, timeframe, ACCOUNT_SIZE, RISK_PCT, **SPRINT1_AFTER_ENGINE
-    )
+    kw = dict(SPRINT1_AFTER_ENGINE)
+    if engine_kwargs:
+        kw.update(engine_kwargs)
+    result = run_backtest(df, strat, symbol, timeframe, ACCOUNT_SIZE, RISK_PCT, **kw)
     metrics = compute_metrics(result, ACCOUNT_SIZE)
     t_stat = _t_from_trades(result.trades)
     metrics["t_stat"] = round(t_stat, 3) if t_stat is not None else None
@@ -400,13 +519,17 @@ def symbol_gate(wf: Dict[str, Any], ho: Dict[str, Any] | None) -> tuple[bool, st
     return True, "PASS"
 
 
-def family_label(mnq_ok: bool, mes_ok: bool) -> str:
+def _thin_holdout(ho: Dict[str, Any] | None) -> bool:
+    return bool(ho) and int(ho.get("trade_count") or 0) < KILL_MIN_TRADES
+
+
+def family_label(mnq_ok: bool, mes_ok: bool, mnq_thin: bool = False, mes_thin: bool = False) -> str:
     if mnq_ok and mes_ok:
-        return "PASS_BOTH"
+        return "PASS_BOTH_PROVISIONAL" if (mnq_thin or mes_thin) else "PASS_BOTH"
     if mnq_ok:
-        return "PASS_MNQ"
+        return "PASS_MNQ_PROVISIONAL" if mnq_thin else "PASS_MNQ"
     if mes_ok:
-        return "PASS_MES"
+        return "PASS_MES_PROVISIONAL" if mes_thin else "PASS_MES"
     return "KILL"
 
 
@@ -467,8 +590,10 @@ def write_cycle_md(path: Path, cycle: int, rows: List[Dict[str, Any]], spans: Di
     lines.extend(
         [
             "",
-            "Labels: **PASS_MNQ** (MNQ-only candidate, trade-MNQ-only is allowed), "
-            "**PASS_MES**, **PASS_BOTH**, **KILL**. Paper only. No live trading.",
+            "Labels: **PASS_MNQ** / **PASS_MNQ_PROVISIONAL** (thin holdout n<30), "
+            "**PASS_MES** / **PASS_MES_PROVISIONAL**, **PASS_BOTH**, **KILL**. "
+            "Paper only. No live trading. READY_FOR_PAPER_LIVE_CANDIDATE only after harden.",
+            "",
             "",
         ]
     )
@@ -551,13 +676,22 @@ def main() -> None:
         mnq = payloads.get((PRIMARY, name))
         mes = payloads.get((REPLICATION, name))
         mnq_ok = mes_ok = False
+        mnq_thin = mes_thin = False
         if mnq is not None:
             mnq_ok, mnq_sv = symbol_gate(mnq["walk_forward_oos"], mnq.get("holdout"))
-            mnq["symbol_verdict"] = f"PASS_MNQ" if mnq_ok else mnq_sv
+            mnq_thin = _thin_holdout(mnq.get("holdout"))
+            if mnq_ok:
+                mnq["symbol_verdict"] = "PASS_MNQ_PROVISIONAL" if mnq_thin else "PASS_MNQ"
+            else:
+                mnq["symbol_verdict"] = mnq_sv
         if mes is not None:
             mes_ok, mes_sv = symbol_gate(mes["walk_forward_oos"], mes.get("holdout"))
-            mes["symbol_verdict"] = f"PASS_MES" if mes_ok else mes_sv
-        label = family_label(mnq_ok, mes_ok)
+            mes_thin = _thin_holdout(mes.get("holdout"))
+            if mes_ok:
+                mes["symbol_verdict"] = "PASS_MES_PROVISIONAL" if mes_thin else "PASS_MES"
+            else:
+                mes["symbol_verdict"] = mes_sv
+        label = family_label(mnq_ok, mes_ok, mnq_thin, mes_thin)
         if mnq is not None:
             mnq["verdict"] = label
             (cycle_dir / f"{PRIMARY}_{name}.json").write_text(json.dumps(mnq, indent=2, default=str))

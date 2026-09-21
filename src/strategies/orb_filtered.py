@@ -222,3 +222,24 @@ class OrbFilteredStrategy:
         stops[i] = stop
         targets[i] = close[i] + direction * self.target_r * risk
         return True
+
+
+class MesSens7Strategy(OrbFilteredStrategy):
+    """Locked local-sprint-4 MES winner. Paper / backtest only. Soft holdout."""
+
+    name = "s2_mes_sens_7"
+
+    def __init__(self, **kwargs):
+        params = dict(
+            or_minutes=15,
+            entry_window_minutes=130,
+            volume_mult=1.4,
+            require_vwap_align=True,
+            skip_inside_overnight=True,
+            require_retest=False,
+            target_r=1.0,
+            stop_mode="mid",
+        )
+        params.update(kwargs)
+        super().__init__(**params)
+        self.name = "s2_mes_sens_7"

@@ -24,11 +24,14 @@ SUPPORTED_STRATEGIES = [
     "orb_crabel", "last30_momentum", "ib_extension", "on_inventory",
     "lunch_range_break", "vol_gated_ensemble",
     "open_drive", "failed_ib_fade", "afternoon_momentum", "am_vwap_reclaim",
-    "orb_filtered", "orb_retrace", "vwap_hour_reclaim_fail", "trend15_pullback5",
+    "orb_filtered", "s2_mes_sens_7", "orb_retrace", "vwap_hour_reclaim_fail",
+    "trend15_pullback5",
     "gap_fill_go", "rvol_open15", "vwap_band_fade", "adr_exhaust_fade",
     "pdh_pdl_fail", "morning_reversal",
     "vwap_pullback_cont", "ema_stack_pullback", "ib_mid_fade",
     "three_bar_vwap_fade", "rsi2_vwap_fade", "vwap_reclaim",
+    "orb_fail_fade", "gap_and_go", "spread_fade", "nr15_break",
+    "wick_reject_cont", "onh_onl_break", "volume_dryup_break",
 ]
 
 # NQ now has its own real Databento feed (data/NQ_1m.csv, NQ_5m.csv) — no

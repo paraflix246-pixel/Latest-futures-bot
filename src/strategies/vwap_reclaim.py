@@ -22,6 +22,7 @@ import pandas as pd
 
 from src.strategies.base import StrategySignals
 from src.strategies.indicators import adx as adx_ind
+from src.strategies.indicators import sma
 from src.strategies.session import (
     FLATTEN_1545,
     RTH_CLOSE_MINUTES,
@@ -56,6 +57,7 @@ class VwapReclaimStrategy:
         adx_min: float = 0.0,
         first_hour_bias: bool = False,
         one_per_session: bool = False,
+        volume_mult: float = 0.0,
         max_hold_bars: int = MAX_HOLD_BARS,
     ):
         self.min_away_atr = float(min_away_atr)
@@ -65,6 +67,7 @@ class VwapReclaimStrategy:
         self.adx_min = float(adx_min)
         self.first_hour_bias = bool(first_hour_bias)
         self.one_per_session = bool(one_per_session)
+        self.volume_mult = float(volume_mult)
         self.max_hold_bars = int(max_hold_bars)
         self.rth_entry_cutoff_minutes = min(self.entry_end_minutes, FLATTEN_1545)
         self.session_exit_minutes = FLATTEN_1545
@@ -77,6 +80,8 @@ class VwapReclaimStrategy:
         low = df["low"].to_numpy()
         close = df["close"].to_numpy()
         open_ = df["open"].to_numpy()
+        volume = df["volume"].to_numpy()
+        vol_avg = sma(df["volume"], 20).to_numpy() if self.volume_mult > 0 else None
         vwap = rth_session_vwap(df["high"], df["low"], df["close"], df["volume"]).to_numpy()
         atr_ = prior_day_atr(df, dates).to_numpy()
         adx_px = adx_ind(df["high"], df["low"], df["close"], 14).to_numpy() if self.adx_min > 0 else None
@@ -105,6 +110,9 @@ class VwapReclaimStrategy:
                     continue
                 if adx_px is not None and (np.isnan(adx_px[i]) or adx_px[i] < self.adx_min):
                     continue
+                if vol_avg is not None:
+                    if np.isnan(vol_avg[i]) or volume[i] < self.volume_mult * vol_avg[i]:
+                        continue
                 away = close[i] - vwap[i]
                 band = self.min_away_atr * float(atr_[i])
                 if ext_dir == 0 and abs(away) >= band:

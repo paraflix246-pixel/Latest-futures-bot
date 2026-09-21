@@ -197,6 +197,92 @@ def test_symbol_gate_and_family_label():
     assert family_label(False, True) == "PASS_MES"
     assert family_label(True, True) == "PASS_BOTH"
     assert family_label(False, False) == "KILL"
+    assert family_label(False, True, False, True) == "PASS_MES_PROVISIONAL"
+    assert family_label(True, False, True, False) == "PASS_MNQ_PROVISIONAL"
+
+
+def test_s2_mes_sens_7_defaults_match_local_sprint4():
+    from src.strategies import get_strategy
+    from src.strategies.orb_filtered import MesSens7Strategy
+
+    s = MesSens7Strategy()
+    assert s.name == "s2_mes_sens_7"
+    assert s.or_minutes == 15
+    assert s.entry_window_minutes == 130
+    assert s.volume_mult == 1.4
+    assert s.require_vwap_align is True
+    assert s.skip_inside_overnight is True
+    assert s.require_retest is False
+    assert s.target_r == 1.0
+    assert s.stop_mode == "mid"
+    assert s.flatten_rth is True
+    via_registry = get_strategy("s2_mes_sens_7")
+    assert via_registry.name == "s2_mes_sens_7"
+    assert via_registry.entry_window_minutes == 130
+    assert via_registry.volume_mult == 1.4
+
+
+def test_wick_reject_cont_enters_after_failed_or_wick():
+    from src.strategies.session import RTH_OPEN_MINUTES, session_clock
+    from src.strategies.wick_reject_cont import WickRejectContStrategy
+
+    start = pd.Timestamp("2024-01-03 14:00", tz="UTC")
+    idx = pd.date_range(start, periods=80, freq="5min", tz="UTC")
+    px = np.full(80, 20000.0)
+    df = pd.DataFrame(
+        {"open": px, "high": px + 2, "low": px - 2, "close": px, "volume": 1000.0},
+        index=idx,
+    )
+    minutes, _ = session_clock(df.index)
+    or_mask = (minutes >= RTH_OPEN_MINUTES) & (minutes < RTH_OPEN_MINUTES + 15)
+    after = df.index[minutes >= RTH_OPEN_MINUTES + 15]
+    df.loc[or_mask, ["open", "low"]] = 20000.0
+    df.loc[or_mask, ["close", "high"]] = 20020.0
+    # Wick through OR high, close back inside.
+    df.loc[after[0], ["open", "close"]] = 20010.0
+    df.loc[after[0], "high"] = 20040.0
+    df.loc[after[0], "low"] = 20005.0
+    # Next bar clears OR high.
+    df.loc[after[1], ["open", "low"]] = 20020.0
+    df.loc[after[1], ["high", "close"]] = 20050.0
+    sig = WickRejectContStrategy(require_vwap_align=False).generate_signals(df)
+    assert sig.entries.loc[after[0]] == 0
+    assert sig.entries.loc[after[1]] == 1
+    assert sig.stop_price.loc[after[1]] == 20010.0
+
+
+def test_cycle8_modules_are_rth_flat():
+    from src.strategies.gap_and_go import GapAndGoStrategy
+    from src.strategies.nr15_break import Nr15BreakStrategy
+    from src.strategies.onh_onl_break import OnhOnlBreakStrategy
+    from src.strategies.orb_fail_fade import OrbFailFadeStrategy
+    from src.strategies.spread_fade import SpreadFadeStrategy
+    from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy
+    from src.strategies.wick_reject_cont import WickRejectContStrategy
+
+    for strat in (
+        OrbFailFadeStrategy(),
+        GapAndGoStrategy(),
+        Nr15BreakStrategy(),
+        WickRejectContStrategy(),
+        OnhOnlBreakStrategy(),
+        VolumeDryupBreakStrategy(),
+        SpreadFadeStrategy(),
+    ):
+        assert strat.flatten_rth is True
+        assert strat.session_exit_minutes is not None
+        assert strat.max_hold_bars is not None
+
+
+def test_paper_engine_matches_sprint1():
+    from scripts.run_paper_replay import PAPER_ENGINE
+    from src.research.presets import SPRINT1_AFTER_ENGINE
+
+    assert PAPER_ENGINE.get("rth_entries_only") is True
+    assert PAPER_ENGINE.get("fill_model") == "next_open"
+    assert PAPER_ENGINE.get("flatten_at_rth_close") is True
+    for key, val in SPRINT1_AFTER_ENGINE.items():
+        assert PAPER_ENGINE[key] == val
 
 
 def test_open_drive_and_failed_ib_have_clock_attrs():

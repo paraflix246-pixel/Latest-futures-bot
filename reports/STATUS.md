@@ -17,47 +17,76 @@ rigorous gate. MES does **not** need the same logic or params.
 | **PASS_BOTH** | Bonus if both clear (same or different strategies). |
 | **KILL** | In-sample only wins, overnight cling, live trading, fabricated data, or WF/holdout miss. |
 
-Still hunting **both** instruments in parallel. No `GO_LIVE_CHECKLIST`. Live stays off.
+Thin holdout n<30 → `PASS_*_PROVISIONAL`, not paper-live.
+`READY_FOR_PAPER_LIVE_CANDIDATE` only after neighbor / bootstrap / LOYO / cost
+stress on the **official** sprint-1 engine. Still hunting **both** instruments.
+No `GO_LIVE_CHECKLIST`. Live stays off.
 
 ## Bottom line
 
 | Label | Count | Notes |
 |---|---:|---|
-| PASS_MNQ | 0 | Official engine: none yet. Local-hunt near-miss `vwap_reclaim_4` t=1.59 n=167 is being ported. |
-| PASS_MES | 0 | Local hunt `filtered_orb_2` is **provisional** (WF t=2.53 n=39, holdout t=1.94 n=14 **THIN**). Not official until sprint-1 replay + sensitivity + LORO. |
+| PASS_MNQ | 0 | Official closest: `vwap_reclaim_90` WF t=1.609 n=41, HO t=2.116 n=158. Still KILL (t<2). Local `s2_orb_retrace_7` **DEMOTED** (robustness fail). Local `s4_spread_fade2` t=1.80 **fails robustness**. |
+| PASS_MES | 0 official | **Local sprint-4 STRONG (soft HO):** `s2_mes_sens_7`. Official sprint-1 replay is cycle 8 — do not treat local t as PASS_MES until that replay. Prior local `filtered_orb_2` **died** on official fills. |
 | PASS_BOTH | 0 | — |
-| KILL | 26 | Cycles 1–4 on official engine |
+| KILL | 34+ | Cycles 1–4 + 8 hunt-port families. Cycle 8 official numbers pending in this PR. |
 
-## Local hunt (imported 2026-09-21 — not yet official)
+**No paper-live. No live.**
 
-These numbers were produced **outside** this repo. They are imported here as
-hypotheses to replay on the sprint-1 engine (`next_open`, exit slip, gap-aware
-stops, RTH flatten). Until that replay, they are **not** PASS_MES / PASS_MNQ.
+## Local sprint 4 — MES `s2_mes_sens_7` (STRONG, soft HO)
 
-### MES provisional — `filtered_orb_2`
+Imported 2026-09-21. Produced **outside** this repo. Hypothesis only until
+sprint-1 replay (`next_open`, exit slip, gap-aware stops, RTH flatten,
+`rth_entries_only`).
 
-| | n | t | PnL |
-|---|---:|---:|---:|
-| Walk-forward OOS | 39 | 2.53 | +$1474 |
-| Holdout | 14 | 1.94 | +$669 |
+| | n | t | Notes |
+|---|---:|---:|---|
+| Walk-forward OOS | 34 | 3.93 | Local hunt |
+| Neighbor strict PASS | — | — | 42% |
+| Bootstrap | — | ci_lo=1.34 | frac≥2 = 91% |
+| LOYO | — | — | ok |
+| Holdout | 12 | — | **THIN** — soft HO, not paper-live |
 
-Params: `or_minutes=15`, `entry_window_minutes=120`, `volume_mult=1.3`,
-`require_vwap_align=true`, `skip_inside_overnight=true`,
-`require_retest=false`, `target_r=1.0`.
+Locked params:
 
-Holdout n=14 is **thin**. Official harden: ±20% sensitivity, leave-one-regime-out,
-90/30 diagnostic WF for more OOS trades. Do not GO_LIVE on 14 holdout trades.
+- `or_minutes=15`
+- `entry_window_minutes=130`
+- `volume_mult=1.4`
+- `target_r=1.0`
+- `require_vwap_align=True`
+- `skip_inside_overnight=True`
+- `require_retest=False`
+- `stop_mode=mid`
 
-### MNQ KILL — local near-misses
+Official port: `MesSens7Strategy` / `s2_mes_sens_7` in `src/strategies/orb_filtered.py`,
+wired into `get_strategy`, `SUPPORTED_STRATEGIES`, paper harness (`PAPER_ENGINE`
+= sprint-1 including `rth_entries_only`), and cycle 8.
 
-| Variant | WF t | n | WF PnL | Holdout |
-|---|---:|---:|---:|---|
-| vwap_reclaim_4 | 1.59 | 167 | +$6653 | t=1.04 +$2399 |
-| orb_retrace_3 | 1.48 | — | — | — |
-| orb_retrace_x_1 | 1.37 | — | — | — |
+`filtered_orb_2` (or=15 ew=120 vol=1.3) was the previous local MES provisional.
+Official sprint-1 replay **KILL**: WF t=0.366 n=42, HO t=−0.854 n=55. Same-ish
+n, worse t — next-open + exit-slip vs a looser fill model. ±20% sensitivity
+did not recover t≥2. See `reports/cycles/harden/MES_filtered_orb_2/`.
+`s2_mes_sens_7` is nearby (ew=130, vol=1.4). It **must** clear the official
+engine before anyone calls it PASS_MES.
 
-MNQ push on official engine: denser grid around those three, plus MNQ-specific
-tighter ATR stops, first-90-minute cutoff, ADX floor, 5-minute vs 15-minute OR.
+## Local sprint 3 — MNQ `s2_orb_retrace_7` DEMOTED
+
+Do **not** promote. Local WF t=2.13 n=40 looked like PASS_MNQ_PROVISIONAL,
+then failed robustness:
+
+- neighbor strict PASS 8.3%
+- bootstrap t=0.70, CI crosses 0
+- LOYO 2024 lost money
+- cost×2 survival is not enough
+
+## Local sprint 4 — MNQ no strong PASS
+
+Best near-miss: `s4_spread_fade2` WF t=1.80, **fails robustness**. Official
+cycle 8 includes a small-grid `spread_fade` replay so sprint-1 numbers exist;
+it is **not** a PASS candidate. New MNQ families in cycle 8:
+`orb_fail_fade`, `gap_and_go`, `nr15_break`, `wick_reject_cont`,
+`onh_onl_break`, `volume_dryup_break`. Cycle 7 densifies official
+`vwap_reclaim_90`.
 
 ## Tape
 
@@ -67,9 +96,8 @@ tighter ATR stops, first-90-minute cutoff, ADX floor, 5-minute vs 15-minute OR.
 | MES 5m | 138,366 | 2024-09-22 → 2026-09-18 | `data/massive/MES_5m.csv.gz` |
 
 ~2 years, volume-rolled. Not 2020+. Discovery before locked holdout `2025-09-12`
-is ~1 year (2 WF folds at 180/60). A Massive REST pull from 2020-01-01 is in
-flight (`MASSIVE_API_KEY` present this run) to thicken samples if the plan
-allows it. Failures will be written under `reports/massive/`.
+is ~1 year (2 WF folds at 180/60). Massive REST cannot extend pre-2024 on this
+plan: 0 results. See `reports/massive/BLOCKER.md`.
 
 ## Cycle 1 (KILL)
 
@@ -106,9 +134,6 @@ allows it. Failures will be written under `reports/massive/`.
 | vwap_hour_reclaim_fail | 42 | −0.23 | 51 | −0.18 | −0.15 | KILL |
 | trend15_pullback5 | 47 | 0.72 | 51 | 0.32 | 0.53 | KILL |
 
-All-day entry window (to 15:45) is why these diverged from the local hunt’s
-120-minute window.
-
 ## Cycle 4 (KILL)
 
 | Family | MNQ n | MNQ t | MES n | MES t | Holdout MNQ t | Label |
@@ -120,19 +145,41 @@ All-day entry window (to 15:45) is why these diverged from the local hunt’s
 | rvol_open15 | 1 | — | 16 | 0.12 | −0.51 | KILL |
 | vwap_band_fade | 35 | −0.22 | 12 | −2.05 | −1.25 | KILL |
 
-## Cycle 6 (in progress) — official hunt port
+## Cycle 6 (KILL) — official hunt port
 
-`scripts/research_cycle.py --cycle 6` and `scripts/harden_candidate.py`:
+| Family | MNQ n | MNQ t | MNQ hold t | MES n | MES t | MES hold t | Label |
+|---|---:|---:|---:|---:|---:|---:|---|
+| filtered_orb_2 | 8 | −0.16 | 0.43 | 42 | 0.37 | −0.85 | KILL |
+| filtered_orb_90 | 6 | −0.28 | 0.23 | 37 | 0.12 | −1.45 | KILL |
+| filtered_orb_5m | 1 | — | 1.50 | 40 | −0.26 | −0.36 | KILL |
+| filtered_orb_adx | 7 | −0.41 | 0.28 | 30 | 0.53 | −0.17 | KILL |
+| vwap_reclaim | 44 | 0.95 | 1.35 | 14 | −0.26 | −1.43 | KILL |
+| **vwap_reclaim_90** | **41** | **1.61** | **2.12** | 28 | 0.57 | 0.10 | KILL |
+| orb_retrace_3 | 32 | 1.25 | −0.78 | 39 | 0.40 | −1.05 | KILL |
+| orb_retrace_x | 48 | −0.08 | −0.52 | 55 | −1.04 | −0.94 | KILL |
 
-- `filtered_orb_2` locked hunt params on the sprint-1 engine (MES harden + MNQ)
-- MNQ denser `vwap_reclaim` / `vwap_reclaim_90` / `orb_retrace_3` / `orb_retrace_x`
-- MNQ-specific: 5m OR, first-90-min, ADX, tighter ATR stops
+MNQ `vwap_reclaim_90`: both WF folds picked `min_away_atr=0.10`,
+`stop_atr_mult=0.20`, `entry_end=11:00`, `first_hour_bias=True`.
+
+## Cycle 7 / 8 (this PR)
+
+- Cycle 7: densify MNQ `vwap_reclaim_90` (ADX / volume / tighter stops).
+- Cycle 8: official `s2_mes_sens_7` on MES (and MNQ for completeness) plus
+  new MNQ families listed above. Paper replay of MES `s2_mes_sens_7` on the
+  locked holdout from `2025-09-12`. Harden after official WF.
+
+## Extra Massive history
+
+`reports/massive/BLOCKER.md`: 2020+ pull authenticated but **429** + **0**
+pre-2024 bars on this plan. Tape stays 2024-09 → 2026-09 (two 180/60 folds).
+Do not fabricate bars.
 
 ## Reproduce
 
 ```bash
-python scripts/research_cycle.py --cycle 6
-python scripts/harden_candidate.py --family filtered_orb_2 --symbol MES
-python scripts/harden_candidate.py --family vwap_reclaim --symbol MNQ
+python scripts/research_cycle.py --cycle 8 --symbol MES MNQ
+python scripts/research_cycle.py --cycle 7 --symbol MNQ
+python scripts/harden_candidate.py --family s2_mes_sens_7 --symbol MES
+python scripts/run_paper_replay.py --symbol MES --timeframe 5m --strategy s2_mes_sens_7 --start 2025-09-12
 python -m pytest tests/ -q
 ```

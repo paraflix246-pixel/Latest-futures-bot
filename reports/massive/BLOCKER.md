@@ -1,21 +1,21 @@
-# Massive ingest — attached dump unblocks research
+# Massive extra-history blocker
 
 Paper / backtest only. No live trading.
 
-**Cloud `MASSIVE_API_KEY` is not required for this cycle.** Founder attached
-volume-rolled 5m dumps (2024-09-22 → 2026-09-18) which are committed as
-`data/massive/MNQ_5m.csv.gz` and `data/massive/MES_5m.csv.gz`.
+**Kind:** `plan_depth_or_rate_limit`
 
-The loader prefers those files. Future REST pulls (optional) still use:
+Auth succeeded (`Authorization: Bearer`, HTTP 200). A 2020-01-01 5m pull was
+attempted for MNQ and MES. Outcomes:
 
-```
-Authorization: Bearer $MASSIVE_API_KEY
-GET https://api.massive.com/futures/v1/aggs/{ticker}?resolution=5min&...
-```
+- Many HMUZ contract requests returned **HTTP 429** after retries.
+- Contracts that did return bars start around **2024-09**, matching the
+  already-committed gzip dumps. No usable pre-2024 overlap.
+- `pick_front_month` then raised `No overlapping contracts to roll` because
+  too many names were skipped.
 
-Tickers: `MNQU5`, `MESU5`, `ESU5`. Enumerate H/M/U/Z. Do not rely on
-`product_code` filters.
+The attached tape (`data/massive/*.csv.gz`, 2024-09-22 → 2026-09-18) remains
+the research tape. Discovery before the locked holdout `2025-09-12` still
+supports only **two** 180/60 walk-forward folds.
 
-This dump is **~2 years**, not 2020+. That is shorter than a Developer-plan
-5-year pull. Research proceeds on the attached tape; a longer REST pull is
-an optional later step, not a gate.
+Founder: a longer-history Massive futures plan (Developer/Advanced) plus a
+higher rate limit would thicken OOS samples. Do not fabricate bars.

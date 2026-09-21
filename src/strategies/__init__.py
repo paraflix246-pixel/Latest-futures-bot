@@ -11,8 +11,15 @@ from src.strategies.lunch_range_break import LunchRangeBreakStrategy
 from src.strategies.mean_reversion import MeanReversionStrategy
 from src.strategies.on_inventory import OnInventoryStrategy
 from src.strategies.open_drive import OpenDriveStrategy
-from src.strategies.orb_filtered import OrbFilteredStrategy
+from src.strategies.orb_filtered import MesSens7Strategy, OrbFilteredStrategy
 from src.strategies.orb_retrace import OrbRetraceStrategy
+from src.strategies.orb_fail_fade import OrbFailFadeStrategy
+from src.strategies.gap_and_go import GapAndGoStrategy
+from src.strategies.spread_fade import SpreadFadeStrategy
+from src.strategies.nr15_break import Nr15BreakStrategy
+from src.strategies.wick_reject_cont import WickRejectContStrategy
+from src.strategies.onh_onl_break import OnhOnlBreakStrategy
+from src.strategies.volume_dryup_break import VolumeDryupBreakStrategy
 from src.strategies.trend15_pullback5 import Trend15Pullback5Strategy
 from src.strategies.vwap_hour import VwapHourReclaimFailStrategy
 from src.strategies.gap_fill_go import GapFillGoStrategy
@@ -67,7 +74,15 @@ STRATEGIES = {
     "afternoon_momentum": AfternoonMomentumStrategy,
     "am_vwap_reclaim": AmVwapReclaimStrategy,
     "orb_filtered": OrbFilteredStrategy,
+    "s2_mes_sens_7": MesSens7Strategy,
     "orb_retrace": OrbRetraceStrategy,
+    "orb_fail_fade": OrbFailFadeStrategy,
+    "gap_and_go": GapAndGoStrategy,
+    "spread_fade": SpreadFadeStrategy,
+    "nr15_break": Nr15BreakStrategy,
+    "wick_reject_cont": WickRejectContStrategy,
+    "onh_onl_break": OnhOnlBreakStrategy,
+    "volume_dryup_break": VolumeDryupBreakStrategy,
     "vwap_hour_reclaim_fail": VwapHourReclaimFailStrategy,
     "trend15_pullback5": Trend15Pullback5Strategy,
     "gap_fill_go": GapFillGoStrategy,
