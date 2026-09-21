@@ -217,6 +217,12 @@ def test_last30_momentum_enters_at_1530_after_strong_first30():
     assert len(entry_bars) == 1
     assert signals.entries.loc[entry_bars[0]] == 1
     assert (signals.entries[day2] != 0).sum() == 1
+    result = run_backtest(
+        df=df, strategy=Last30MomentumStrategy(min_ret_atr_frac=0.01),
+        symbol="MNQ", timeframe="5m", account_size=50_000, risk_pct=0.5,
+    )
+    assert len(result.trades) >= 1
+    assert all(t.exit_time.tz_convert("America/New_York").hour <= 16 for t in result.trades)
 
 
 def test_new_strategies_use_risk_module_and_flatten():

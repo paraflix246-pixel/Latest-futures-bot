@@ -223,7 +223,11 @@ def main() -> None:
             rows.append(payload)
 
     rows.sort(key=lambda r: (r["strategy"], r["symbol"]))
-    (reports_dir / "leaderboard.json").write_text(json.dumps([
+    board_path = reports_dir / "leaderboard.json"
+    existing_board = json.loads(board_path.read_text()) if board_path.exists() else []
+    this_keys = {(r["symbol"], r["strategy"]) for r in rows}
+    merged_board = [r for r in existing_board if (r["symbol"], r["strategy"]) not in this_keys]
+    merged_board.extend(
         {
             "symbol": r["symbol"],
             "strategy": r["strategy"],
@@ -234,8 +238,29 @@ def main() -> None:
             "holdout_trades": r["holdout"].get("trade_count"),
         }
         for r in rows
-    ], indent=2))
-    write_summary(reports_dir, rows)
+    )
+    merged_board.sort(key=lambda r: (r["strategy"], r["symbol"]))
+    board_path.write_text(json.dumps(merged_board, indent=2))
+
+    # Rebuild the markdown table from the merged board + any per-file JSON.
+    summary_rows = []
+    for item in merged_board:
+        path = reports_dir / f"{item['symbol']}_{item['strategy']}.json"
+        if path.exists():
+            summary_rows.append(json.loads(path.read_text()))
+        else:
+            summary_rows.append({
+                "symbol": item["symbol"],
+                "strategy": item["strategy"],
+                "walk_forward_oos": item,
+                "holdout": {
+                    "trade_count": item.get("holdout_trades"),
+                    "total_pnl": item.get("holdout_pnl"),
+                    "t_stat": item.get("holdout_t"),
+                },
+                "verdict": item.get("verdict", ""),
+            })
+    write_summary(reports_dir, summary_rows)
     print("\n=== VERDICTS ===")
     for r in rows:
         print(f"{r['symbol']:4} {r['strategy']:24} {r['verdict']}")

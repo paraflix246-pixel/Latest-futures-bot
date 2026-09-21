@@ -23,13 +23,14 @@ from src.strategies.base import StrategySignals
 from src.strategies.indicators import atr
 from src.strategies.session import (
     RTH_CLOSE_MINUTES,
-    RTH_ENTRY_CUTOFF_MINUTES,
     RTH_OPEN_MINUTES,
     session_clock,
 )
 
 FIRST30_END = RTH_OPEN_MINUTES + 30  # 10:00 ET
 ENTRY_MINUTES = 15 * 60 + 30         # 15:30 ET
+# Engine cutoff is >= this minute; must sit *after* the 15:30 entry bar.
+ENTRY_CUTOFF_MINUTES = 15 * 60 + 35
 MIN_RET_ATR_FRAC = 0.15
 STOP_ATR_MULT = 0.35
 MAX_HOLD_BARS = 6
@@ -39,7 +40,7 @@ class Last30MomentumStrategy:
     name = "last30_momentum"
     flatten_rth = True
     rth_flatten_minutes = RTH_CLOSE_MINUTES
-    rth_entry_cutoff_minutes = RTH_ENTRY_CUTOFF_MINUTES
+    rth_entry_cutoff_minutes = ENTRY_CUTOFF_MINUTES
     max_hold_bars = MAX_HOLD_BARS
 
     def __init__(
